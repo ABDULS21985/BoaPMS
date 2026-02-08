@@ -511,3 +511,15 @@ type ObjectiveLevelVm struct {
 	ObjectiveLevel enums.ObjectiveLevel `json:"objectiveLevel"`
 	Description    string               `json:"description"`
 }
+
+// ---------------------------------------------------------------------------
+// ObjectivesUploadRequestModel – carries the parsed rows from a cascaded
+// objective upload spreadsheet for bulk processing.
+// ---------------------------------------------------------------------------
+
+// ObjectivesUploadRequestModel wraps a list of UploadCascadedObjectiveVm rows
+// together with the identity of the user performing the upload.
+type ObjectivesUploadRequestModel struct {
+	Objectives []UploadCascadedObjectiveVm `json:"objectives" validate:"required,min=1"`
+	CreatedBy  string                      `json:"createdBy"  validate:"required"`
+}

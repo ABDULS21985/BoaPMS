@@ -913,16 +913,245 @@ func (s *objectiveService) GetConsolidatedObjectivesPaginated(ctx context.Contex
 func (s *objectiveService) ProcessObjectivesUpload(ctx context.Context, req interface{}) (interface{}, error) {
 	resp := performance.GenericResponseVm{
 		IsSuccess: false,
-		Message:   "objectives upload not yet implemented",
 	}
 
-	// The .NET implementation reads an Excel file, validates each row against
-	// the ObjectiveTemplateFields, and creates enterprise/department/division/
-	// office objectives in a transaction. The upload processing is complex and
-	// will be implemented when the file upload infrastructure is ready.
-	s.log.Warn().Msg("ProcessObjectivesUpload: stub - file upload not yet implemented")
+	r, ok := req.(*performance.ObjectivesUploadRequestModel)
+	if !ok {
+		resp.Message = "invalid request type for ProcessObjectivesUpload"
+		return resp, fmt.Errorf("invalid request type for ProcessObjectivesUpload")
+	}
+
+	if len(r.Objectives) == 0 {
+		resp.Message = "no objectives provided"
+		return resp, nil
+	}
+
+	// Track created counts per level
+	var enterpriseCount, departmentCount, divisionCount, officeCount int
+
+	// Caches to avoid duplicate lookups and re-creation within the same batch.
+	// Keys are normalised "name|parentRef" to match existing objectives.
+	enterpriseCache := make(map[string]string) // key -> EnterpriseObjectiveID
+	departmentCache := make(map[string]string) // key -> DepartmentObjectiveID
+	divisionCache := make(map[string]string)   // key -> DivisionObjectiveID
+
+	tx := s.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		resp.Message = "failed to start transaction"
+		return resp, fmt.Errorf("starting transaction: %w", tx.Error)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	for i, row := range r.Objectives {
+		// -----------------------------------------------------------------
+		// 1. Enterprise Objective
+		// -----------------------------------------------------------------
+		var enterpriseObjID string
+
+		if row.EObjName != "" {
+			cacheKey := strings.ToLower(row.EObjName) + "|" + row.StrategyID
+			if cachedID, found := enterpriseCache[cacheKey]; found {
+				enterpriseObjID = cachedID
+			} else {
+				// Try to find existing enterprise objective with same name + strategy
+				var existing performance.EnterpriseObjective
+				err := tx.Where("LOWER(name) = LOWER(?) AND strategy_id = ? AND record_status != ?",
+					row.EObjName, row.StrategyID, enums.StatusCancelled.String()).
+					First(&existing).Error
+				if err == nil {
+					enterpriseObjID = existing.EnterpriseObjectiveID
+				} else {
+					// Resolve category ID from name
+					categoryID := s.resolveObjectiveCategoryID(tx, row.EObjCategory)
+
+					obj := performance.EnterpriseObjective{
+						EnterpriseObjectivesCategoryID: categoryID,
+						StrategyID:                     row.StrategyID,
+						StrategicThemeID:               row.StrategicThemeID,
+						Type:                           enums.ObjectiveTypeEnterprise,
+					}
+					obj.Name = row.EObjName
+					obj.Description = row.EObjDesc
+					obj.Kpi = row.EObjKPI
+					obj.Target = row.EObjTarget
+					obj.RecordStatus = enums.StatusActive.String()
+					obj.IsActive = true
+					obj.CreatedBy = r.CreatedBy
+
+					if err := tx.Create(&obj).Error; err != nil {
+						tx.Rollback()
+						resp.Message = fmt.Sprintf("failed to create enterprise objective at row %d: %s", i+1, err.Error())
+						resp.Errors = append(resp.Errors, resp.Message)
+						return resp, fmt.Errorf("creating enterprise objective row %d: %w", i+1, err)
+					}
+					enterpriseObjID = obj.EnterpriseObjectiveID
+					enterpriseCount++
+				}
+				enterpriseCache[cacheKey] = enterpriseObjID
+			}
+		}
+
+		// -----------------------------------------------------------------
+		// 2. Department Objective
+		// -----------------------------------------------------------------
+		var departmentObjID string
+
+		if row.DeptObjName != "" && enterpriseObjID != "" {
+			cacheKey := strings.ToLower(row.DeptObjName) + "|" + enterpriseObjID + "|" + fmt.Sprintf("%d", row.DepartmentID)
+			if cachedID, found := departmentCache[cacheKey]; found {
+				departmentObjID = cachedID
+			} else {
+				var existing performance.DepartmentObjective
+				err := tx.Where("LOWER(name) = LOWER(?) AND enterprise_objective_id = ? AND department_id = ? AND record_status != ?",
+					row.DeptObjName, enterpriseObjID, row.DepartmentID, enums.StatusCancelled.String()).
+					First(&existing).Error
+				if err == nil {
+					departmentObjID = existing.DepartmentObjectiveID
+				} else {
+					obj := performance.DepartmentObjective{
+						EnterpriseObjectiveID: enterpriseObjID,
+						DepartmentID:          row.DepartmentID,
+					}
+					obj.Name = row.DeptObjName
+					obj.Description = row.DeptObjDesc
+					obj.Kpi = row.DeptObjKPI
+					obj.Target = row.DeptObjTarget
+					obj.RecordStatus = enums.StatusActive.String()
+					obj.IsActive = true
+					obj.CreatedBy = r.CreatedBy
+
+					if err := tx.Create(&obj).Error; err != nil {
+						tx.Rollback()
+						resp.Message = fmt.Sprintf("failed to create department objective at row %d: %s", i+1, err.Error())
+						resp.Errors = append(resp.Errors, resp.Message)
+						return resp, fmt.Errorf("creating department objective row %d: %w", i+1, err)
+					}
+					departmentObjID = obj.DepartmentObjectiveID
+					departmentCount++
+				}
+				departmentCache[cacheKey] = departmentObjID
+			}
+		}
+
+		// -----------------------------------------------------------------
+		// 3. Division Objective
+		// -----------------------------------------------------------------
+		var divisionObjID string
+
+		if row.DivObjName != "" && departmentObjID != "" {
+			cacheKey := strings.ToLower(row.DivObjName) + "|" + departmentObjID + "|" + fmt.Sprintf("%d", row.DivisionID)
+			if cachedID, found := divisionCache[cacheKey]; found {
+				divisionObjID = cachedID
+			} else {
+				var existing performance.DivisionObjective
+				err := tx.Where("LOWER(name) = LOWER(?) AND department_objective_id = ? AND division_id = ? AND record_status != ?",
+					row.DivObjName, departmentObjID, row.DivisionID, enums.StatusCancelled.String()).
+					First(&existing).Error
+				if err == nil {
+					divisionObjID = existing.DivisionObjectiveID
+				} else {
+					obj := performance.DivisionObjective{
+						DepartmentObjectiveID: departmentObjID,
+						DivisionID:            row.DivisionID,
+					}
+					obj.Name = row.DivObjName
+					obj.Description = row.DivObjDesc
+					obj.Kpi = row.DivObjKPI
+					obj.Target = row.DivObjTarget
+					obj.RecordStatus = enums.StatusActive.String()
+					obj.IsActive = true
+					obj.CreatedBy = r.CreatedBy
+
+					if err := tx.Create(&obj).Error; err != nil {
+						tx.Rollback()
+						resp.Message = fmt.Sprintf("failed to create division objective at row %d: %s", i+1, err.Error())
+						resp.Errors = append(resp.Errors, resp.Message)
+						return resp, fmt.Errorf("creating division objective row %d: %w", i+1, err)
+					}
+					divisionObjID = obj.DivisionObjectiveID
+					divisionCount++
+				}
+				divisionCache[cacheKey] = divisionObjID
+			}
+		}
+
+		// -----------------------------------------------------------------
+		// 4. Office Objective
+		// -----------------------------------------------------------------
+		if row.OffObjName != "" && divisionObjID != "" {
+			// Office objectives are not cached since each row may have
+			// a unique office + job-grade-group combination.
+			var existing performance.OfficeObjective
+			err := tx.Where("LOWER(name) = LOWER(?) AND division_objective_id = ? AND office_id = ? AND job_grade_group_id = ? AND record_status != ?",
+				row.OffObjName, divisionObjID, row.OfficeID, row.JobGradeGroupID, enums.StatusCancelled.String()).
+				First(&existing).Error
+			if err != nil {
+				// Does not exist – create it
+				obj := performance.OfficeObjective{
+					DivisionObjectiveID: divisionObjID,
+					OfficeID:            row.OfficeID,
+					JobGradeGroupID:     row.JobGradeGroupID,
+				}
+				obj.Name = row.OffObjName
+				obj.Description = row.OffObjDesc
+				obj.Kpi = row.OffObjKPI
+				obj.Target = row.OffObjTarget
+				obj.RecordStatus = enums.StatusActive.String()
+				obj.IsActive = true
+				obj.CreatedBy = r.CreatedBy
+
+				if err := tx.Create(&obj).Error; err != nil {
+					tx.Rollback()
+					resp.Message = fmt.Sprintf("failed to create office objective at row %d: %s", i+1, err.Error())
+					resp.Errors = append(resp.Errors, resp.Message)
+					return resp, fmt.Errorf("creating office objective row %d: %w", i+1, err)
+				}
+				officeCount++
+			}
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		resp.Message = "failed to commit transaction"
+		return resp, fmt.Errorf("committing transaction: %w", err)
+	}
+
+	totalCreated := enterpriseCount + departmentCount + divisionCount + officeCount
+	resp.IsSuccess = true
+	resp.TotalRecords = totalCreated
+	resp.Message = fmt.Sprintf("objectives upload completed successfully: %d enterprise, %d department, %d division, %d office objectives created (%d total)",
+		enterpriseCount, departmentCount, divisionCount, officeCount, totalCreated)
+
+	s.log.Info().
+		Int("enterprise", enterpriseCount).
+		Int("department", departmentCount).
+		Int("division", divisionCount).
+		Int("office", officeCount).
+		Int("total", totalCreated).
+		Msg("ProcessObjectivesUpload completed")
 
 	return resp, nil
+}
+
+// resolveObjectiveCategoryID looks up an ObjectiveCategory by name and returns
+// its ID. If not found, it returns the name as-is (the caller may have passed
+// the ID directly).
+func (s *objectiveService) resolveObjectiveCategoryID(tx *gorm.DB, nameOrID string) string {
+	if nameOrID == "" {
+		return ""
+	}
+	var cat performance.ObjectiveCategory
+	if err := tx.Where("LOWER(name) = LOWER(?) AND record_status != ?",
+		nameOrID, enums.StatusCancelled.String()).
+		First(&cat).Error; err == nil {
+		return cat.ObjectiveCategoryID
+	}
+	// Fall back: treat the input as an ID
+	return nameOrID
 }
 
 func (s *objectiveService) DeActivateOrReactivateObjectives(ctx context.Context, req interface{}, deactivate bool) (interface{}, error) {
