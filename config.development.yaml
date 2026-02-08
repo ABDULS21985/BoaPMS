@@ -68,3 +68,31 @@ logging:
   level: debug
   console_enabled: true
   file_enabled: true
+
+recaptcha:
+  site_key: ""
+  secret_key: ""
+  verify_url: "https://www.google.com/recaptcha/api/siteverify"
+
+password_gen:
+  max_identical_consecutive_chars: 2
+  lowercase_chars: "abcdefghijklmnopqrstuvwxyz"
+  uppercase_chars: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  numeric_chars: "0123456789"
+  special_chars: "!@#$%^&*()-_=+[]{}|;:,.<>?"
+  space_char: " "
+  password_length_min: 8
+  password_length_max: 128
+
+general:
+  domain: ""
+  name: "PMS"
+  logo: ""
+  no_reply_email: ""
+
+rsa:
+  base_url: ""
+  api_key: ""
+
+storage:
+  base_path: "./uploads"

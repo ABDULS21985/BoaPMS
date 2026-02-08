@@ -22,6 +22,11 @@ type Config struct {
 	Jobs             JobsConfig             `mapstructure:"jobs"`
 	APIKey           string                 `mapstructure:"api_key"`
 	HangfireSchema   string                 `mapstructure:"hangfire_schema"`
+	ReCaptcha        GoogleReCaptchaConfig  `mapstructure:"recaptcha"`
+	PasswordGen      PasswordGenConfig      `mapstructure:"password_gen"`
+	General          GeneralConfig          `mapstructure:"general"`
+	RSA              RSAConfig              `mapstructure:"rsa"`
+	Storage          StorageConfig          `mapstructure:"storage"`
 }
 
 // JobsConfig holds background job processing settings.
@@ -149,6 +154,44 @@ type RedisConfig struct {
 	Port     int    `mapstructure:"port"`
 	Password string `mapstructure:"password"`
 	DB       int    `mapstructure:"db"`
+}
+
+// GoogleReCaptchaConfig holds Google reCAPTCHA verification settings.
+type GoogleReCaptchaConfig struct {
+	SiteKey   string `mapstructure:"site_key"`
+	SecretKey string `mapstructure:"secret_key"`
+	VerifyURL string `mapstructure:"verify_url"`
+}
+
+// PasswordGenConfig holds password generation policy settings.
+type PasswordGenConfig struct {
+	MaxIdenticalConsecutiveChars int    `mapstructure:"max_identical_consecutive_chars"`
+	LowercaseChars              string `mapstructure:"lowercase_chars"`
+	UppercaseChars              string `mapstructure:"uppercase_chars"`
+	NumericChars                string `mapstructure:"numeric_chars"`
+	SpecialChars                string `mapstructure:"special_chars"`
+	SpaceChar                   string `mapstructure:"space_char"`
+	PasswordLengthMin           int    `mapstructure:"password_length_min"`
+	PasswordLengthMax           int    `mapstructure:"password_length_max"`
+}
+
+// GeneralConfig holds general application settings.
+type GeneralConfig struct {
+	Domain       string `mapstructure:"domain"`
+	Name         string `mapstructure:"name"`
+	Logo         string `mapstructure:"logo"`
+	NoReplyEmail string `mapstructure:"no_reply_email"`
+}
+
+// RSAConfig holds RSA integration settings.
+type RSAConfig struct {
+	BaseURL string `mapstructure:"base_url"`
+	APIKey  string `mapstructure:"api_key"`
+}
+
+// StorageConfig holds file storage settings.
+type StorageConfig struct {
+	BasePath string `mapstructure:"base_path"`
 }
 
 // Load reads the configuration from files and environment variables.
@@ -285,4 +328,32 @@ func setDefaults(v *viper.Viper) {
 
 	// Hangfire
 	v.SetDefault("hangfire_schema", "WebAPiHangfire")
+
+	// ReCaptcha
+	v.SetDefault("recaptcha.site_key", "")
+	v.SetDefault("recaptcha.secret_key", "")
+	v.SetDefault("recaptcha.verify_url", "https://www.google.com/recaptcha/api/siteverify")
+
+	// Password Generation
+	v.SetDefault("password_gen.max_identical_consecutive_chars", 2)
+	v.SetDefault("password_gen.lowercase_chars", "abcdefghijklmnopqrstuvwxyz")
+	v.SetDefault("password_gen.uppercase_chars", "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	v.SetDefault("password_gen.numeric_chars", "0123456789")
+	v.SetDefault("password_gen.special_chars", "!@#$%^&*()-_=+[]{}|;:,.<>?")
+	v.SetDefault("password_gen.space_char", " ")
+	v.SetDefault("password_gen.password_length_min", 8)
+	v.SetDefault("password_gen.password_length_max", 128)
+
+	// General
+	v.SetDefault("general.domain", "")
+	v.SetDefault("general.name", "PMS")
+	v.SetDefault("general.logo", "")
+	v.SetDefault("general.no_reply_email", "")
+
+	// RSA
+	v.SetDefault("rsa.base_url", "")
+	v.SetDefault("rsa.api_key", "")
+
+	// Storage
+	v.SetDefault("storage.base_path", "./uploads")
 }
