@@ -1,0 +1,70 @@
+## PMS API Configuration — Development overrides
+
+server:
+  port: 8080
+
+database:
+  core:
+    host: localhost
+    port: 5432
+    database: PMS_PILOT_17
+    username: postgres
+    password: postgres
+    ssl_mode: disable
+  hangfire:
+    host: localhost
+    port: 5432
+    database: PMS_PILOT_17
+    username: postgres
+    password: postgres
+    ssl_mode: disable
+  erp_data:
+    host: localhost
+    port: 1433
+    database: ERP_DATA
+    username: sa
+    password: ""
+  staff_id_mask:
+    host: localhost
+    port: 1433
+    database: CBN_LAPTOP_REG
+    username: sa
+    password: ""
+  email_service:
+    host: localhost
+    port: 1433
+    database: XXCBN_EMAIL_SERVICE
+    username: sa
+    password: ""
+  sas:
+    host: localhost
+    port: 1433
+    database: SAS
+    username: sa
+    password: ""
+
+jwt:
+  secret: "CHANGE_ME_USE_A_STRONG_SECRET_IN_PRODUCTION"
+  issuer: "https://codepedia.info"
+  audience: "codepedia.info"
+  token_expiry_minutes: 20m
+
+active_directory:
+  ldap_url: "ldap://172.24.90.152:389"
+  domain: "CENBANK"
+  username: ""
+  password: ""
+
+email:
+  smtp_server: "mail.cbn.gov.ng"
+  smtp_port: 25
+  sender_email: "CompetencyManagementSystem@cbn.gov.ng"
+  sender_password: ""
+  sender_display: "PMS Notifications"
+  application_url: "https://cms.cbn.gov.ng"
+  to_all_staff: ""
+
+logging:
+  level: debug
+  console_enabled: true
+  file_enabled: true

@@ -1,0 +1,62 @@
+## PMS API Configuration — Production overrides
+## Sensitive values should come from environment variables, not this file.
+
+server:
+  port: 8080
+
+database:
+  core:
+    host: "${PMS_DATABASE_CORE_HOST}"
+    port: 5432
+    database: PMS_PILOT_17
+    username: "${PMS_DATABASE_CORE_USERNAME}"
+    password: "${PMS_DATABASE_CORE_PASSWORD}"
+    ssl_mode: require
+    max_open_conns: 50
+    max_idle_conns: 20
+  erp_data:
+    host: "${PMS_DATABASE_ERP_HOST}"
+    port: 53190
+    database: ERP_DATA
+    username: "${PMS_DATABASE_ERP_USERNAME}"
+    password: "${PMS_DATABASE_ERP_PASSWORD}"
+  staff_id_mask:
+    host: "${PMS_DATABASE_ERP_HOST}"
+    port: 53190
+    database: CBN_LAPTOP_REG
+    username: "${PMS_DATABASE_ERP_USERNAME}"
+    password: "${PMS_DATABASE_ERP_PASSWORD}"
+  email_service:
+    host: "${PMS_DATABASE_ERP_HOST}"
+    port: 53190
+    database: XXCBN_EMAIL_SERVICE
+    username: "${PMS_DATABASE_ERP_USERNAME}"
+    password: "${PMS_DATABASE_ERP_PASSWORD}"
+  sas:
+    host: "${PMS_DATABASE_ERP_HOST}"
+    port: 53190
+    database: SAS
+    username: "${PMS_DATABASE_ERP_USERNAME}"
+    password: "${PMS_DATABASE_ERP_PASSWORD}"
+
+jwt:
+  secret: "${PMS_JWT_SECRET}"
+  issuer: "https://codepedia.info"
+  audience: "codepedia.info"
+
+active_directory:
+  ldap_url: "ldap://172.24.90.152:389"
+  domain: "CENBANK"
+  username: "${PMS_AD_USERNAME}"
+  password: "${PMS_AD_PASSWORD}"
+
+email:
+  smtp_server: "mail.cbn.gov.ng"
+  smtp_port: 25
+  sender_email: "CompetencyManagementSystem@cbn.gov.ng"
+  application_url: "https://cms.cbn.gov.ng"
+
+logging:
+  level: info
+  console_enabled: true
+  file_enabled: true

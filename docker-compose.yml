@@ -1,0 +1,75 @@
+services:
+  # --- PostgreSQL ---
+  postgres:
+    image: postgres:16-alpine
+    container_name: pms-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: pms_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- Redis (background job queue, replacing Hangfire) ---
+  redis:
+    image: redis:7-alpine
+    container_name: pms-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- PMS API ---
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pms-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      APP_ENV: production
+      PMS_SERVER_PORT: "8080"
+      PMS_DATABASE_CORE_HOST: postgres
+      PMS_DATABASE_CORE_PORT: "5432"
+      PMS_DATABASE_CORE_DATABASE: pms_db
+      PMS_DATABASE_CORE_USERNAME: postgres
+      PMS_DATABASE_CORE_PASSWORD: postgres
+      PMS_DATABASE_CORE_SSL_MODE: disable
+      PMS_DATABASE_HANGFIRE_HOST: postgres
+      PMS_DATABASE_HANGFIRE_PORT: "5432"
+      PMS_DATABASE_HANGFIRE_DATABASE: pms_db
+      PMS_DATABASE_HANGFIRE_USERNAME: postgres
+      PMS_DATABASE_HANGFIRE_PASSWORD: postgres
+      PMS_REDIS_HOST: redis
+      PMS_REDIS_PORT: "6379"
+      PMS_JWT_SECRET: "${PMS_JWT_SECRET:-CHANGE_ME_IN_PRODUCTION}"
+      PMS_LOGGING_CONSOLE_ENABLED: "true"
+      PMS_LOGGING_FILE_ENABLED: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - api-logs:/app/logs
+
+volumes:
+  pgdata:
+  redisdata:
+  api-logs:
