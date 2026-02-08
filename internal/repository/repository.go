@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// Container holds all database connections and provides access to repositories.
+// Container holds all database connections and domain repositories.
 // This is the Go equivalent of the .NET DI-registered DbContexts and repositories.
 type Container struct {
 	// GORM connection for the primary PostgreSQL database (ORM operations)
@@ -27,10 +27,24 @@ type Container struct {
 	// Audit interceptor (auto-logs entity changes)
 	Audit *AuditInterceptor
 
+	// ── Domain-specific repositories (GORM-based, primary PostgreSQL) ──
+	Competency  *CompetencyRepository
+	Performance *PerformanceRepository
+	Project     *ProjectRepository
+	Feedback    *FeedbackRepository
+	Grievance   *GrievanceRepository
+
+	// ── Multi-database repositories (sqlx-based, SQL Server) ───────────
+	Erp   *ErpRepository
+	Staff *StaffRepository
+	Email *EmailRepository
+	Sas   *SasRepository
+
 	log zerolog.Logger
 }
 
-// New initializes all database connections and the audit interceptor.
+// New initializes all database connections, the audit interceptor,
+// and all domain-specific repositories.
 func New(cfg *config.Config, log zerolog.Logger) (*Container, error) {
 	dm, err := NewDatabaseManager(cfg, log)
 	if err != nil {
@@ -50,7 +64,20 @@ func New(cfg *config.Config, log zerolog.Logger) (*Container, error) {
 	// Register audit log interceptor on the GORM connection
 	c.Audit = NewAuditInterceptor(dm.CoreGorm, log)
 
-	log.Info().Msg("Repository container initialized")
+	// Initialize domain-specific repositories (GORM — primary PostgreSQL)
+	c.Competency = NewCompetencyRepository(dm.CoreGorm)
+	c.Performance = NewPerformanceRepository(dm.CoreGorm)
+	c.Project = NewProjectRepository(dm.CoreGorm)
+	c.Feedback = NewFeedbackRepository(dm.CoreGorm)
+	c.Grievance = NewGrievanceRepository(dm.CoreGorm)
+
+	// Initialize multi-database repositories (sqlx — SQL Server, optional)
+	c.Erp = NewErpRepository(dm.ErpSQL)
+	c.Staff = NewStaffRepository(dm.StaffIDSQL)
+	c.Email = NewEmailRepository(dm.EmailSvcSQL)
+	c.Sas = NewSasRepository(dm.SasSQL)
+
+	log.Info().Msg("Repository container initialized with all domain repositories")
 	return c, nil
 }
 

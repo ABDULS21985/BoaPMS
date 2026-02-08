@@ -1,0 +1,35 @@
+-- Reverse remaining performance tables (drop in dependency order)
+
+DROP TABLE IF EXISTS pms.grievance_resolutions;
+DROP TABLE IF EXISTS pms.grievances;
+DROP TABLE IF EXISTS pms.competency_gap_closures;
+DROP TABLE IF EXISTS pms.competency_reviewer_ratings;
+DROP TABLE IF EXISTS pms.competency_reviewers;
+DROP TABLE IF EXISTS pms.competency_review_feedbacks;
+DROP TABLE IF EXISTS pms.feedback_questionaire_options;
+DROP TABLE IF EXISTS pms.feedback_questionaires;
+DROP TABLE IF EXISTS pms.pms_competencies;
+DROP TABLE IF EXISTS pms.feedback_request_logs;
+DROP TABLE IF EXISTS pms.review_period_360_reviews;
+DROP TABLE IF EXISTS pms.review_period_extensions;
+DROP TABLE IF EXISTS pms.committee_assigned_work_products;
+DROP TABLE IF EXISTS pms.project_assigned_work_products;
+DROP TABLE IF EXISTS pms.committee_work_products;
+DROP TABLE IF EXISTS pms.project_work_products;
+DROP TABLE IF EXISTS pms.committee_objectives;
+DROP TABLE IF EXISTS pms.project_objectives;
+DROP TABLE IF EXISTS pms.committee_members;
+DROP TABLE IF EXISTS pms.project_members;
+DROP TABLE IF EXISTS pms.committees;
+DROP TABLE IF EXISTS pms.projects;
+DROP TABLE IF EXISTS pms."CascadedWorkProducts";
+DROP TABLE IF EXISTS pms."WorkProductDefinitions";
+DROP TABLE IF EXISTS pms.operational_objective_work_products;
+DROP TABLE IF EXISTS pms.evaluation_options;
+DROP TABLE IF EXISTS pms.work_product_evaluations;
+DROP TABLE IF EXISTS pms.work_product_tasks;
+DROP TABLE IF EXISTS pms.review_period_individual_planned_objectives;
+DROP TABLE IF EXISTS pms.period_objective_department_evaluations;
+DROP TABLE IF EXISTS pms.period_objective_evaluations;
+DROP TABLE IF EXISTS pms.period_objectives;
+DROP TABLE IF EXISTS pms.category_definitions;
