@@ -73,7 +73,7 @@ func New(repos *repository.Container, cfg *config.Config, log zerolog.Logger) *C
 		Auth:          authSvc,
 		Email:         emailSvc,
 		// FileStorage:  TODO: implement newFileStorageService(cfg, log),
-		// Notification: TODO: implement newNotificationService(repos, cfg, log),
+		Notification: newNotificationService(emailSvc, cfg, log),
 		// Encryption:   TODO: implement newEncryptionService(cfg, log),
 		AD:            adSvc,
 		UserContext:    ucSvc,

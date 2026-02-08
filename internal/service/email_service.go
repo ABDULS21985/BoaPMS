@@ -8,6 +8,7 @@ import (
 
 	"github.com/enterprise-pms/pms-api/internal/config"
 	"github.com/enterprise-pms/pms-api/internal/domain/performance"
+	"github.com/enterprise-pms/pms-api/internal/email"
 	"github.com/enterprise-pms/pms-api/internal/repository"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog"
@@ -273,18 +274,71 @@ func (s *emailService) ProcessEmail(ctx context.Context, req interface{}) (inter
 		}, nil
 	}
 
-	// Build a generic notification body.
-	// In the .NET version, each case constructs a specific HTML body using HtmlMessageTemplate
-	// and resolves recipients via ErpEmployeeService. Here we persist a simplified record
-	// for the mail sender process to pick up. A future enhancement can add template rendering.
-	body := fmt.Sprintf(
-		"<p>Notification: <strong>%s</strong></p><p>%s</p><p>User: %s</p>",
-		emailReq.Title,
-		emailReq.EmailDescription,
-		emailReq.UserID,
-	)
+	// Render the HTML body using the appropriate template from the email package.
+	// This replaces the .NET HtmlMessageTemplate string-interpolation pattern.
+	// Template data is built from the EmailRequest fields; recipient resolution
+	// via ErpEmployeeService will be added when that service is fully implemented.
+	appURL := s.cfg.Email.ApplicationURL
+	data := email.TemplateData{
+		Recipient:      emailReq.UserID,
+		Requester:      emailReq.UserID,
+		RequestorName:  emailReq.UserID,
+		AppURL:         appURL,
+		CompetencyInfo: emailReq.EmailDescription,
+		ReviewPeriod:   emailReq.EmailDescription,
+		DeadlineDate:   emailReq.EmailDescription,
+		CompetencyName: emailReq.EmailDescription,
+		Description:    emailReq.EmailDescription,
+	}
 
-	// Save the email for async delivery
+	// Map EmailRequest.Title to the template key used in the email package.
+	var templateKey string
+	switch emailReq.Title {
+	case "NewCompetency":
+		templateKey = email.TplNewCompetencyToApprover
+	case "ApprovedCompetency":
+		templateKey = email.TplApprovedCompetencyToRequestor
+	case "NewReviewPeriod":
+		templateKey = email.TplNewReviewPeriodToApprover
+	case "ApprovedReviewPeriod":
+		templateKey = email.TplApprovedReviewPeriodToAll
+	case "Self":
+		templateKey = email.TplSelfReviewCompleted
+	case "Peers":
+		templateKey = email.TplPeersReviewCompleted
+	case "Subordinates":
+		templateKey = email.TplSubordinateReviewCompleted
+	case "Superior":
+		templateKey = email.TplSuperiorReviewCompleted
+	case "DevTaskAssigned":
+		templateKey = email.TplDevTaskAssigned
+	case "DevTaskCompleted":
+		templateKey = email.TplDevTaskCompleted
+	case "DevTaskApproved":
+		templateKey = email.TplDevTaskApproved
+	case "UpdateJobRole":
+		templateKey = email.TplJobRoleUpdateRequest
+	case "ApprovedJobRole":
+		templateKey = email.TplApprovedJobRole
+	case "RejectJobRole":
+		templateKey = email.TplRejectJobRole
+	case "NotifyCmsTeamApprovedJobRole":
+		templateKey = email.TplCMSTeamApprovedJobRole
+	case "ReminderEmail":
+		templateKey = email.TplReminderMessage
+	}
+
+	body, err := email.Render(templateKey, data)
+	if err != nil {
+		// Fallback to a generic body if template rendering fails.
+		s.log.Warn().Err(err).Str("template", templateKey).Msg("template rendering failed, using fallback")
+		body = fmt.Sprintf(
+			"<p>Notification: <strong>%s</strong></p><p>%s</p><p>User: %s</p>",
+			emailReq.Title, emailReq.EmailDescription, emailReq.UserID,
+		)
+	}
+
+	// Save the email for async delivery via the mail sender worker.
 	if err := s.saveEmailToDb(ctx, "", subject, body, emailReq.Title); err != nil {
 		s.log.Error().Err(err).Str("title", emailReq.Title).Msg("failed to process email notification")
 		return nil, fmt.Errorf("processing email notification: %w", err)

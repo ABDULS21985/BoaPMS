@@ -11,6 +11,7 @@ import (
 
 	"github.com/enterprise-pms/pms-api/internal/config"
 	"github.com/enterprise-pms/pms-api/internal/handler"
+	"github.com/enterprise-pms/pms-api/internal/jobs"
 	"github.com/enterprise-pms/pms-api/internal/middleware"
 	"github.com/enterprise-pms/pms-api/internal/repository"
 	"github.com/enterprise-pms/pms-api/internal/service"
@@ -38,6 +39,11 @@ func main() {
 
 	// Initialize services
 	svc := service.New(repos, cfg, log)
+
+	// Initialize and start background job scheduler
+	// Replaces .NET Hangfire server + BackgroundService hosted services.
+	scheduler := jobs.NewScheduler(svc, repos, cfg, log)
+	scheduler.Start(context.Background())
 
 	// Initialize middleware
 	mw := middleware.New(cfg, log)
@@ -67,6 +73,10 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	sig := <-quit
 	log.Info().Str("signal", sig.String()).Msg("Shutting down server...")
+
+	// Stop background jobs before shutting down HTTP server.
+	scheduler.Stop()
+	log.Info().Msg("Background jobs stopped")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()

@@ -19,8 +19,17 @@ type Config struct {
 	CORS             CORSConfig             `mapstructure:"cors"`
 	Logging          LoggingConfig          `mapstructure:"logging"`
 	Redis            RedisConfig            `mapstructure:"redis"`
+	Jobs             JobsConfig             `mapstructure:"jobs"`
 	APIKey           string                 `mapstructure:"api_key"`
 	HangfireSchema   string                 `mapstructure:"hangfire_schema"`
+}
+
+// JobsConfig holds background job processing settings.
+type JobsConfig struct {
+	WorkerPoolSize     int           `mapstructure:"worker_pool_size"`
+	WorkerQueueSize    int           `mapstructure:"worker_queue_size"`
+	MailSenderInterval time.Duration `mapstructure:"mail_sender_interval"`
+	CronSchedule       string       `mapstructure:"cron_schedule"`
 }
 
 // ServerConfig holds HTTP server settings.
@@ -267,6 +276,12 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("redis.host", "localhost")
 	v.SetDefault("redis.port", 6379)
 	v.SetDefault("redis.db", 0)
+
+	// Jobs
+	v.SetDefault("jobs.worker_pool_size", 5)
+	v.SetDefault("jobs.worker_queue_size", 100)
+	v.SetDefault("jobs.mail_sender_interval", "30s")
+	v.SetDefault("jobs.cron_schedule", "@every 10m")
 
 	// Hangfire
 	v.SetDefault("hangfire_schema", "WebAPiHangfire")

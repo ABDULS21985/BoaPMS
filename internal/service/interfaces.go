@@ -481,9 +481,20 @@ type FileStorageService interface {
 
 // --- Notification ---
 
-// NotificationService handles in-app and push notifications.
+// NotificationService handles email notifications using templates.
+// Mirrors the .NET NotificationService + NotificationTemplates pattern.
 type NotificationService interface {
+	// Send sends a plain-text/HTML notification email.
 	Send(ctx context.Context, userID string, message string) error
+	// SendNewRequestNotification sends a notification for a new feedback request.
+	// Uses SLA template if hasSLA is true, otherwise generic template.
+	SendNewRequestNotification(ctx context.Context, recipientEmail, recipientName, requestName string, assignedDate time.Time, hasSLA bool, slaHours int) error
+	// SendAssignerNewRequestNotification notifies the assigner that their request was initiated.
+	SendAssignerNewRequestNotification(ctx context.Context, recipientEmail, recipientName, requestName string, assignedDate time.Time) error
+	// SendRequestTreatedNotification notifies when a request is treated.
+	SendRequestTreatedNotification(ctx context.Context, recipientEmail, recipientName, requestName string, treatedDate time.Time) error
+	// SendAssignerRequestTreatedNotification notifies the assigner when their request is treated.
+	SendAssignerRequestTreatedNotification(ctx context.Context, recipientEmail, recipientName, requestName string, treatedDate time.Time) error
 }
 
 // --- Encryption ---
