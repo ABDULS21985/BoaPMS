@@ -27,6 +27,7 @@ type Config struct {
 	General          GeneralConfig          `mapstructure:"general"`
 	RSA              RSAConfig              `mapstructure:"rsa"`
 	Storage          StorageConfig          `mapstructure:"storage"`
+	Encryption       EncryptionConfig       `mapstructure:"encryption"`
 }
 
 // JobsConfig holds background job processing settings.
@@ -194,6 +195,11 @@ type StorageConfig struct {
 	BasePath string `mapstructure:"base_path"`
 }
 
+// EncryptionConfig holds AES encryption settings.
+type EncryptionConfig struct {
+	Key string `mapstructure:"key"`
+}
+
 // Load reads the configuration from files and environment variables.
 func Load() (*Config, error) {
 	v := viper.New()
@@ -356,4 +362,7 @@ func setDefaults(v *viper.Viper) {
 
 	// Storage
 	v.SetDefault("storage.base_path", "./uploads")
+
+	// Encryption
+	v.SetDefault("encryption.key", "")
 }

@@ -30,6 +30,7 @@ type performanceManagementService struct {
 	log zerolog.Logger
 
 	// Composed sub-services
+	strategy         *strategyService
 	objectives       *objectiveService
 	dashboard        *dashboardService
 	periodScr        *periodScoreService
@@ -55,6 +56,7 @@ func newPerformanceManagementService(
 	reviewPeriodSvc ReviewPeriodService,
 	erpEmployeeSvc ErpEmployeeService,
 	globalSettingSvc GlobalSettingService,
+	userCtxSvc UserContextService,
 ) PerformanceManagementService {
 	db := repos.GormDB
 
@@ -69,6 +71,7 @@ func newPerformanceManagementService(
 	}
 
 	// Compose sub-services sharing the same DB and repos
+	svc.strategy = newStrategyService(repos, cfg, svc.log, userCtxSvc)
 	svc.objectives = newObjectiveService(db, cfg, svc.log, svc)
 	svc.dashboard = newDashboardService(db, cfg, svc.log, svc)
 	svc.periodScr = newPeriodScoreService(db, cfg, svc.log, svc)
@@ -83,35 +86,35 @@ func newPerformanceManagementService(
 }
 
 // =========================================================================
-// Delegated methods: Strategies (delegated to strategy service - separate agent)
+// Delegated methods: Strategies (via strategyService)
 // =========================================================================
 
 func (s *performanceManagementService) GetStrategies(ctx context.Context) (interface{}, error) {
-	return nil, fmt.Errorf("strategy operations delegated to strategyService")
+	return s.strategy.GetStrategies(ctx)
 }
 
 func (s *performanceManagementService) GetStrategicThemes(ctx context.Context) (interface{}, error) {
-	return nil, fmt.Errorf("strategy operations delegated to strategyService")
+	return s.strategy.GetStrategicThemes(ctx)
 }
 
 func (s *performanceManagementService) GetStrategicThemesById(ctx context.Context, strategyID string) (interface{}, error) {
-	return nil, fmt.Errorf("strategy operations delegated to strategyService")
+	return s.strategy.GetStrategicThemesById(ctx, strategyID)
 }
 
 func (s *performanceManagementService) CreateStrategy(ctx context.Context, req interface{}) (interface{}, error) {
-	return nil, fmt.Errorf("strategy operations delegated to strategyService")
+	return s.strategy.CreateStrategy(ctx, req)
 }
 
 func (s *performanceManagementService) UpdateStrategy(ctx context.Context, req interface{}) (interface{}, error) {
-	return nil, fmt.Errorf("strategy operations delegated to strategyService")
+	return s.strategy.UpdateStrategy(ctx, req)
 }
 
 func (s *performanceManagementService) CreateStrategicTheme(ctx context.Context, req interface{}) (interface{}, error) {
-	return nil, fmt.Errorf("strategy operations delegated to strategyService")
+	return s.strategy.CreateStrategicTheme(ctx, req)
 }
 
 func (s *performanceManagementService) UpdateStrategicTheme(ctx context.Context, req interface{}) (interface{}, error) {
-	return nil, fmt.Errorf("strategy operations delegated to strategyService")
+	return s.strategy.UpdateStrategicTheme(ctx, req)
 }
 
 // =========================================================================

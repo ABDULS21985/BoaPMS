@@ -8,6 +8,7 @@ import (
 
 	"github.com/enterprise-pms/pms-api/internal/domain/audit"
 	"github.com/enterprise-pms/pms-api/internal/domain/enums"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 )
@@ -205,4 +206,105 @@ var validSettingTypes = map[string]struct{}{
 func isValidSettingType(t string) bool {
 	_, ok := validSettingTypes[t]
 	return ok
+}
+
+// ---------------------------------------------------------------------------
+// ID generation — mirrors .NET Guid.NewGuid().ToString().
+// ---------------------------------------------------------------------------
+
+// GenerateID returns a new UUID string suitable for use as a record identifier.
+func GenerateID() string {
+	return uuid.New().String()
+}
+
+// ---------------------------------------------------------------------------
+// Workflow record-level helpers — generic functions that operate on any table
+// via raw GORM updates. These mirror the .NET BaseService approve/reject/
+// workflow-status helper methods.
+// ---------------------------------------------------------------------------
+
+// ApproveRecord sets approval fields on a workflow entity identified by
+// tableName, primary key column, and record ID.
+// Mirrors the .NET BaseService record-level approval logic.
+func ApproveRecord(db *gorm.DB, ctx context.Context, tableName string, pkColumn string, recordID string, approvedBy string) error {
+	now := time.Now().UTC()
+	return db.WithContext(ctx).Table(tableName).
+		Where(pkColumn+" = ?", recordID).
+		Updates(map[string]interface{}{
+			"status":        enums.StatusApprovedAndActive.String(),
+			"record_status": "Active",
+			"date_approved": now,
+			"is_approved":   true,
+			"is_active":     true,
+			"approved_by":   approvedBy,
+		}).Error
+}
+
+// RejectRecord sets rejection fields on a workflow entity identified by
+// tableName, primary key column, and record ID.
+// Mirrors the .NET BaseService record-level rejection logic.
+func RejectRecord(db *gorm.DB, ctx context.Context, tableName string, pkColumn string, recordID string, rejectedBy string, reason string) error {
+	now := time.Now().UTC()
+	return db.WithContext(ctx).Table(tableName).
+		Where(pkColumn+" = ?", recordID).
+		Updates(map[string]interface{}{
+			"status":           enums.StatusRejected.String(),
+			"record_status":    "Rejected",
+			"date_rejected":    now,
+			"is_rejected":      true,
+			"is_active":        false,
+			"rejected_by":      rejectedBy,
+			"rejection_reason": reason,
+		}).Error
+}
+
+// SetWorkflowStatus is a generic function to set workflow status fields on
+// any entity. It computes the appropriate record_status and secondary fields
+// based on the target status. Mirrors the .NET BaseService workflow-status
+// helper pattern.
+func SetWorkflowStatus(db *gorm.DB, ctx context.Context, tableName string, pkColumn string, recordID string, status enums.Status, updatedBy string) error {
+	updates := map[string]interface{}{
+		"status":     status.String(),
+		"updated_by": updatedBy,
+	}
+
+	switch status {
+	case enums.StatusDraft:
+		updates["record_status"] = "Draft"
+	case enums.StatusPendingApproval:
+		updates["record_status"] = "PendingApproval"
+	case enums.StatusApprovedAndActive:
+		updates["record_status"] = "Active"
+		updates["is_approved"] = true
+		updates["is_active"] = true
+		now := time.Now().UTC()
+		updates["date_approved"] = now
+		updates["approved_by"] = updatedBy
+	case enums.StatusReturned:
+		updates["record_status"] = "Returned"
+	case enums.StatusRejected:
+		updates["record_status"] = "Rejected"
+		updates["is_rejected"] = true
+		updates["is_active"] = false
+		now := time.Now().UTC()
+		updates["date_rejected"] = now
+		updates["rejected_by"] = updatedBy
+	case enums.StatusCancelled:
+		updates["record_status"] = "Cancelled"
+		updates["is_active"] = false
+	case enums.StatusClosed:
+		updates["record_status"] = "Closed"
+	case enums.StatusPaused:
+		updates["record_status"] = "Paused"
+	case enums.StatusAwaitingEvaluation:
+		updates["record_status"] = "AwaitingEvaluation"
+	case enums.StatusCompleted:
+		updates["record_status"] = "Completed"
+	case enums.StatusPendingAcceptance:
+		updates["record_status"] = "PendingAcceptance"
+	}
+
+	return db.WithContext(ctx).Table(tableName).
+		Where(pkColumn+" = ?", recordID).
+		Updates(updates).Error
 }

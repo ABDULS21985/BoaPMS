@@ -39,20 +39,21 @@ func New(repos *repository.Container, cfg *config.Config, log zerolog.Logger) *C
 	ucSvc := newUserContextService(log)
 	pwGen := newPasswordGenerator()
 	emailSvc := newEmailService(repos, cfg, log, gsSvc)
-	pmsSetupSvc := newPmsSetupService(repos, cfg, log, nil) // encryption service wired when available
+	encSvc := newEncryptionService(cfg, log)
+	fsSvc := newFileStorageService(cfg, log)
+	pmsSetupSvc := newPmsSetupService(repos, cfg, log, encSvc)
 	userMgr := NewUserManagementService(repos, log)
 
 	// --- Domain services ---
 	rpSvc := newReviewPeriodService(repos, cfg, log)
 	competencySvc := newCompetencyService(repos, cfg, log)
 	staffMgtSvc := newStaffManagementService(repos, cfg, log, userMgr)
-	perfSvc := newPerformanceManagementService(repos, cfg, log, rpSvc, nil, gsSvc)
+	erpSvc := newErpEmployeeService(repos, cfg, log)
+	perfSvc := newPerformanceManagementService(repos, cfg, log, rpSvc, erpSvc, gsSvc, ucSvc)
 
 	// Grievance depends on several other services (mirrors .NET DI graph).
-	// ErpEmployeeService is not yet implemented so we pass nil; the grievance
-	// service handles a nil erpSvc gracefully where applicable.
 	grievanceSvc := newGrievanceManagementService(repos, cfg, log,
-		nil,      // ErpEmployeeService (not yet implemented)
+		erpSvc,   // ErpEmployeeService
 		gsSvc,    // GlobalSettingService
 		ucSvc,    // UserContextService
 		emailSvc, // EmailService
@@ -68,13 +69,13 @@ func New(repos *repository.Container, cfg *config.Config, log zerolog.Logger) *C
 		StaffMgt:      staffMgtSvc,
 		Competency:    competencySvc,
 		Organogram:    newOrganogramService(repos, cfg, log),
-		// ErpEmployee:  TODO: implement newErpEmployeeService(repos, cfg, log),
+		ErpEmployee:   erpSvc,
 		GlobalSetting: gsSvc,
 		Auth:          authSvc,
 		Email:         emailSvc,
-		// FileStorage:  TODO: implement newFileStorageService(cfg, log),
-		Notification: newNotificationService(emailSvc, cfg, log),
-		// Encryption:   TODO: implement newEncryptionService(cfg, log),
+		FileStorage:   fsSvc,
+		Notification:  newNotificationService(emailSvc, cfg, log),
+		Encryption:    encSvc,
 		AD:            adSvc,
 		UserContext:    ucSvc,
 		PasswordGen:   pwGen,

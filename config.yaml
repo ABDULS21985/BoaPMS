@@ -139,3 +139,6 @@ rsa:
 
 storage:
   base_path: "./uploads"
+
+encryption:
+  key: ""  # 32-byte hex-encoded AES-256 key (64 hex chars). Override via PMS_ENCRYPTION_KEY env var.

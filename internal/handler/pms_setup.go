@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/enterprise-pms/pms-api/internal/domain/performance"
 	"github.com/enterprise-pms/pms-api/internal/service"
 	"github.com/enterprise-pms/pms-api/pkg/response"
 	"github.com/rs/zerolog"
@@ -21,57 +22,30 @@ func NewPmsSetupHandler(svc *service.Container, log zerolog.Logger) *PmsSetupHan
 	return &PmsSetupHandler{svc: svc, log: log}
 }
 
-// --- Request DTOs ---
-
-// AddSettingRequest is the payload for creating a new setting.
-type AddSettingRequest struct {
-	Key         string `json:"key"`
-	Value       string `json:"value"`
-	SettingType string `json:"settingType"`
-}
-
-// SettingRequest is the payload for updating an existing setting.
-type SettingRequest struct {
-	ID          string `json:"id"`
-	Key         string `json:"key"`
-	Value       string `json:"value"`
-	SettingType string `json:"settingType"`
-}
-
-// AddPmsConfigurationRequest is the payload for creating a new PMS configuration.
-type AddPmsConfigurationRequest struct {
-	Key         string `json:"key"`
-	Value       string `json:"value"`
-	IsEncrypted bool   `json:"isEncrypted"`
-}
-
-// PmsConfigurationRequest is the payload for updating an existing PMS configuration.
-type PmsConfigurationRequest struct {
-	ID          string `json:"id"`
-	Key         string `json:"key"`
-	Value       string `json:"value"`
-	IsEncrypted bool   `json:"isEncrypted"`
-}
-
 // ============================================================
 // Settings Endpoints
 // ============================================================
 
 // AddSetting handles POST /api/v1/setup/settings
-// Mirrors .NET PerformanceMgtController.AddSetting — creates a new global setting.
+// Mirrors .NET PerformanceMgtController.AddSetting -- creates a new global setting.
 func (h *PmsSetupHandler) AddSetting(w http.ResponseWriter, r *http.Request) {
-	var req AddSettingRequest
+	var req performance.AddSettingRequestModel
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	if req.Key == "" || req.Value == "" {
-		response.Error(w, http.StatusBadRequest, "Key and value are required")
+	if req.Name == "" || req.Value == "" {
+		response.Error(w, http.StatusBadRequest, "Name and value are required")
 		return
 	}
 
-	result, err := h.svc.PmsSetup.AddSetting(r.Context(), req)
+	if req.Type == "" {
+		response.Error(w, http.StatusBadRequest, "Setting type is required")
+		return
+	}
+
+	result, err := h.svc.PmsSetup.AddSetting(r.Context(), &req)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "AddSetting").Msg("Failed to add setting")
 		response.Error(w, http.StatusInternalServerError, "Failed to add setting")
@@ -82,25 +56,30 @@ func (h *PmsSetupHandler) AddSetting(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateSetting handles PUT /api/v1/setup/settings
-// Mirrors .NET PerformanceMgtController.UpdateSetting — updates an existing global setting.
+// Mirrors .NET PerformanceMgtController.UpdateSetting -- updates an existing global setting.
 func (h *PmsSetupHandler) UpdateSetting(w http.ResponseWriter, r *http.Request) {
-	var req SettingRequest
+	var req performance.SettingRequestModel
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	if req.ID == "" {
+	if req.SettingID == "" {
 		response.Error(w, http.StatusBadRequest, "Setting ID is required")
 		return
 	}
 
-	if req.Key == "" || req.Value == "" {
-		response.Error(w, http.StatusBadRequest, "Key and value are required")
+	if req.Name == "" || req.Value == "" {
+		response.Error(w, http.StatusBadRequest, "Name and value are required")
 		return
 	}
 
-	result, err := h.svc.PmsSetup.UpdateSetting(r.Context(), req)
+	if req.Type == "" {
+		response.Error(w, http.StatusBadRequest, "Setting type is required")
+		return
+	}
+
+	result, err := h.svc.PmsSetup.UpdateSetting(r.Context(), &req)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "UpdateSetting").Msg("Failed to update setting")
 		response.Error(w, http.StatusInternalServerError, "Failed to update setting")
@@ -111,7 +90,7 @@ func (h *PmsSetupHandler) UpdateSetting(w http.ResponseWriter, r *http.Request) 
 }
 
 // GetSettingDetails handles GET /api/v1/setup/settings/{settingId}
-// Mirrors .NET PerformanceMgtController.GetSettingDetails — returns a single setting by ID.
+// Mirrors .NET PerformanceMgtController.GetSettingDetails -- returns a single setting by ID.
 func (h *PmsSetupHandler) GetSettingDetails(w http.ResponseWriter, r *http.Request) {
 	settingID := r.PathValue("settingId")
 	if settingID == "" {
@@ -130,7 +109,7 @@ func (h *PmsSetupHandler) GetSettingDetails(w http.ResponseWriter, r *http.Reque
 }
 
 // ListAllSettings handles GET /api/v1/setup/settings
-// Mirrors .NET PerformanceMgtController.ListAllSettings — returns all global settings.
+// Mirrors .NET PerformanceMgtController.ListAllSettings -- returns all global settings.
 func (h *PmsSetupHandler) ListAllSettings(w http.ResponseWriter, r *http.Request) {
 	result, err := h.svc.PmsSetup.ListAllSettings(r.Context())
 	if err != nil {
@@ -146,21 +125,26 @@ func (h *PmsSetupHandler) ListAllSettings(w http.ResponseWriter, r *http.Request
 // PMS Configuration Endpoints
 // ============================================================
 
-// AddPmsConfiguration handles POST /api/v1/setup/configurations
-// Mirrors .NET PerformanceMgtController.AddPmsConfiguration — creates a new PMS configuration entry.
+// AddPmsConfiguration handles POST /api/v1/setup/pms-configurations
+// Mirrors .NET PerformanceMgtController.AddPmsConfiguration -- creates a new PMS configuration entry.
 func (h *PmsSetupHandler) AddPmsConfiguration(w http.ResponseWriter, r *http.Request) {
-	var req AddPmsConfigurationRequest
+	var req performance.AddPmsConfigurationRequestModel
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	if req.Key == "" || req.Value == "" {
-		response.Error(w, http.StatusBadRequest, "Key and value are required")
+	if req.Name == "" || req.Value == "" {
+		response.Error(w, http.StatusBadRequest, "Name and value are required")
 		return
 	}
 
-	result, err := h.svc.PmsSetup.AddPmsConfiguration(r.Context(), req)
+	if req.Type == "" {
+		response.Error(w, http.StatusBadRequest, "Configuration type is required")
+		return
+	}
+
+	result, err := h.svc.PmsSetup.AddPmsConfiguration(r.Context(), &req)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "AddPmsConfiguration").Msg("Failed to add PMS configuration")
 		response.Error(w, http.StatusInternalServerError, "Failed to add PMS configuration")
@@ -170,26 +154,31 @@ func (h *PmsSetupHandler) AddPmsConfiguration(w http.ResponseWriter, r *http.Req
 	response.Created(w, result)
 }
 
-// UpdatePmsConfiguration handles PUT /api/v1/setup/configurations
-// Mirrors .NET PerformanceMgtController.UpdatePmsConfiguration — updates an existing PMS configuration.
+// UpdatePmsConfiguration handles PUT /api/v1/setup/pms-configurations
+// Mirrors .NET PerformanceMgtController.UpdatePmsConfiguration -- updates an existing PMS configuration.
 func (h *PmsSetupHandler) UpdatePmsConfiguration(w http.ResponseWriter, r *http.Request) {
-	var req PmsConfigurationRequest
+	var req performance.PmsConfigurationRequestModel
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	if req.ID == "" {
+	if req.PmsConfigurationID == "" {
 		response.Error(w, http.StatusBadRequest, "Configuration ID is required")
 		return
 	}
 
-	if req.Key == "" || req.Value == "" {
-		response.Error(w, http.StatusBadRequest, "Key and value are required")
+	if req.Name == "" || req.Value == "" {
+		response.Error(w, http.StatusBadRequest, "Name and value are required")
 		return
 	}
 
-	result, err := h.svc.PmsSetup.UpdatePmsConfiguration(r.Context(), req)
+	if req.Type == "" {
+		response.Error(w, http.StatusBadRequest, "Configuration type is required")
+		return
+	}
+
+	result, err := h.svc.PmsSetup.UpdatePmsConfiguration(r.Context(), &req)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "UpdatePmsConfiguration").Msg("Failed to update PMS configuration")
 		response.Error(w, http.StatusInternalServerError, "Failed to update PMS configuration")
@@ -199,8 +188,8 @@ func (h *PmsSetupHandler) UpdatePmsConfiguration(w http.ResponseWriter, r *http.
 	response.OK(w, result)
 }
 
-// GetPmsConfigurationDetails handles GET /api/v1/setup/configurations/{configId}
-// Mirrors .NET PerformanceMgtController.GetPmsConfigurationDetails — returns a single configuration by ID.
+// GetPmsConfigurationDetails handles GET /api/v1/setup/pms-configurations/{configId}
+// Mirrors .NET PerformanceMgtController.GetPmsConfigurationDetails -- returns a single configuration by ID.
 func (h *PmsSetupHandler) GetPmsConfigurationDetails(w http.ResponseWriter, r *http.Request) {
 	configID := r.PathValue("configId")
 	if configID == "" {
@@ -218,8 +207,8 @@ func (h *PmsSetupHandler) GetPmsConfigurationDetails(w http.ResponseWriter, r *h
 	response.OK(w, result)
 }
 
-// ListAllPmsConfigurations handles GET /api/v1/setup/configurations
-// Mirrors .NET PerformanceMgtController.ListAllPmsConfigurations — returns all PMS configurations.
+// ListAllPmsConfigurations handles GET /api/v1/setup/pms-configurations
+// Mirrors .NET PerformanceMgtController.ListAllPmsConfigurations -- returns all PMS configurations.
 func (h *PmsSetupHandler) ListAllPmsConfigurations(w http.ResponseWriter, r *http.Request) {
 	result, err := h.svc.PmsSetup.ListAllPmsConfigurations(r.Context())
 	if err != nil {
