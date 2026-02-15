@@ -3,7 +3,10 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
+	"github.com/enterprise-pms/pms-api/internal/domain/enums"
+	"github.com/enterprise-pms/pms-api/internal/domain/performance"
 	"github.com/enterprise-pms/pms-api/internal/middleware"
 	"github.com/enterprise-pms/pms-api/internal/service"
 	"github.com/enterprise-pms/pms-api/pkg/response"
@@ -294,156 +297,156 @@ func (h *PmsEngineHandler) requiredQuery(w http.ResponseWriter, r *http.Request,
 // Mirrors .NET SaveDraftProject -- creates a draft project via
 // performanceManagementService.ProjectSetup(model, OperationTypes.Draft).
 func (h *PmsEngineHandler) SaveDraftProject(w http.ResponseWriter, r *http.Request) {
-	var req CreateProjectRequest
+	var req performance.ProjectRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.SetupProject(r.Context(), req); err != nil {
+	req.Status = enums.OperationDraft.String()
+	result, err := h.svc.Performance.ProjectSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "SaveDraftProject").Msg("Failed to save draft project")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Draft project saved successfully"})
+	response.OK(w, result)
 }
 
 // AddProject handles POST /api/v1/pms-engine/projects
 // Mirrors .NET AddProject -- creates and commits a project via
 // performanceManagementService.ProjectSetup(model, OperationTypes.Add).
 func (h *PmsEngineHandler) AddProject(w http.ResponseWriter, r *http.Request) {
-	var req CreateProjectRequest
+	var req performance.ProjectRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.SetupProject(r.Context(), req); err != nil {
+	req.Status = enums.OperationAdd.String()
+	result, err := h.svc.Performance.ProjectSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "AddProject").Msg("Failed to add project")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.Created(w, map[string]string{"message": "Project created successfully"})
+	response.Created(w, result)
 }
 
 // SubmitDraftProject handles POST /api/v1/pms-engine/projects/submit-draft
 // Mirrors .NET SubmitDraftProject -- commits a previously saved draft via
 // performanceManagementService.ProjectSetup(request, OperationTypes.CommitDraft).
 func (h *PmsEngineHandler) SubmitDraftProject(w http.ResponseWriter, r *http.Request) {
-	var req ProjectActionRequest
+	var req performance.ProjectRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.SetupProject(r.Context(), req); err != nil {
+	req.Status = enums.OperationCommitDraft.String()
+	result, err := h.svc.Performance.ProjectSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "SubmitDraftProject").Msg("Failed to submit draft project")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Draft project submitted successfully"})
+	response.OK(w, result)
 }
 
 // ApproveProject handles POST /api/v1/pms-engine/projects/approve
 // Mirrors .NET ApproveProject -- performanceManagementService.ProjectSetup(request, OperationTypes.Approve).
 func (h *PmsEngineHandler) ApproveProject(w http.ResponseWriter, r *http.Request) {
-	var req ProjectActionRequest
+	var req performance.ProjectRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.SetupProject(r.Context(), req); err != nil {
+	req.Status = enums.OperationApprove.String()
+	result, err := h.svc.Performance.ProjectSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "ApproveProject").Msg("Failed to approve project")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Project approved successfully"})
+	response.OK(w, result)
 }
 
 // RejectProject handles POST /api/v1/pms-engine/projects/reject
 // Mirrors .NET RejectProject -- performanceManagementService.ProjectSetup(request, OperationTypes.Reject).
 func (h *PmsEngineHandler) RejectProject(w http.ResponseWriter, r *http.Request) {
-	var req ProjectActionRequest
+	var req performance.ProjectRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.SetupProject(r.Context(), req); err != nil {
+	req.Status = enums.OperationReject.String()
+	result, err := h.svc.Performance.ProjectSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "RejectProject").Msg("Failed to reject project")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Project rejected successfully"})
+	response.OK(w, result)
 }
 
 // ReturnProject handles POST /api/v1/pms-engine/projects/return
 // Mirrors .NET ReturnProject -- performanceManagementService.ProjectSetup(request, OperationTypes.Return).
 func (h *PmsEngineHandler) ReturnProject(w http.ResponseWriter, r *http.Request) {
-	var req ProjectActionRequest
+	var req performance.ProjectRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.SetupProject(r.Context(), req); err != nil {
+	req.Status = enums.OperationReturn.String()
+	result, err := h.svc.Performance.ProjectSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "ReturnProject").Msg("Failed to return project")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Project returned successfully"})
+	response.OK(w, result)
 }
 
 // ReSubmitProject handles POST /api/v1/pms-engine/projects/resubmit
 // Mirrors .NET ReSubmitProject -- performanceManagementService.ProjectSetup(request, OperationTypes.ReSubmit).
 func (h *PmsEngineHandler) ReSubmitProject(w http.ResponseWriter, r *http.Request) {
-	var req ProjectActionRequest
+	var req performance.ProjectRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.SetupProject(r.Context(), req); err != nil {
+	req.Status = enums.OperationReSubmit.String()
+	result, err := h.svc.Performance.ProjectSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "ReSubmitProject").Msg("Failed to resubmit project")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Project resubmitted successfully"})
+	response.OK(w, result)
 }
 
 // UpdateProject handles PUT /api/v1/pms-engine/projects
 // Mirrors .NET UpdateProject -- performanceManagementService.ProjectSetup(request, OperationTypes.Update).
 func (h *PmsEngineHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
-	var req ProjectActionRequest
+	var req performance.ProjectRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.SetupProject(r.Context(), req); err != nil {
+	req.Status = enums.OperationUpdate.String()
+	result, err := h.svc.Performance.ProjectSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "UpdateProject").Msg("Failed to update project")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Project updated successfully"})
+	response.OK(w, result)
 }
 
 // CancelProject handles POST /api/v1/pms-engine/projects/cancel
 // Mirrors .NET CancelProject -- performanceManagementService.ProjectSetup(request, OperationTypes.Cancel).
 func (h *PmsEngineHandler) CancelProject(w http.ResponseWriter, r *http.Request) {
-	var req ProjectActionRequest
+	var req performance.ProjectRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.SetupProject(r.Context(), req); err != nil {
+	req.Status = enums.OperationCancel.String()
+	result, err := h.svc.Performance.ProjectSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "CancelProject").Msg("Failed to cancel project")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Project cancelled successfully"})
+	response.OK(w, result)
 }
 
 // GetProjects handles GET /api/v1/pms-engine/projects
@@ -452,13 +455,23 @@ func (h *PmsEngineHandler) CancelProject(w http.ResponseWriter, r *http.Request)
 func (h *PmsEngineHandler) GetProjects(w http.ResponseWriter, r *http.Request) {
 	staffID := r.URL.Query().Get("staffId")
 
-	result, err := h.svc.Performance.GetProjectsByStaff(r.Context(), staffID)
+	if staffID != "" {
+		result, err := h.svc.Performance.GetProjectsByManager(r.Context(), staffID)
+		if err != nil {
+			h.log.Error().Err(err).Str("action", "GetProjects").Str("staffId", staffID).Msg("Failed to get projects by manager")
+			response.Error(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		response.OK(w, result)
+		return
+	}
+
+	result, err := h.svc.Performance.GetProjects(r.Context())
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "GetProjects").Msg("Failed to get projects")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
 	response.OK(w, result)
 }
 
@@ -471,48 +484,46 @@ func (h *PmsEngineHandler) GetProjectDetails(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	result, err := h.svc.Performance.GetProjectsByStaff(r.Context(), projectID)
+	result, err := h.svc.Performance.GetProject(r.Context(), projectID)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "GetProjectDetails").Str("projectId", projectID).Msg("Failed to get project details")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
 	response.OK(w, result)
 }
 
 // AddProjectObjective handles POST /api/v1/pms-engine/projects/objectives
 // Mirrors .NET AddProjectObjective -- performanceManagementService.ProjectObjectiveSetup(model, OperationTypes.Add).
 func (h *PmsEngineHandler) AddProjectObjective(w http.ResponseWriter, r *http.Request) {
-	var req AddProjectObjectiveRequest
+	var req performance.ProjectObjectiveRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.AddProjectObjective(r.Context(), req); err != nil {
+	result, err := h.svc.Performance.ProjectObjectiveSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "AddProjectObjective").Msg("Failed to add project objective")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.Created(w, map[string]string{"message": "Project objective added successfully"})
+	response.Created(w, result)
 }
 
 // AddProjectMember handles POST /api/v1/pms-engine/projects/members
 // Mirrors .NET AddProjectMember -- performanceManagementService.ProjectMembersSetup(model, OperationTypes.Add).
 func (h *PmsEngineHandler) AddProjectMember(w http.ResponseWriter, r *http.Request) {
-	var req AddProjectMemberRequest
+	var req performance.ProjectMemberRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.AddProjectMember(r.Context(), req); err != nil {
+	req.Status = enums.OperationAdd.String()
+	result, err := h.svc.Performance.ProjectMembersSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "AddProjectMember").Msg("Failed to add project member")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.Created(w, map[string]string{"message": "Project member added successfully"})
+	response.Created(w, result)
 }
 
 // GetProjectMembers handles GET /api/v1/pms-engine/projects/{projectId}/members
@@ -524,13 +535,12 @@ func (h *PmsEngineHandler) GetProjectMembers(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	result, err := h.svc.Performance.GetProjectsByStaff(r.Context(), projectID)
+	result, err := h.svc.Performance.GetProjectMembers(r.Context(), projectID)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "GetProjectMembers").Str("projectId", projectID).Msg("Failed to get project members")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
 	response.OK(w, result)
 }
 
@@ -543,13 +553,12 @@ func (h *PmsEngineHandler) GetProjectObjectives(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	result, err := h.svc.Performance.GetProjectsByStaff(r.Context(), projectID)
+	result, err := h.svc.Performance.GetProjectObjectives(r.Context(), projectID)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "GetProjectObjectives").Str("projectId", projectID).Msg("Failed to get project objectives")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
 	response.OK(w, result)
 }
 
@@ -558,170 +567,179 @@ func (h *PmsEngineHandler) GetProjectObjectives(w http.ResponseWriter, r *http.R
 // SaveDraftCommittee handles POST /api/v1/pms-engine/committees/draft
 // Mirrors .NET SaveDraftCommittee -- performanceManagementService.CommitteeSetup(model, OperationTypes.Draft).
 func (h *PmsEngineHandler) SaveDraftCommittee(w http.ResponseWriter, r *http.Request) {
-	var req CreateCommitteeRequest
+	var req performance.CommitteeRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.SetupProject(r.Context(), req); err != nil {
+	req.Status = enums.OperationDraft.String()
+	result, err := h.svc.Performance.CommitteeSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "SaveDraftCommittee").Msg("Failed to save draft committee")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Draft committee saved successfully"})
+	response.OK(w, result)
 }
 
 // AddCommittee handles POST /api/v1/pms-engine/committees
 // Mirrors .NET AddCommittee -- performanceManagementService.CommitteeSetup(model, OperationTypes.Add).
 func (h *PmsEngineHandler) AddCommittee(w http.ResponseWriter, r *http.Request) {
-	var req CreateCommitteeRequest
+	var req performance.CommitteeRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.SetupProject(r.Context(), req); err != nil {
+	req.Status = enums.OperationAdd.String()
+	result, err := h.svc.Performance.CommitteeSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "AddCommittee").Msg("Failed to add committee")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.Created(w, map[string]string{"message": "Committee created successfully"})
+	response.Created(w, result)
 }
 
 // SubmitDraftCommittee handles POST /api/v1/pms-engine/committees/submit-draft
 // Mirrors .NET SubmitDraftCommittee -- performanceManagementService.CommitteeSetup(request, OperationTypes.CommitDraft).
 func (h *PmsEngineHandler) SubmitDraftCommittee(w http.ResponseWriter, r *http.Request) {
-	var req CommitteeActionRequest
+	var req performance.CommitteeRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.SetupProject(r.Context(), req); err != nil {
+	req.Status = enums.OperationCommitDraft.String()
+	result, err := h.svc.Performance.CommitteeSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "SubmitDraftCommittee").Msg("Failed to submit draft committee")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Draft committee submitted successfully"})
+	response.OK(w, result)
 }
 
 // ApproveCommittee handles POST /api/v1/pms-engine/committees/approve
 // Mirrors .NET ApproveCommittee -- performanceManagementService.CommitteeSetup(request, OperationTypes.Approve).
 func (h *PmsEngineHandler) ApproveCommittee(w http.ResponseWriter, r *http.Request) {
-	var req CommitteeActionRequest
+	var req performance.CommitteeRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.SetupProject(r.Context(), req); err != nil {
+	req.Status = enums.OperationApprove.String()
+	result, err := h.svc.Performance.CommitteeSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "ApproveCommittee").Msg("Failed to approve committee")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Committee approved successfully"})
+	response.OK(w, result)
 }
 
 // RejectCommittee handles POST /api/v1/pms-engine/committees/reject
 // Mirrors .NET RejectCommittee -- performanceManagementService.CommitteeSetup(request, OperationTypes.Reject).
 func (h *PmsEngineHandler) RejectCommittee(w http.ResponseWriter, r *http.Request) {
-	var req CommitteeActionRequest
+	var req performance.CommitteeRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.SetupProject(r.Context(), req); err != nil {
+	req.Status = enums.OperationReject.String()
+	result, err := h.svc.Performance.CommitteeSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "RejectCommittee").Msg("Failed to reject committee")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Committee rejected successfully"})
+	response.OK(w, result)
 }
 
 // ReturnCommittee handles POST /api/v1/pms-engine/committees/return
 // Mirrors .NET ReturnCommittee -- performanceManagementService.CommitteeSetup(request, OperationTypes.Return).
 func (h *PmsEngineHandler) ReturnCommittee(w http.ResponseWriter, r *http.Request) {
-	var req CommitteeActionRequest
+	var req performance.CommitteeRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.SetupProject(r.Context(), req); err != nil {
+	req.Status = enums.OperationReturn.String()
+	result, err := h.svc.Performance.CommitteeSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "ReturnCommittee").Msg("Failed to return committee")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Committee returned successfully"})
+	response.OK(w, result)
 }
 
 // ReSubmitCommittee handles POST /api/v1/pms-engine/committees/resubmit
 // Mirrors .NET ReSubmitCommittee -- performanceManagementService.CommitteeSetup(request, OperationTypes.ReSubmit).
 func (h *PmsEngineHandler) ReSubmitCommittee(w http.ResponseWriter, r *http.Request) {
-	var req CommitteeActionRequest
+	var req performance.CommitteeRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.SetupProject(r.Context(), req); err != nil {
+	req.Status = enums.OperationReSubmit.String()
+	result, err := h.svc.Performance.CommitteeSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "ReSubmitCommittee").Msg("Failed to resubmit committee")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Committee resubmitted successfully"})
+	response.OK(w, result)
 }
 
 // UpdateCommittee handles PUT /api/v1/pms-engine/committees
 // Mirrors .NET UpdateCommittee -- performanceManagementService.CommitteeSetup(request, OperationTypes.Update).
 func (h *PmsEngineHandler) UpdateCommittee(w http.ResponseWriter, r *http.Request) {
-	var req CommitteeActionRequest
+	var req performance.CommitteeRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.SetupProject(r.Context(), req); err != nil {
+	req.Status = enums.OperationUpdate.String()
+	result, err := h.svc.Performance.CommitteeSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "UpdateCommittee").Msg("Failed to update committee")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Committee updated successfully"})
+	response.OK(w, result)
 }
 
 // CancelCommittee handles POST /api/v1/pms-engine/committees/cancel
 // Mirrors .NET CancelCommittee -- performanceManagementService.CommitteeSetup(request, OperationTypes.Cancel).
 func (h *PmsEngineHandler) CancelCommittee(w http.ResponseWriter, r *http.Request) {
-	var req CommitteeActionRequest
+	var req performance.CommitteeRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.SetupProject(r.Context(), req); err != nil {
+	req.Status = enums.OperationCancel.String()
+	result, err := h.svc.Performance.CommitteeSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "CancelCommittee").Msg("Failed to cancel committee")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Committee cancelled successfully"})
+	response.OK(w, result)
 }
 
 // GetCommittees handles GET /api/v1/pms-engine/committees
 // Mirrors .NET GetCommittees / GetCommitteesForChairperson.
 // When ?chairpersonId= is provided it filters by chairperson.
 func (h *PmsEngineHandler) GetCommittees(w http.ResponseWriter, r *http.Request) {
-	// Optional filter by chairperson
-	_ = r.URL.Query().Get("chairpersonId")
+	chairpersonID := r.URL.Query().Get("chairpersonId")
 
-	result, err := h.svc.Performance.GetProjectsByStaff(r.Context(), "")
+	if chairpersonID != "" {
+		result, err := h.svc.Performance.GetCommitteesByChairperson(r.Context(), chairpersonID)
+		if err != nil {
+			h.log.Error().Err(err).Str("action", "GetCommittees").Str("chairpersonId", chairpersonID).Msg("Failed to get committees by chairperson")
+			response.Error(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		response.OK(w, result)
+		return
+	}
+
+	result, err := h.svc.Performance.GetCommittees(r.Context())
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "GetCommittees").Msg("Failed to get committees")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
 	response.OK(w, result)
 }
 
@@ -734,48 +752,46 @@ func (h *PmsEngineHandler) GetCommitteeDetails(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	result, err := h.svc.Performance.GetProjectsByStaff(r.Context(), committeeID)
+	result, err := h.svc.Performance.GetCommittee(r.Context(), committeeID)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "GetCommitteeDetails").Str("committeeId", committeeID).Msg("Failed to get committee details")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
 	response.OK(w, result)
 }
 
 // AddCommitteeMember handles POST /api/v1/pms-engine/committees/members
 // Mirrors .NET AddCommitteeMember -- performanceManagementService.CommitteeMembersSetup(model, OperationTypes.Add).
 func (h *PmsEngineHandler) AddCommitteeMember(w http.ResponseWriter, r *http.Request) {
-	var req AddCommitteeMemberRequest
+	var req performance.CommitteeMemberRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.AddProjectMember(r.Context(), req); err != nil {
+	req.Status = enums.OperationAdd.String()
+	result, err := h.svc.Performance.CommitteeMembersSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "AddCommitteeMember").Msg("Failed to add committee member")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.Created(w, map[string]string{"message": "Committee member added successfully"})
+	response.Created(w, result)
 }
 
 // AddCommitteeObjective handles POST /api/v1/pms-engine/committees/objectives
 // Mirrors .NET AddCommitteeObjective -- performanceManagementService.CommitteeObjectiveSetup(model, OperationTypes.Add).
 func (h *PmsEngineHandler) AddCommitteeObjective(w http.ResponseWriter, r *http.Request) {
-	var req AddCommitteeObjectiveRequest
+	var req performance.CommitteeObjectiveRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.AddProjectObjective(r.Context(), req); err != nil {
+	result, err := h.svc.Performance.CommitteeObjectiveSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "AddCommitteeObjective").Msg("Failed to add committee objective")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.Created(w, map[string]string{"message": "Committee objective added successfully"})
+	response.Created(w, result)
 }
 
 // =================== WORK PRODUCT HANDLERS =================================
@@ -783,188 +799,188 @@ func (h *PmsEngineHandler) AddCommitteeObjective(w http.ResponseWriter, r *http.
 // SaveDraftWorkProduct handles POST /api/v1/pms-engine/work-products/draft
 // Mirrors .NET SaveDraftWorkProduct -- performanceManagementService.WorkProductSetup(model, OperationTypes.Draft).
 func (h *PmsEngineHandler) SaveDraftWorkProduct(w http.ResponseWriter, r *http.Request) {
-	var req CreateWorkProductRequest
+	var req performance.WorkProductRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.AddWorkProduct(r.Context(), req); err != nil {
+	req.Status = enums.OperationDraft.String()
+	result, err := h.svc.Performance.WorkProductSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "SaveDraftWorkProduct").Msg("Failed to save draft work product")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Draft work product saved successfully"})
+	response.OK(w, result)
 }
 
 // AddWorkProduct handles POST /api/v1/pms-engine/work-products
 // Mirrors .NET AddWorkProduct -- performanceManagementService.WorkProductSetup(model, OperationTypes.Add).
 func (h *PmsEngineHandler) AddWorkProduct(w http.ResponseWriter, r *http.Request) {
-	var req CreateWorkProductRequest
+	var req performance.WorkProductRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.AddWorkProduct(r.Context(), req); err != nil {
+	req.Status = enums.OperationAdd.String()
+	result, err := h.svc.Performance.WorkProductSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "AddWorkProduct").Msg("Failed to add work product")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.Created(w, map[string]string{"message": "Work product created successfully"})
+	response.Created(w, result)
 }
 
 // SubmitDraftWorkProduct handles POST /api/v1/pms-engine/work-products/submit-draft
 // Mirrors .NET SubmitDraftWorkProduct -- performanceManagementService.WorkProductSetup(request, OperationTypes.CommitDraft).
 func (h *PmsEngineHandler) SubmitDraftWorkProduct(w http.ResponseWriter, r *http.Request) {
-	var req WorkProductActionRequest
+	var req performance.WorkProductRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.AddWorkProduct(r.Context(), req); err != nil {
+	req.Status = enums.OperationCommitDraft.String()
+	result, err := h.svc.Performance.WorkProductSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "SubmitDraftWorkProduct").Msg("Failed to submit draft work product")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Draft work product submitted successfully"})
+	response.OK(w, result)
 }
 
 // ApproveWorkProduct handles POST /api/v1/pms-engine/work-products/approve
 // Mirrors .NET ApproveWorkProduct -- performanceManagementService.WorkProductSetup(request, OperationTypes.Approve).
 func (h *PmsEngineHandler) ApproveWorkProduct(w http.ResponseWriter, r *http.Request) {
-	var req WorkProductActionRequest
+	var req performance.WorkProductRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.AddWorkProduct(r.Context(), req); err != nil {
+	req.Status = enums.OperationApprove.String()
+	result, err := h.svc.Performance.WorkProductSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "ApproveWorkProduct").Msg("Failed to approve work product")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Work product approved successfully"})
+	response.OK(w, result)
 }
 
 // RejectWorkProduct handles POST /api/v1/pms-engine/work-products/reject
 // Mirrors .NET RejectWorkProduct -- performanceManagementService.WorkProductSetup(request, OperationTypes.Reject).
 func (h *PmsEngineHandler) RejectWorkProduct(w http.ResponseWriter, r *http.Request) {
-	var req WorkProductActionRequest
+	var req performance.WorkProductRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.AddWorkProduct(r.Context(), req); err != nil {
+	req.Status = enums.OperationReject.String()
+	result, err := h.svc.Performance.WorkProductSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "RejectWorkProduct").Msg("Failed to reject work product")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Work product rejected successfully"})
+	response.OK(w, result)
 }
 
 // ReturnWorkProduct handles POST /api/v1/pms-engine/work-products/return
 // Mirrors .NET ReturnWorkProduct -- performanceManagementService.WorkProductSetup(request, OperationTypes.Return).
 func (h *PmsEngineHandler) ReturnWorkProduct(w http.ResponseWriter, r *http.Request) {
-	var req WorkProductActionRequest
+	var req performance.WorkProductRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.AddWorkProduct(r.Context(), req); err != nil {
+	req.Status = enums.OperationReturn.String()
+	result, err := h.svc.Performance.WorkProductSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "ReturnWorkProduct").Msg("Failed to return work product")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Work product returned successfully"})
+	response.OK(w, result)
 }
 
 // ReSubmitWorkProduct handles POST /api/v1/pms-engine/work-products/resubmit
 // Mirrors .NET ReSubmitWorkProduct -- performanceManagementService.WorkProductSetup(request, OperationTypes.ReSubmit).
 func (h *PmsEngineHandler) ReSubmitWorkProduct(w http.ResponseWriter, r *http.Request) {
-	var req WorkProductActionRequest
+	var req performance.WorkProductRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.AddWorkProduct(r.Context(), req); err != nil {
+	req.Status = enums.OperationReSubmit.String()
+	result, err := h.svc.Performance.WorkProductSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "ReSubmitWorkProduct").Msg("Failed to resubmit work product")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Work product resubmitted successfully"})
+	response.OK(w, result)
 }
 
 // UpdateWorkProduct handles PUT /api/v1/pms-engine/work-products
 // Mirrors .NET UpdateWorkProduct -- performanceManagementService.WorkProductSetup(request, OperationTypes.Update).
 func (h *PmsEngineHandler) UpdateWorkProduct(w http.ResponseWriter, r *http.Request) {
-	var req WorkProductActionRequest
+	var req performance.WorkProductRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.AddWorkProduct(r.Context(), req); err != nil {
+	req.Status = enums.OperationUpdate.String()
+	result, err := h.svc.Performance.WorkProductSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "UpdateWorkProduct").Msg("Failed to update work product")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Work product updated successfully"})
+	response.OK(w, result)
 }
 
 // CancelWorkProduct handles POST /api/v1/pms-engine/work-products/cancel
 // Mirrors .NET CancelWorkProduct -- performanceManagementService.WorkProductSetup(request, OperationTypes.Cancel).
 func (h *PmsEngineHandler) CancelWorkProduct(w http.ResponseWriter, r *http.Request) {
-	var req WorkProductActionRequest
+	var req performance.WorkProductRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.AddWorkProduct(r.Context(), req); err != nil {
+	req.Status = enums.OperationCancel.String()
+	result, err := h.svc.Performance.WorkProductSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "CancelWorkProduct").Msg("Failed to cancel work product")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Work product cancelled successfully"})
+	response.OK(w, result)
 }
 
 // PauseWorkProduct handles POST /api/v1/pms-engine/work-products/pause
 // Mirrors .NET PauseWorkProduct -- performanceManagementService.WorkProductSetup(request, OperationTypes.Pause).
 func (h *PmsEngineHandler) PauseWorkProduct(w http.ResponseWriter, r *http.Request) {
-	var req WorkProductActionRequest
+	var req performance.WorkProductRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.AddWorkProduct(r.Context(), req); err != nil {
+	req.Status = enums.OperationPause.String()
+	result, err := h.svc.Performance.WorkProductSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "PauseWorkProduct").Msg("Failed to pause work product")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Work product paused successfully"})
+	response.OK(w, result)
 }
 
 // ResumeWorkProduct handles POST /api/v1/pms-engine/work-products/resume
 // Mirrors .NET ResumeWorkProduct -- performanceManagementService.WorkProductSetup(request, OperationTypes.Resume).
 func (h *PmsEngineHandler) ResumeWorkProduct(w http.ResponseWriter, r *http.Request) {
-	var req WorkProductActionRequest
+	var req performance.WorkProductRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.AddWorkProduct(r.Context(), req); err != nil {
+	req.Status = enums.OperationResume.String()
+	result, err := h.svc.Performance.WorkProductSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "ResumeWorkProduct").Msg("Failed to resume work product")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Work product resumed successfully"})
+	response.OK(w, result)
 }
 
 // GetStaffWorkProducts handles GET /api/v1/pms-engine/work-products?staffId={id}
@@ -975,16 +991,25 @@ func (h *PmsEngineHandler) GetStaffWorkProducts(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	// Optional review period filter
-	_ = r.URL.Query().Get("reviewPeriodId")
+	reviewPeriodID := r.URL.Query().Get("reviewPeriodId")
 
-	result, err := h.svc.Performance.GetProjectsByStaff(r.Context(), staffID)
-	if err != nil {
-		h.log.Error().Err(err).Str("action", "GetStaffWorkProducts").Str("staffId", staffID).Msg("Failed to get staff work products")
-		response.Error(w, http.StatusBadRequest, err.Error())
+	if reviewPeriodID != "" {
+		result, err := h.svc.Performance.GetStaffWorkProducts(r.Context(), staffID, reviewPeriodID)
+		if err != nil {
+			h.log.Error().Err(err).Str("action", "GetStaffWorkProducts").Str("staffId", staffID).Msg("Failed to get staff work products")
+			response.Error(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		response.OK(w, result)
 		return
 	}
 
+	result, err := h.svc.Performance.GetAllStaffWorkProducts(r.Context(), staffID)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetStaffWorkProducts").Str("staffId", staffID).Msg("Failed to get all staff work products")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
 	response.OK(w, result)
 }
 
@@ -997,31 +1022,29 @@ func (h *PmsEngineHandler) GetWorkProductDetails(w http.ResponseWriter, r *http.
 		return
 	}
 
-	result, err := h.svc.Performance.GetProjectsByStaff(r.Context(), workProductID)
+	result, err := h.svc.Performance.GetWorkProduct(r.Context(), workProductID)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "GetWorkProductDetails").Str("workProductId", workProductID).Msg("Failed to get work product details")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
 	response.OK(w, result)
 }
 
 // AssignWorkProduct handles POST /api/v1/pms-engine/work-products/assign
 // Mirrors .NET ProjectAssignedWorkProductSetup / CommitteeAssignedWorkProductSetup.
 func (h *PmsEngineHandler) AssignWorkProduct(w http.ResponseWriter, r *http.Request) {
-	var req AssignWorkProductRequest
+	var req performance.ProjectAssignedWorkProductRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.AddWorkProduct(r.Context(), req); err != nil {
+	result, err := h.svc.Performance.ProjectAssignedWorkProductSetup(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "AssignWorkProduct").Msg("Failed to assign work product")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Work product assigned successfully"})
+	response.OK(w, result)
 }
 
 // GetAssignedWorkProducts handles GET /api/v1/pms-engine/work-products/assigned?staffId={id}
@@ -1032,141 +1055,132 @@ func (h *PmsEngineHandler) GetAssignedWorkProducts(w http.ResponseWriter, r *htt
 		return
 	}
 
-	// Optional review period filter
-	_ = r.URL.Query().Get("reviewPeriodId")
-
-	result, err := h.svc.Performance.GetProjectsByStaff(r.Context(), staffID)
+	result, err := h.svc.Performance.GetProjectsAssigned(r.Context(), staffID)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "GetAssignedWorkProducts").Str("staffId", staffID).Msg("Failed to get assigned work products")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
 	response.OK(w, result)
 }
 
 // EvaluateWorkProduct handles POST /api/v1/pms-engine/work-products/evaluate
 // Mirrors .NET AddWorkProductEvaluation -- performanceManagementService.WorkProductEvaluation(model, OperationTypes.Add).
 func (h *PmsEngineHandler) EvaluateWorkProduct(w http.ResponseWriter, r *http.Request) {
-	var req EvaluateWorkProductRequest
+	var req performance.WorkProductEvaluationRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.EvaluateWorkProduct(r.Context(), req); err != nil {
+	result, err := h.svc.Performance.WorkProductEvaluation(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "EvaluateWorkProduct").Msg("Failed to evaluate work product")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Work product evaluated successfully"})
+	response.OK(w, result)
 }
 
-// =================== WORK PRODUCT EVALUATION HANDLERS ======================
+// =================== PERIOD OBJECTIVE EVALUATION HANDLERS ==================
 
 // SaveDraftEvaluation handles POST /api/v1/pms-engine/evaluations/draft
 // Mirrors .NET AddObjectiveOutcomeScore with Draft operation.
 func (h *PmsEngineHandler) SaveDraftEvaluation(w http.ResponseWriter, r *http.Request) {
-	var req CreateEvaluationRequest
+	var req performance.PeriodObjectiveEvaluationRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.EvaluateWorkProduct(r.Context(), req); err != nil {
+	req.Status = enums.OperationDraft.String()
+	result, err := h.svc.Performance.ReviewPeriodObjectiveEvaluation(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "SaveDraftEvaluation").Msg("Failed to save draft evaluation")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Draft evaluation saved successfully"})
+	response.OK(w, result)
 }
 
 // AddEvaluation handles POST /api/v1/pms-engine/evaluations
 // Mirrors .NET AddObjectiveOutcomeScore -- performanceManagementService.ReviewPeriodObjectiveEvaluation(model, OperationTypes.Add).
 func (h *PmsEngineHandler) AddEvaluation(w http.ResponseWriter, r *http.Request) {
-	var req CreateEvaluationRequest
+	var req performance.PeriodObjectiveEvaluationRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.EvaluateWorkProduct(r.Context(), req); err != nil {
+	req.Status = enums.OperationAdd.String()
+	result, err := h.svc.Performance.ReviewPeriodObjectiveEvaluation(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "AddEvaluation").Msg("Failed to add evaluation")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.Created(w, map[string]string{"message": "Evaluation added successfully"})
+	response.Created(w, result)
 }
 
 // SubmitDraftEvaluation handles POST /api/v1/pms-engine/evaluations/submit-draft
 // Mirrors .NET commit draft evaluation flow.
 func (h *PmsEngineHandler) SubmitDraftEvaluation(w http.ResponseWriter, r *http.Request) {
-	var req EvaluationActionRequest
+	var req performance.PeriodObjectiveEvaluationRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.EvaluateWorkProduct(r.Context(), req); err != nil {
+	req.Status = enums.OperationCommitDraft.String()
+	result, err := h.svc.Performance.ReviewPeriodObjectiveEvaluation(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "SubmitDraftEvaluation").Msg("Failed to submit draft evaluation")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Draft evaluation submitted successfully"})
+	response.OK(w, result)
 }
 
 // ApproveEvaluation handles POST /api/v1/pms-engine/evaluations/approve
 // Mirrors .NET ApproveObjectiveOutcomeScore.
 func (h *PmsEngineHandler) ApproveEvaluation(w http.ResponseWriter, r *http.Request) {
-	var req EvaluationActionRequest
+	var req performance.PeriodObjectiveEvaluationRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.EvaluateWorkProduct(r.Context(), req); err != nil {
+	req.Status = enums.OperationApprove.String()
+	result, err := h.svc.Performance.ReviewPeriodObjectiveEvaluation(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "ApproveEvaluation").Msg("Failed to approve evaluation")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Evaluation approved successfully"})
+	response.OK(w, result)
 }
 
 // RejectEvaluation handles POST /api/v1/pms-engine/evaluations/reject
 // Mirrors .NET ReturnObjectiveOutcomeScore (return/reject evaluation).
 func (h *PmsEngineHandler) RejectEvaluation(w http.ResponseWriter, r *http.Request) {
-	var req EvaluationActionRequest
+	var req performance.PeriodObjectiveEvaluationRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.EvaluateWorkProduct(r.Context(), req); err != nil {
+	req.Status = enums.OperationReject.String()
+	result, err := h.svc.Performance.ReviewPeriodObjectiveEvaluation(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "RejectEvaluation").Msg("Failed to reject evaluation")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Evaluation rejected successfully"})
+	response.OK(w, result)
 }
 
-// GetStaffEvaluations handles GET /api/v1/pms-engine/evaluations?staffId={id}
+// GetStaffEvaluations handles GET /api/v1/pms-engine/evaluations?reviewPeriodId={id}
 // Mirrors .NET GetReviewPeriodObjectiveEvaluation.
 func (h *PmsEngineHandler) GetStaffEvaluations(w http.ResponseWriter, r *http.Request) {
-	staffID := h.requiredQuery(w, r, "staffId")
-	if staffID == "" {
+	reviewPeriodID := h.requiredQuery(w, r, "reviewPeriodId")
+	if reviewPeriodID == "" {
 		return
 	}
 
-	// Optional review period filter
-	_ = r.URL.Query().Get("reviewPeriodId")
-
-	result, err := h.svc.Performance.GetPerformanceScore(r.Context(), staffID)
+	result, err := h.svc.Performance.GetReviewPeriodObjectiveEvaluations(r.Context(), reviewPeriodID)
 	if err != nil {
-		h.log.Error().Err(err).Str("action", "GetStaffEvaluations").Str("staffId", staffID).Msg("Failed to get staff evaluations")
+		h.log.Error().Err(err).Str("action", "GetStaffEvaluations").Str("reviewPeriodId", reviewPeriodID).Msg("Failed to get staff evaluations")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
 	response.OK(w, result)
 }
 
@@ -1175,17 +1189,15 @@ func (h *PmsEngineHandler) GetStaffEvaluations(w http.ResponseWriter, r *http.Re
 // RequestFeedback handles POST /api/v1/pms-engine/feedback/request
 // Mirrors .NET feedback request initiation flow.
 func (h *PmsEngineHandler) RequestFeedback(w http.ResponseWriter, r *http.Request) {
-	var req RequestFeedbackRequest
+	var req performance.TreatFeedbackRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.RequestFeedback(r.Context(), req); err != nil {
+	if err := h.svc.Performance.TreatAssignedRequest(r.Context(), &req); err != nil {
 		h.log.Error().Err(err).Str("action", "RequestFeedback").Msg("Failed to request feedback")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
 	response.Created(w, map[string]string{"message": "Feedback requested successfully"})
 }
 
@@ -1197,30 +1209,27 @@ func (h *PmsEngineHandler) GetFeedbackRequests(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	result, err := h.svc.Performance.GetFeedbackRequests(r.Context(), staffID)
+	result, err := h.svc.Performance.GetRequests(r.Context(), staffID, nil, nil)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "GetFeedbackRequests").Str("staffId", staffID).Msg("Failed to get feedback requests")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
 	response.OK(w, result)
 }
 
 // ProcessFeedback handles POST /api/v1/pms-engine/feedback/process
 // Mirrors .NET TreatAssignedRequest / CloseRequest / ReassignRequest.
 func (h *PmsEngineHandler) ProcessFeedback(w http.ResponseWriter, r *http.Request) {
-	var req ProcessFeedbackRequest
+	var req performance.TreatFeedbackRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.RequestFeedback(r.Context(), req); err != nil {
+	if err := h.svc.Performance.TreatAssignedRequest(r.Context(), &req); err != nil {
 		h.log.Error().Err(err).Str("action", "ProcessFeedback").Msg("Failed to process feedback")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
 	response.OK(w, map[string]string{"message": "Feedback processed successfully"})
 }
 
@@ -1232,13 +1241,12 @@ func (h *PmsEngineHandler) GetPendingFeedbackActions(w http.ResponseWriter, r *h
 		return
 	}
 
-	result, err := h.svc.Performance.GetFeedbackRequests(r.Context(), staffID)
+	result, err := h.svc.Performance.GetPendingRequests(r.Context(), staffID)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "GetPendingFeedbackActions").Str("staffId", staffID).Msg("Failed to get pending feedback actions")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
 	response.OK(w, result)
 }
 
@@ -1252,16 +1260,12 @@ func (h *PmsEngineHandler) GetPerformanceScore(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// Optional review period filter
-	_ = r.URL.Query().Get("reviewPeriodId")
-
 	result, err := h.svc.Performance.GetPerformanceScore(r.Context(), staffID)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "GetPerformanceScore").Str("staffId", staffID).Msg("Failed to get performance score")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
 	response.OK(w, result)
 }
 
@@ -1280,11 +1284,10 @@ func (h *PmsEngineHandler) GetDashboardStats(w http.ResponseWriter, r *http.Requ
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
 	response.OK(w, result)
 }
 
-// GetPerformanceSummary handles GET /api/v1/pms-engine/scores/summary?reviewPeriodId={id}
+// GetPerformanceSummary handles GET /api/v1/pms-engine/scores/summary?reviewPeriodId={id}&referenceId={id}&organogramLevel={level}
 // Mirrors .NET GetPeriodScores / GetOrganogramPerformanceSummaryStatistics.
 func (h *PmsEngineHandler) GetPerformanceSummary(w http.ResponseWriter, r *http.Request) {
 	reviewPeriodID := h.requiredQuery(w, r, "reviewPeriodId")
@@ -1292,17 +1295,22 @@ func (h *PmsEngineHandler) GetPerformanceSummary(w http.ResponseWriter, r *http.
 		return
 	}
 
-	// Optional organogram-level filters
-	_ = r.URL.Query().Get("referenceId")
-	_ = r.URL.Query().Get("organogramLevel")
+	referenceID := r.URL.Query().Get("referenceId")
+	organogramLevelStr := r.URL.Query().Get("organogramLevel")
 
-	result, err := h.svc.Performance.GetPerformanceScore(r.Context(), reviewPeriodID)
+	level, err := strconv.Atoi(organogramLevelStr)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetPerformanceSummary").Str("organogramLevel", organogramLevelStr).Msg("Invalid organogram level")
+		response.Error(w, http.StatusBadRequest, "organogramLevel must be a valid integer")
+		return
+	}
+
+	result, err := h.svc.Performance.GetOrganogramPerformanceSummaryStatistics(r.Context(), referenceID, reviewPeriodID, enums.OrganogramLevel(level))
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "GetPerformanceSummary").Str("reviewPeriodId", reviewPeriodID).Msg("Failed to get performance summary")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
 	response.OK(w, result)
 }
 
@@ -1311,120 +1319,113 @@ func (h *PmsEngineHandler) GetPerformanceSummary(w http.ResponseWriter, r *http.
 // SaveDraftIndividualPlannedObjective handles POST /api/v1/pms-engine/individual-objectives/draft
 // Mirrors .NET individual objective draft creation.
 func (h *PmsEngineHandler) SaveDraftIndividualPlannedObjective(w http.ResponseWriter, r *http.Request) {
-	var req CreateIndividualObjectiveRequest
+	var req performance.AddReviewPeriodIndividualPlannedObjectiveRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.SetupProject(r.Context(), req); err != nil {
+	result, err := h.svc.ReviewPeriod.SaveDraftIndividualPlannedObjective(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "SaveDraftIndividualPlannedObjective").Msg("Failed to save draft individual objective")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Draft individual objective saved successfully"})
+	response.OK(w, result)
 }
 
 // AddIndividualPlannedObjective handles POST /api/v1/pms-engine/individual-objectives
 // Mirrors .NET individual objective creation with commit.
 func (h *PmsEngineHandler) AddIndividualPlannedObjective(w http.ResponseWriter, r *http.Request) {
-	var req CreateIndividualObjectiveRequest
+	var req performance.AddReviewPeriodIndividualPlannedObjectiveRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.SetupProject(r.Context(), req); err != nil {
+	result, err := h.svc.ReviewPeriod.AddIndividualPlannedObjective(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "AddIndividualPlannedObjective").Msg("Failed to add individual objective")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.Created(w, map[string]string{"message": "Individual objective created successfully"})
+	response.Created(w, result)
 }
 
 // SubmitDraftIndividualObjective handles POST /api/v1/pms-engine/individual-objectives/submit-draft
 // Mirrors .NET commit draft individual objective.
 func (h *PmsEngineHandler) SubmitDraftIndividualObjective(w http.ResponseWriter, r *http.Request) {
-	var req IndividualObjectiveActionRequest
+	var req performance.ReviewPeriodIndividualPlannedObjectiveRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.SetupProject(r.Context(), req); err != nil {
+	result, err := h.svc.ReviewPeriod.SubmitDraftIndividualPlannedObjective(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "SubmitDraftIndividualObjective").Msg("Failed to submit draft individual objective")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Draft individual objective submitted successfully"})
+	response.OK(w, result)
 }
 
 // ApproveIndividualObjective handles POST /api/v1/pms-engine/individual-objectives/approve
 // Mirrors .NET approve individual objective.
 func (h *PmsEngineHandler) ApproveIndividualObjective(w http.ResponseWriter, r *http.Request) {
-	var req IndividualObjectiveActionRequest
+	var req performance.ReviewPeriodIndividualPlannedObjectiveRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.SetupProject(r.Context(), req); err != nil {
+	result, err := h.svc.ReviewPeriod.ApproveIndividualPlannedObjective(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "ApproveIndividualObjective").Msg("Failed to approve individual objective")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Individual objective approved successfully"})
+	response.OK(w, result)
 }
 
 // RejectIndividualObjective handles POST /api/v1/pms-engine/individual-objectives/reject
 // Mirrors .NET reject individual objective.
 func (h *PmsEngineHandler) RejectIndividualObjective(w http.ResponseWriter, r *http.Request) {
-	var req IndividualObjectiveActionRequest
+	var req performance.ReviewPeriodIndividualPlannedObjectiveRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.SetupProject(r.Context(), req); err != nil {
+	result, err := h.svc.ReviewPeriod.RejectIndividualPlannedObjective(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "RejectIndividualObjective").Msg("Failed to reject individual objective")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Individual objective rejected successfully"})
+	response.OK(w, result)
 }
 
 // ReturnIndividualObjective handles POST /api/v1/pms-engine/individual-objectives/return
 // Mirrors .NET return individual objective.
 func (h *PmsEngineHandler) ReturnIndividualObjective(w http.ResponseWriter, r *http.Request) {
-	var req IndividualObjectiveActionRequest
+	var req performance.ReviewPeriodIndividualPlannedObjectiveRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.SetupProject(r.Context(), req); err != nil {
+	result, err := h.svc.ReviewPeriod.ReturnIndividualPlannedObjective(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "ReturnIndividualObjective").Msg("Failed to return individual objective")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Individual objective returned successfully"})
+	response.OK(w, result)
 }
 
 // CancelIndividualObjective handles POST /api/v1/pms-engine/individual-objectives/cancel
 // Mirrors .NET cancel individual objective.
 func (h *PmsEngineHandler) CancelIndividualObjective(w http.ResponseWriter, r *http.Request) {
-	var req IndividualObjectiveActionRequest
+	var req performance.ReviewPeriodIndividualPlannedObjectiveRequestModel
 	if !h.decodeJSON(w, r, &req) {
 		return
 	}
-
-	if err := h.svc.Performance.SetupProject(r.Context(), req); err != nil {
+	result, err := h.svc.ReviewPeriod.CancelIndividualPlannedObjective(r.Context(), &req)
+	if err != nil {
 		h.log.Error().Err(err).Str("action", "CancelIndividualObjective").Msg("Failed to cancel individual objective")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	response.OK(w, map[string]string{"message": "Individual objective cancelled successfully"})
+	response.OK(w, result)
 }
 
 // GetStaffIndividualObjectives handles GET /api/v1/pms-engine/individual-objectives?staffId={id}&reviewPeriodId={id}
@@ -1435,16 +1436,17 @@ func (h *PmsEngineHandler) GetStaffIndividualObjectives(w http.ResponseWriter, r
 		return
 	}
 
-	// Optional review period filter
-	_ = r.URL.Query().Get("reviewPeriodId")
+	reviewPeriodID := h.requiredQuery(w, r, "reviewPeriodId")
+	if reviewPeriodID == "" {
+		return
+	}
 
-	result, err := h.svc.Performance.GetProjectsByStaff(r.Context(), staffID)
+	result, err := h.svc.ReviewPeriod.GetStaffIndividualPlannedObjectives(r.Context(), staffID, reviewPeriodID)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "GetStaffIndividualObjectives").Str("staffId", staffID).Msg("Failed to get staff individual objectives")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
 	response.OK(w, result)
 }
 
@@ -1506,7 +1508,7 @@ func (h *PmsEngineHandler) RegisterRoutes(mux *http.ServeMux, mw *middleware.Sta
 	mux.Handle("GET "+base+"/work-products/assigned", jwt(h.GetAssignedWorkProducts))
 	mux.Handle("POST "+base+"/work-products/evaluate", jwt(h.EvaluateWorkProduct))
 
-	// --- Work Product Evaluation ---
+	// --- Period Objective Evaluation ---
 	mux.Handle("POST "+base+"/evaluations/draft", jwt(h.SaveDraftEvaluation))
 	mux.Handle("POST "+base+"/evaluations", jwt(h.AddEvaluation))
 	mux.Handle("POST "+base+"/evaluations/submit-draft", jwt(h.SubmitDraftEvaluation))
