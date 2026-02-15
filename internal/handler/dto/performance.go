@@ -680,6 +680,28 @@ type AdhocStaffResponseVm struct {
 }
 
 // ===========================================================================
+// Outcome Evaluation Request VMs
+// ===========================================================================
+
+// DepartmentOutcomeRequestVm is the request for submitting a department outcome evaluation.
+type DepartmentOutcomeRequestVm struct {
+	DepartmentID          int     `json:"department_id"`
+	OverallOutcomeScored  float64 `json:"overall_outcome_scored"`
+	AllocatedOutcome      float64 `json:"allocated_outcome"`
+	OutcomeScore          float64 `json:"outcome_score"`
+	EnterpriseObjectiveID string  `json:"enterprise_objective_id"`
+	ReviewPeriodID        string  `json:"review_period_id"`
+}
+
+// EnterpriseOutcomeRequestVm is the request for submitting an enterprise outcome evaluation.
+type EnterpriseOutcomeRequestVm struct {
+	TotalOutcomeScore     float64 `json:"total_outcome_score"`
+	OutcomeScore          float64 `json:"outcome_score"`
+	EnterpriseObjectiveID string  `json:"enterprise_objective_id"`
+	ReviewPeriodID        string  `json:"review_period_id"`
+}
+
+// ===========================================================================
 // View Model DTOs (Vm suffix – handler-layer representations)
 // ===========================================================================
 
@@ -900,6 +922,173 @@ type CommitteeAssignedWorkProductVm struct {
 	EndDate                        time.Time `json:"end_date"`
 	Deliverables                   string    `json:"deliverables"`
 	RecordStatus                   string    `json:"record_status"`
+}
+
+// ---------------------------------------------------------------------------
+// Custom Work Product View Models (rich frontend representations)
+// ---------------------------------------------------------------------------
+
+// CustomWorkProductVm represents an enriched work product view with objective context and tasks.
+type CustomWorkProductVm struct {
+	WorkProductID           string                      `json:"work_product_id"`
+	PlannedObjectiveID      string                      `json:"planned_objective_id"`
+	ObjectiveID             string                      `json:"objective_id"`
+	StaffID                 string                      `json:"staff_id"`
+	CreatedBy               string                      `json:"created_by"`
+	WorkProductDefinitionID string                      `json:"work_product_definition_id"`
+	Name                    string                      `json:"name"`
+	Description             string                      `json:"description"`
+	RejectionReason         string                      `json:"rejection_reason,omitempty"`
+	MaxPoint                float64                     `json:"max_point"`
+	WorkProductType         string                      `json:"work_product_type"`
+	IsSelfCreated           bool                        `json:"is_self_created"`
+	StartDate               time.Time                   `json:"start_date"`
+	EndDate                 time.Time                   `json:"end_date"`
+	Deliverables            string                      `json:"deliverables"`
+	FinalScore              float64                     `json:"final_score"`
+	NoReturned              int                         `json:"no_returned"`
+	CompletionDate          *time.Time                  `json:"completion_date,omitempty"`
+	RecordStatus            string                      `json:"record_status"`
+	WorkProductStatus       string                      `json:"work_product_status"`
+	IsReEvaluated           bool                        `json:"is_re_evaluated"`
+	ReEvaluationReInitiated bool                        `json:"re_evaluation_re_initiated"`
+	CreatedAt               *time.Time                  `json:"created_at,omitempty"`
+	Kpi                     string                      `json:"kpi,omitempty"`
+	Target                  string                      `json:"target,omitempty"`
+	EnterpriseObjective     *EnterpriseObjectiveDataVm  `json:"enterprise_objective,omitempty"`
+	WorkProductTasks        []CustomWorkProductTaskVm   `json:"work_product_tasks,omitempty"`
+}
+
+// CustomWorkProductForProjectVm represents a work product within a project context.
+type CustomWorkProductForProjectVm struct {
+	WorkProductID           string                    `json:"work_product_id"`
+	PlannedObjectiveID      string                    `json:"planned_objective_id"`
+	ObjectiveID             string                    `json:"objective_id"`
+	StaffID                 string                    `json:"staff_id"`
+	CreatedBy               string                    `json:"created_by"`
+	WorkProductDefinitionID string                    `json:"work_product_definition_id"`
+	Name                    string                    `json:"name"`
+	Description             string                    `json:"description"`
+	RejectionReason         string                    `json:"rejection_reason,omitempty"`
+	FinalScore              float64                   `json:"final_score"`
+	MaxPoint                float64                   `json:"max_point"`
+	WorkProductType         string                    `json:"work_product_type"`
+	IsSelfCreated           bool                      `json:"is_self_created"`
+	StartDate               time.Time                 `json:"start_date"`
+	EndDate                 time.Time                 `json:"end_date"`
+	Deliverables            string                    `json:"deliverables"`
+	NoReturned              int                       `json:"no_returned"`
+	CompletionDate          *time.Time                `json:"completion_date,omitempty"`
+	RecordStatus            string                    `json:"record_status"`
+	WorkProductStatus       string                    `json:"work_product_status"`
+	WorkProductTasks        []CustomWorkProductTaskVm `json:"work_product_tasks,omitempty"`
+}
+
+// CustomWorkProductTaskVm represents a task within a custom work product view.
+type CustomWorkProductTaskVm struct {
+	WorkProductTaskID string     `json:"work_product_task_id"`
+	Name              string     `json:"name"`
+	Description       string     `json:"description"`
+	WorkProductID     string     `json:"work_product_id"`
+	EndDate           time.Time  `json:"end_date"`
+	StartDate         time.Time  `json:"start_date"`
+	CompletionDate    *time.Time `json:"completion_date,omitempty"`
+	RecordStatus      string     `json:"record_status"`
+}
+
+// EnterpriseObjectiveDataVm holds enterprise objective data embedded in work product views.
+type EnterpriseObjectiveDataVm struct {
+	EnterpriseObjectiveID          string     `json:"enterprise_objective_id"`
+	PeriodObjectiveID              string     `json:"period_objective_id"`
+	Name                           string     `json:"name"`
+	Description                    string     `json:"description"`
+	Kpi                            string     `json:"kpi"`
+	Target                         string     `json:"target"`
+	EnterpriseObjectivesCategoryID string     `json:"enterprise_objectives_category_id"`
+	StrategyID                     string     `json:"strategy_id"`
+	HasEvaluation                  bool       `json:"has_evaluation"`
+	OutcomeScore                   float64    `json:"outcome_score"`
+	TotalOutcomeScore              float64    `json:"total_outcome_score"`
+	Evaluator                      string     `json:"evaluator"`
+	EvaluationDate                 *time.Time `json:"evaluation_date,omitempty"`
+}
+
+// CustomProjectWorkProduct represents a work product within a project/committee.
+type CustomProjectWorkProduct struct {
+	WorkProductID    string                    `json:"work_product_id"`
+	Name             string                    `json:"name"`
+	Description      string                    `json:"description"`
+	WorkProductType  string                    `json:"work_product_type"`
+	FinalScore       float64                   `json:"final_score"`
+	MaxPoint         float64                   `json:"max_point"`
+	StaffID          string                    `json:"staff_id"`
+	StartDate        time.Time                 `json:"start_date"`
+	EndDate          time.Time                 `json:"end_date"`
+	CompletionDate   *time.Time                `json:"completion_date,omitempty"`
+	RecordStatus     string                    `json:"record_status"`
+	WorkProductTasks []CustomWorkProductTaskVm `json:"work_product_tasks,omitempty"`
+}
+
+// ProjectWorkProductVm represents a combined project/committee work product view.
+type ProjectWorkProductVm struct {
+	Name                           string                    `json:"name"`
+	ProjectAssignedWorkProductID   string                    `json:"project_assigned_work_product_id,omitempty"`
+	CommitteeAssignedWorkProductID string                    `json:"committee_assigned_work_product_id,omitempty"`
+	Description                    string                    `json:"description"`
+	WorkProductDefinitionID        string                    `json:"work_product_definition_id"`
+	WorkProductID                  string                    `json:"work_product_id,omitempty"`
+	WorkProductType                string                    `json:"work_product_type"`
+	ProjectWorkProductID           string                    `json:"project_work_product_id,omitempty"`
+	WorkProduct                    *CustomProjectWorkProduct `json:"work_product,omitempty"`
+	ProjectID                      string                    `json:"project_id,omitempty"`
+	ProjectManager                 string                    `json:"project_manager,omitempty"`
+	CommitteeID                    string                    `json:"committee_id,omitempty"`
+	Chairperson                    string                    `json:"chairperson,omitempty"`
+	StartDate                      time.Time                 `json:"start_date"`
+	EndDate                        time.Time                 `json:"end_date"`
+	Deliverables                   string                    `json:"deliverables"`
+	RejectionReason                string                    `json:"rejection_reason,omitempty"`
+	ReferenceNo                    string                    `json:"reference_no,omitempty"`
+	ObjectiveID                    string                    `json:"objective_id,omitempty"`
+	ObjectiveLevel                 string                    `json:"objective_level,omitempty"`
+	AssignedEvaluator              string                    `json:"assigned_evaluator,omitempty"`
+	RecordStatus                   string                    `json:"record_status"`
+}
+
+// ObjectiveWorkProductVm represents an objective-work product association for display.
+type ObjectiveWorkProductVm struct {
+	ReviewPeriodID          string                     `json:"review_period_id"`
+	ReviewPeriod            string                     `json:"review_period"`
+	ObjectiveLevel          string                     `json:"objective_level"`
+	ObjectiveID             string                     `json:"objective_id"`
+	Objective               string                     `json:"objective"`
+	WorkProductDefinitionID string                     `json:"work_product_definition_id"`
+	WorkProductName         string                     `json:"work_product_name"`
+	Deliverables            string                     `json:"deliverables"`
+	StaffID                 string                     `json:"staff_id"`
+	Kpi                     string                     `json:"kpi,omitempty"`
+	Target                  string                     `json:"target,omitempty"`
+	EnterpriseObjective     *EnterpriseObjectiveDataVm `json:"enterprise_objective,omitempty"`
+}
+
+// CustomProjectMemberVm represents a project member with objective context.
+type CustomProjectMemberVm struct {
+	ProjectMemberID    string `json:"project_member_id"`
+	StaffID            string `json:"staff_id"`
+	ProjectID          string `json:"project_id"`
+	StaffName          string `json:"staff_name"`
+	ObjectiveName      string `json:"objective_name"`
+	PlannedObjectiveID string `json:"planned_objective_id"`
+}
+
+// CustomCommitteeMemberVm represents a committee member with objective context.
+type CustomCommitteeMemberVm struct {
+	CommitteeMemberID  string `json:"committee_member_id"`
+	StaffID            string `json:"staff_id"`
+	CommitteeID        string `json:"committee_id"`
+	StaffName          string `json:"staff_name"`
+	ObjectiveName      string `json:"objective_name"`
+	PlannedObjectiveID string `json:"planned_objective_id"`
 }
 
 // ---------------------------------------------------------------------------

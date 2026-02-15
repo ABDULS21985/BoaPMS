@@ -945,14 +945,6 @@ func (s *erpEmployeeService) mapToStaffJobRole(m map[string]interface{}) *compet
 	return sjr
 }
 
-// min returns the smaller of two integers.
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 func init() {
 	// Compile-time interface compliance check.
 	var _ ErpEmployeeService = (*erpEmployeeService)(nil)

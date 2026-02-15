@@ -43,6 +43,57 @@ type StrategicThemeVm struct {
 }
 
 // ---------------------------------------------------------------------------
+// Strategy & Theme Response VMs
+// ---------------------------------------------------------------------------
+
+// StrategyData holds strategy data for responses.
+type StrategyData struct {
+	StrategyID       string    `json:"strategy_id"`
+	Name             string    `json:"name"`
+	Description      string    `json:"description"`
+	SmdReferenceCode string    `json:"smd_reference_code"`
+	BankYearID       string    `json:"bank_year_id"`
+	BankYearName     string    `json:"bank_year_name"`
+	StartDate        time.Time `json:"start_date"`
+	EndDate          time.Time `json:"end_date"`
+	RecordStatus     string    `json:"record_status"`
+}
+
+// StrategyResponseVm wraps a single strategy in a standard response.
+type StrategyResponseVm struct {
+	BaseAPIResponse
+	Strategy StrategyData `json:"strategy"`
+}
+
+// StrategyListResponseVm wraps a list of strategies.
+type StrategyListResponseVm struct {
+	GenericListResponseVm
+	Strategies []StrategyData `json:"strategies"`
+}
+
+// StrategicThemeData holds strategic theme data for responses.
+type StrategicThemeData struct {
+	StrategicThemeID string `json:"strategic_theme_id"`
+	Name             string `json:"name"`
+	Description      string `json:"description"`
+	StrategyID       string `json:"strategy_id"`
+	StrategyName     string `json:"strategy_name"`
+	RecordStatus     string `json:"record_status"`
+}
+
+// StrategicThemeResponseVm wraps a single strategic theme in a standard response.
+type StrategicThemeResponseVm struct {
+	BaseAPIResponse
+	Theme StrategicThemeData `json:"theme"`
+}
+
+// StrategicThemeListResponseVm wraps a list of strategic themes.
+type StrategicThemeListResponseVm struct {
+	GenericListResponseVm
+	Themes []StrategicThemeData `json:"themes"`
+}
+
+// ---------------------------------------------------------------------------
 // Enterprise Objective VMs
 // ---------------------------------------------------------------------------
 
@@ -399,6 +450,206 @@ type PmsConfigurationResponseVm struct {
 type ListPmsConfigurationResponseVm struct {
 	GenericListResponseVm
 	Configurations []PmsConfigurationData `json:"configurations"`
+}
+
+// ---------------------------------------------------------------------------
+// Enterprise Objective Response VMs
+// ---------------------------------------------------------------------------
+
+// EnterpriseObjectiveResponseData holds enterprise objective data for responses.
+type EnterpriseObjectiveResponseData struct {
+	EnterpriseObjectiveID          string `json:"enterprise_objective_id"`
+	Name                           string `json:"name"`
+	Description                    string `json:"description"`
+	Kpi                            string `json:"kpi"`
+	Target                         string `json:"target"`
+	SmdReferenceCode               string `json:"smd_reference_code"`
+	EnterpriseObjectivesCategoryID string `json:"enterprise_objectives_category_id"`
+	CategoryName                   string `json:"category_name"`
+	StrategyID                     string `json:"strategy_id"`
+	StrategyName                   string `json:"strategy_name"`
+	StrategicThemeID               string `json:"strategic_theme_id"`
+	Type                           string `json:"type"`
+	RecordStatus                   string `json:"record_status"`
+}
+
+// EnterpriseObjectiveResponseVm wraps a single enterprise objective.
+type EnterpriseObjectiveResponseVm struct {
+	BaseAPIResponse
+	Objective EnterpriseObjectiveResponseData `json:"objective"`
+}
+
+// EnterpriseObjectiveListResponseVm wraps a list of enterprise objectives.
+type EnterpriseObjectiveListResponseVm struct {
+	GenericListResponseVm
+	Objectives []EnterpriseObjectiveResponseData `json:"objectives"`
+}
+
+// DepartmentObjectiveResponseData holds department objective data for responses.
+type DepartmentObjectiveResponseData struct {
+	DepartmentObjectiveID string `json:"department_objective_id"`
+	Name                  string `json:"name"`
+	Description           string `json:"description"`
+	Kpi                   string `json:"kpi"`
+	Target                string `json:"target"`
+	SmdReferenceCode      string `json:"smd_reference_code"`
+	DepartmentID          string `json:"department_id"`
+	DepartmentName        string `json:"department_name"`
+	EnterpriseObjectiveID string `json:"enterprise_objective_id"`
+	RecordStatus          string `json:"record_status"`
+}
+
+// DepartmentObjectiveResponseVm wraps a single department objective.
+type DepartmentObjectiveResponseVm struct {
+	BaseAPIResponse
+	Objective DepartmentObjectiveResponseData `json:"objective"`
+}
+
+// DepartmentObjectiveListResponseVm wraps a list of department objectives.
+type DepartmentObjectiveListResponseVm struct {
+	GenericListResponseVm
+	Objectives []DepartmentObjectiveResponseData `json:"objectives"`
+}
+
+// DivisionObjectiveResponseData holds division objective data for responses.
+type DivisionObjectiveResponseData struct {
+	DivisionObjectiveID   string `json:"division_objective_id"`
+	Name                  string `json:"name"`
+	Description           string `json:"description"`
+	Kpi                   string `json:"kpi"`
+	Target                string `json:"target"`
+	SmdReferenceCode      string `json:"smd_reference_code"`
+	DivisionID            string `json:"division_id"`
+	DivisionName          string `json:"division_name"`
+	DepartmentObjectiveID string `json:"department_objective_id"`
+	RecordStatus          string `json:"record_status"`
+}
+
+// DivisionObjectiveResponseVm wraps a single division objective.
+type DivisionObjectiveResponseVm struct {
+	BaseAPIResponse
+	Objective DivisionObjectiveResponseData `json:"objective"`
+}
+
+// DivisionObjectiveListResponseVm wraps a list of division objectives.
+type DivisionObjectiveListResponseVm struct {
+	GenericListResponseVm
+	Objectives []DivisionObjectiveResponseData `json:"objectives"`
+}
+
+// OfficeObjectiveResponseData holds office objective data for responses.
+type OfficeObjectiveResponseData struct {
+	OfficeObjectiveID   string `json:"office_objective_id"`
+	Name                string `json:"name"`
+	Description         string `json:"description"`
+	Kpi                 string `json:"kpi"`
+	Target              string `json:"target"`
+	SmdReferenceCode    string `json:"smd_reference_code"`
+	OfficeID            string `json:"office_id"`
+	OfficeName          string `json:"office_name"`
+	DivisionObjectiveID string `json:"division_objective_id"`
+	JobGradeGroupID     string `json:"job_grade_group_id"`
+	RecordStatus        string `json:"record_status"`
+}
+
+// OfficeObjectiveResponseVm wraps a single office objective.
+type OfficeObjectiveResponseVm struct {
+	BaseAPIResponse
+	Objective OfficeObjectiveResponseData `json:"objective"`
+}
+
+// OfficeObjectiveListResponseVm wraps a list of office objectives.
+type OfficeObjectiveListResponseVm struct {
+	GenericListResponseVm
+	Objectives []OfficeObjectiveResponseData `json:"objectives"`
+}
+
+// ---------------------------------------------------------------------------
+// Objective Category Response VMs
+// ---------------------------------------------------------------------------
+
+// ObjectiveCategoryData holds objective category data for responses.
+type ObjectiveCategoryData struct {
+	ObjectiveCategoryID string `json:"objective_category_id"`
+	Name                string `json:"name"`
+	Description         string `json:"description"`
+	RecordStatus        string `json:"record_status"`
+}
+
+// ObjectiveCategoryResponseVm wraps a single objective category.
+type ObjectiveCategoryResponseVm struct {
+	BaseAPIResponse
+	Category ObjectiveCategoryData `json:"category"`
+}
+
+// ObjectiveCategoryListResponseVm wraps a list of objective categories.
+type ObjectiveCategoryListResponseVm struct {
+	GenericListResponseVm
+	Categories []ObjectiveCategoryData `json:"categories"`
+}
+
+// ---------------------------------------------------------------------------
+// Evaluation Option Response VMs
+// ---------------------------------------------------------------------------
+
+// EvaluationOptionResponseVm wraps a single evaluation option.
+type EvaluationOptionResponseVm struct {
+	BaseAPIResponse
+	Option EvaluationOptionVm `json:"option"`
+}
+
+// EvaluationOptionListResponseVm wraps a list of evaluation options.
+type EvaluationOptionListResponseVm struct {
+	GenericListResponseVm
+	Options []EvaluationOptionVm `json:"options"`
+}
+
+// ---------------------------------------------------------------------------
+// Feedback Questionnaire Response VMs
+// ---------------------------------------------------------------------------
+
+// FeedbackQuestionaireResponseVm wraps a single feedback questionnaire.
+type FeedbackQuestionaireResponseVm struct {
+	BaseAPIResponse
+	Questionnaire FeedbackQuestionaireVm `json:"questionnaire"`
+}
+
+// FeedbackQuestionaireListResponseVm wraps a list of feedback questionnaires.
+type FeedbackQuestionaireListResponseVm struct {
+	GenericListResponseVm
+	Questionnaires []FeedbackQuestionaireVm `json:"questionnaires"`
+}
+
+// ---------------------------------------------------------------------------
+// PMS Competency Response VMs
+// ---------------------------------------------------------------------------
+
+// PmsCompetencyResponseVm wraps a single PMS competency.
+type PmsCompetencyResponseVm struct {
+	BaseAPIResponse
+	Competency PmsCompetencyRequestVm `json:"competency"`
+}
+
+// PmsCompetencyListResponseVm wraps a list of PMS competencies.
+type PmsCompetencyListResponseVm struct {
+	GenericListResponseVm
+	Competencies []PmsCompetencyRequestVm `json:"competencies"`
+}
+
+// ---------------------------------------------------------------------------
+// Work Product Definition Response VMs
+// ---------------------------------------------------------------------------
+
+// WorkProductDefinitionResponseVm wraps a single work product definition.
+type WorkProductDefinitionResponseVm struct {
+	BaseAPIResponse
+	Definition WorkProductDefinitionVm `json:"definition"`
+}
+
+// WorkProductDefinitionListResponseVm wraps a list of work product definitions.
+type WorkProductDefinitionListResponseVm struct {
+	GenericListResponseVm
+	Definitions []WorkProductDefinitionVm `json:"definitions"`
 }
 
 // ---------------------------------------------------------------------------

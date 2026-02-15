@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/enterprise-pms/pms-api/internal/domain/sas"
 	"github.com/jmoiron/sqlx"
@@ -60,6 +61,33 @@ func (r *SasRepository) GetStaffAttendanceByDepartment(ctx context.Context, dept
 		deptID)
 	if err != nil {
 		return nil, fmt.Errorf("sasRepo.GetStaffAttendanceByDepartment: %w", err)
+	}
+	return results, nil
+}
+
+// GetStaffLeaveDaysBetween retrieves approved leave (absence) records for an employee
+// between two dates, excluding the "present" attendance status.
+// Mirrors the .NET query on StaffLunchAttendances:
+//
+//	WHERE EmployeeNumber = staffID
+//	  AND ApprovedDate IS NOT NULL
+//	  AND ApprovedDate >= startDate AND ApprovedDate <= endDate
+//	  AND AttendanceStatus != presentAbsenceID
+func (r *SasRepository) GetStaffLeaveDaysBetween(ctx context.Context, employeeNumber string, startDate, endDate time.Time, presentAbsenceID int) ([]sas.StaffLunchAttendance, error) {
+	if r.db == nil {
+		return nil, fmt.Errorf("sasRepo.GetStaffLeaveDaysBetween: SAS database not configured")
+	}
+	var results []sas.StaffLunchAttendance
+	err := r.db.SelectContext(ctx, &results,
+		`SELECT * FROM dbo.XXCBN_SAS_StaffLunchAttendance
+		 WHERE EmployeeNumber = @p1
+		   AND ApprovedDate IS NOT NULL
+		   AND ApprovedDate >= @p2
+		   AND ApprovedDate <= @p3
+		   AND AttendanceStatus != @p4`,
+		employeeNumber, startDate, endDate, presentAbsenceID)
+	if err != nil {
+		return nil, fmt.Errorf("sasRepo.GetStaffLeaveDaysBetween: %w", err)
 	}
 	return results, nil
 }

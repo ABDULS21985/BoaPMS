@@ -2,19 +2,25 @@ package service
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
+	"time"
 
 	"github.com/enterprise-pms/pms-api/internal/config"
 	"github.com/enterprise-pms/pms-api/internal/domain/auth"
 	"github.com/enterprise-pms/pms-api/internal/domain/identity"
 	"github.com/enterprise-pms/pms-api/internal/repository"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog"
+	"gorm.io/gorm"
 )
 
 // authService orchestrates authentication using AD or local credentials,
 // JWT token issuance, and dynamic role assignment.
 // This mirrors the .NET AuthController's login flow.
 type authService struct {
+	db      *gorm.DB
 	users   *UserManagementService
 	jwt     *JWTService
 	ad      ActiveDirectoryService
@@ -31,6 +37,7 @@ func newAuthService(repos *repository.Container, cfg *config.Config, log zerolog
 	gsSvc := newGlobalSettingService(repos, log)
 
 	return &authService{
+		db:     repos.GormDB,
 		users:  users,
 		jwt:    jwtSvc,
 		ad:     adSvc,
@@ -153,6 +160,11 @@ func (s *authService) AuthenticateAD(ctx context.Context, username, password str
 		return nil, fmt.Errorf("generating refresh token: %w", err)
 	}
 
+	// Persist the hashed refresh token in the database for validation and revocation.
+	if err := s.storeRefreshToken(ctx, user.ID, refreshToken); err != nil {
+		return nil, fmt.Errorf("storing refresh token: %w", err)
+	}
+
 	resp := &auth.AuthenticateResponse{
 		UserID:             user.ID,
 		Username:           user.UserName,
@@ -199,6 +211,11 @@ func (s *authService) GenerateTokenPair(ctx context.Context, userID string, role
 		return "", "", err
 	}
 
+	// Persist the hashed refresh token in the database.
+	if err := s.storeRefreshToken(ctx, user.ID, refreshToken); err != nil {
+		return "", "", fmt.Errorf("storing refresh token: %w", err)
+	}
+
 	return accessToken, refreshToken, nil
 }
 
@@ -207,14 +224,123 @@ func (s *authService) ValidateToken(ctx context.Context, token string) (interfac
 	return s.jwt.ValidateToken(token)
 }
 
-// RefreshAccessToken generates a new access token using a refresh token.
-// In this implementation, the refresh token is stateless (opaque random bytes).
-// A production system should store refresh tokens in the DB for revocation.
-func (s *authService) RefreshAccessToken(ctx context.Context, refreshToken string) (string, error) {
-	// NOTE: Since the .NET implementation uses in-memory refresh tokens,
-	// this is a placeholder. A full implementation would look up the
-	// refresh token in the database, validate it, and issue a new access token.
-	return "", fmt.Errorf("refresh token validation requires persistent storage — not yet implemented")
+// RefreshAccessToken validates a refresh token against the database, issues a
+// new JWT access token, and rotates the refresh token (revoke old, create new).
+func (s *authService) RefreshAccessToken(ctx context.Context, refreshToken string) (*auth.TokenResponse, error) {
+	tokenHash := hashToken(refreshToken)
+
+	// Look up the refresh token by its SHA-256 hash.
+	var stored auth.RefreshToken
+	err := s.db.WithContext(ctx).
+		Where("token = ?", tokenHash).
+		First(&stored).Error
+	if err != nil {
+		s.log.Warn().Str("token_hash", tokenHash[:8]).Msg("Refresh token not found in database")
+		return nil, fmt.Errorf("invalid refresh token: %w", err)
+	}
+
+	// Validate the token is still usable.
+	if stored.Revoked {
+		s.log.Warn().Str("user_id", stored.UserID).Msg("Attempt to use revoked refresh token")
+		return nil, fmt.Errorf("refresh token has been revoked")
+	}
+	if stored.IsExpired() {
+		s.log.Warn().Str("user_id", stored.UserID).Msg("Attempt to use expired refresh token")
+		return nil, fmt.Errorf("refresh token has expired")
+	}
+
+	// Load the user associated with the token.
+	user, err := s.users.FindByID(ctx, stored.UserID)
+	if err != nil {
+		return nil, fmt.Errorf("looking up user for refresh: %w", err)
+	}
+	if user == nil {
+		return nil, fmt.Errorf("user not found for refresh token")
+	}
+	if !user.IsActive {
+		return nil, fmt.Errorf("user account is deactivated")
+	}
+
+	// Resolve roles and permissions for the new access token.
+	roles, err := s.resolveRoles(ctx, user)
+	if err != nil {
+		s.log.Warn().Err(err).Str("user", user.UserName).Msg("Failed to resolve roles during refresh")
+		roles = []string{auth.RoleStaff}
+	}
+
+	permissions, _ := s.users.GetPermissionsByRoles(ctx, roles)
+
+	orgUnit := ""
+	if s.erpSQL.ErpSQL != nil {
+		orgUnit = s.users.GetOrganizationalUnit(ctx, s.erpSQL.ErpSQL, user.ID)
+	}
+
+	// Generate a new access token.
+	expiryMinutes, _ := s.gs.GetIntValue(ctx, auth.SettingTokenExpiryMinutes)
+	claims := TokenClaims{
+		UserID:             user.ID,
+		Email:              user.Email,
+		Name:               user.FullName(),
+		Roles:              roles,
+		Permissions:        permissions,
+		OrganizationalUnit: orgUnit,
+	}
+	newAccessToken, expiresAt, err := s.jwt.GenerateAccessToken(claims, expiryMinutes)
+	if err != nil {
+		return nil, fmt.Errorf("generating new access token: %w", err)
+	}
+
+	// Rotate: revoke the old refresh token and issue a new one.
+	if err := s.db.WithContext(ctx).Model(&stored).Update("revoked", true).Error; err != nil {
+		s.log.Error().Err(err).Str("token_id", stored.ID).Msg("Failed to revoke old refresh token")
+		return nil, fmt.Errorf("revoking old refresh token: %w", err)
+	}
+
+	newRefreshToken, err := s.jwt.GenerateRefreshToken()
+	if err != nil {
+		return nil, fmt.Errorf("generating new refresh token: %w", err)
+	}
+
+	if err := s.storeRefreshToken(ctx, user.ID, newRefreshToken); err != nil {
+		return nil, fmt.Errorf("storing rotated refresh token: %w", err)
+	}
+
+	s.log.Info().Str("user", user.UserName).Msg("Access token refreshed with token rotation")
+
+	return &auth.TokenResponse{
+		AccessToken:  newAccessToken,
+		RefreshToken: newRefreshToken,
+		ExpiresAt:    expiresAt,
+	}, nil
+}
+
+// hashToken produces a hex-encoded SHA-256 digest of the plaintext token.
+func hashToken(plaintext string) string {
+	h := sha256.Sum256([]byte(plaintext))
+	return hex.EncodeToString(h[:])
+}
+
+// storeRefreshToken hashes the plaintext refresh token and persists it
+// in the database. The expiry is derived from the JWT config.
+func (s *authService) storeRefreshToken(ctx context.Context, userID, plaintext string) error {
+	expiry := s.cfg.JWT.RefreshTokenExpiry
+	if expiry <= 0 {
+		expiry = 7 * 24 * time.Hour // default 7 days
+	}
+
+	rt := auth.RefreshToken{
+		ID:        uuid.NewString(),
+		UserID:    userID,
+		Token:     hashToken(plaintext),
+		ExpiresAt: time.Now().UTC().Add(expiry),
+		CreatedAt: time.Now().UTC(),
+		Revoked:   false,
+	}
+
+	if err := s.db.WithContext(ctx).Create(&rt).Error; err != nil {
+		return fmt.Errorf("inserting refresh token: %w", err)
+	}
+	return nil
 }
 
 // provisionADUser creates a local user record from AD data.

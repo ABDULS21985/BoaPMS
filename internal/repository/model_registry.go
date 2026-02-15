@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/enterprise-pms/pms-api/internal/domain/audit"
+	"github.com/enterprise-pms/pms-api/internal/domain/auth"
 	"github.com/enterprise-pms/pms-api/internal/domain/competency"
 	"github.com/enterprise-pms/pms-api/internal/domain/identity"
 	"github.com/enterprise-pms/pms-api/internal/domain/organogram"
@@ -25,6 +26,9 @@ func AutoMigrateAll(db *gorm.DB) error {
 		&identity.Permission{},
 		&identity.RolePermission{},
 		&identity.BankYear{},
+
+		// ── Auth (CoreSchema) ────────────────────────────────────────────
+		&auth.RefreshToken{},
 
 		// ── Organogram (CoreSchema) ─────────────────────────────────────
 		&organogram.Directorate{},

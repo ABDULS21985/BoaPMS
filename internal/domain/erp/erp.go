@@ -53,22 +53,35 @@ type StaffIDMaskDetails struct {
 func (StaffIDMaskDetails) TableName() string { return "dbo.StaffIDMaskDetails" }
 
 // PublicHolidayData represents public holiday entries from ERP.
+// Maps to dbo.HOLIDAYS_T24 table. Mirrors .NET HOLIDAYS_T24 entity.
 type PublicHolidayData struct {
-	ID          int       `json:"id"           db:"ID"           gorm:"column:ID;primaryKey"`
-	HolidayDate time.Time `json:"holiday_date" db:"HOLIDAY_DATE" gorm:"column:HOLIDAY_DATE"`
-	Description string    `json:"description"  db:"DESCRIPTION"  gorm:"column:DESCRIPTION"`
+	UniqueID     int        `json:"unique_id"     db:"unique_id"     gorm:"column:unique_id;primaryKey"`
+	HName        *string    `json:"h_name"        db:"HName"         gorm:"column:HName"`
+	HDate        *time.Time `json:"h_date"        db:"HDate"         gorm:"column:HDate"`
+	HType        *string    `json:"h_type"        db:"HType"         gorm:"column:HType"`
+	EventStatus  *string    `json:"event_status"  db:"event_status"  gorm:"column:event_status"`
+	EventKey     *string    `json:"event_key"     db:"event_key"     gorm:"column:event_key"`
+	CreationDate *time.Time `json:"creation_date" db:"creation_date" gorm:"column:creation_date"`
 }
 
 func (PublicHolidayData) TableName() string { return "dbo.HOLIDAYS_T24" }
 
-// VacationRuleData represents leave/vacation rules from ERP.
+// VacationRuleData represents leave/vacation delegation rules from ERP.
+// Maps to dbo.VACATIONSRULE_DATA table. Mirrors .NET VACATIONSRULE_DATA entity.
 type VacationRuleData struct {
-	ID            int        `json:"id"             db:"ID"             gorm:"column:ID;primaryKey"`
-	EmployeeID    string     `json:"employee_id"    db:"EMPLOYEE_ID"    gorm:"column:EMPLOYEE_ID"`
-	StartDate     *time.Time `json:"start_date"     db:"START_DATE"     gorm:"column:START_DATE"`
-	EndDate       *time.Time `json:"end_date"       db:"END_DATE"       gorm:"column:END_DATE"`
-	VacationType  string     `json:"vacation_type"  db:"VACATION_TYPE"  gorm:"column:VACATION_TYPE"`
-	Status        string     `json:"status"         db:"STATUS"         gorm:"column:STATUS"`
+	UniqueID     int        `json:"unique_id"     db:"unique_id"     gorm:"column:unique_id;primaryKey"`
+	RuleID       int        `json:"rule_id"       db:"rule_id"       gorm:"column:rule_id"`
+	RuleOwner    *string    `json:"rule_owner"    db:"rule_owner"    gorm:"column:rule_owner"`
+	Action       *string    `json:"action"        db:"action"        gorm:"column:action"`
+	BeginDate    time.Time  `json:"begin_date"    db:"begin_date"    gorm:"column:begin_date"`
+	EndDate      *time.Time `json:"end_date"      db:"end_date"      gorm:"column:end_date"`
+	MessageType  *string    `json:"message_type"  db:"message_type"  gorm:"column:message_type"`
+	MessageName  *string    `json:"message_name"  db:"message_name"  gorm:"column:message_name"`
+	AssignedTo   *string    `json:"assigned_to"   db:"assigned_to"   gorm:"column:assigned_to"`
+	RuleComment  *string    `json:"rule_comment"  db:"rule_comment"  gorm:"column:rule_comment"`
+	EventStatus  *string    `json:"event_status"  db:"event_status"  gorm:"column:event_status"`
+	EventKey     *string    `json:"event_key"     db:"event_key"     gorm:"column:event_key"`
+	CreationDate *time.Time `json:"creation_date" db:"creation_date" gorm:"column:creation_date"`
 }
 
 func (VacationRuleData) TableName() string { return "dbo.VACATIONSRULE_DATA" }

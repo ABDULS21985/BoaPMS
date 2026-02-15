@@ -247,12 +247,7 @@ func (s *reviewPeriodService) generateCode(ctx context.Context, seqType enums.Se
 // ===========================================================================
 
 // SaveDraftReviewPeriod creates a new review period in Draft status.
-func (s *reviewPeriodService) SaveDraftReviewPeriod(ctx context.Context, req interface{}) (interface{}, error) {
-	vm, ok := req.(*performance.CreateNewReviewPeriodVm)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type: expected *performance.CreateNewReviewPeriodVm")
-	}
-
+func (s *reviewPeriodService) SaveDraftReviewPeriod(ctx context.Context, vm *performance.CreateNewReviewPeriodVm) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -372,12 +367,7 @@ func (s *reviewPeriodService) SaveDraftReviewPeriod(ctx context.Context, req int
 }
 
 // AddReviewPeriod creates a new review period in PendingApproval status.
-func (s *reviewPeriodService) AddReviewPeriod(ctx context.Context, req interface{}) (interface{}, error) {
-	vm, ok := req.(*performance.CreateNewReviewPeriodVm)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type: expected *performance.CreateNewReviewPeriodVm")
-	}
-
+func (s *reviewPeriodService) AddReviewPeriod(ctx context.Context, vm *performance.CreateNewReviewPeriodVm) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -490,12 +480,7 @@ func (s *reviewPeriodService) AddReviewPeriod(ctx context.Context, req interface
 }
 
 // SubmitDraftReviewPeriod transitions a Draft review period to PendingApproval.
-func (s *reviewPeriodService) SubmitDraftReviewPeriod(ctx context.Context, req interface{}) (interface{}, error) {
-	vm, ok := req.(*performance.ReviewPeriodRequestVm)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type: expected *performance.ReviewPeriodRequestVm")
-	}
-
+func (s *reviewPeriodService) SubmitDraftReviewPeriod(ctx context.Context, vm *performance.ReviewPeriodRequestVm) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -544,12 +529,7 @@ func (s *reviewPeriodService) SubmitDraftReviewPeriod(ctx context.Context, req i
 }
 
 // UpdateReviewPeriod updates a Draft or Returned review period.
-func (s *reviewPeriodService) UpdateReviewPeriod(ctx context.Context, req interface{}) (interface{}, error) {
-	vm, ok := req.(*performance.ReviewPeriodRequestVm)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type: expected *performance.ReviewPeriodRequestVm")
-	}
-
+func (s *reviewPeriodService) UpdateReviewPeriod(ctx context.Context, vm *performance.ReviewPeriodRequestVm) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -596,12 +576,7 @@ func (s *reviewPeriodService) UpdateReviewPeriod(ctx context.Context, req interf
 }
 
 // ApproveReviewPeriod approves a PendingApproval review period, making it Active.
-func (s *reviewPeriodService) ApproveReviewPeriod(ctx context.Context, req interface{}) (interface{}, error) {
-	vm, ok := req.(*performance.ReviewPeriodRequestVm)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type: expected *performance.ReviewPeriodRequestVm")
-	}
-
+func (s *reviewPeriodService) ApproveReviewPeriod(ctx context.Context, vm *performance.ReviewPeriodRequestVm) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -705,12 +680,7 @@ func (s *reviewPeriodService) ApproveReviewPeriod(ctx context.Context, req inter
 }
 
 // RejectReviewPeriod rejects a PendingApproval review period.
-func (s *reviewPeriodService) RejectReviewPeriod(ctx context.Context, req interface{}) (interface{}, error) {
-	vm, ok := req.(*performance.ReviewPeriodRequestVm)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type: expected *performance.ReviewPeriodRequestVm")
-	}
-
+func (s *reviewPeriodService) RejectReviewPeriod(ctx context.Context, vm *performance.ReviewPeriodRequestVm) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -752,12 +722,7 @@ func (s *reviewPeriodService) RejectReviewPeriod(ctx context.Context, req interf
 }
 
 // ReturnReviewPeriod returns a PendingApproval review period for revisions.
-func (s *reviewPeriodService) ReturnReviewPeriod(ctx context.Context, req interface{}) (interface{}, error) {
-	vm, ok := req.(*performance.ReviewPeriodRequestVm)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type: expected *performance.ReviewPeriodRequestVm")
-	}
-
+func (s *reviewPeriodService) ReturnReviewPeriod(ctx context.Context, vm *performance.ReviewPeriodRequestVm) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -799,12 +764,7 @@ func (s *reviewPeriodService) ReturnReviewPeriod(ctx context.Context, req interf
 }
 
 // ReSubmitReviewPeriod re-submits a Returned review period for approval.
-func (s *reviewPeriodService) ReSubmitReviewPeriod(ctx context.Context, req interface{}) (interface{}, error) {
-	vm, ok := req.(*performance.ReviewPeriodRequestVm)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type: expected *performance.ReviewPeriodRequestVm")
-	}
-
+func (s *reviewPeriodService) ReSubmitReviewPeriod(ctx context.Context, vm *performance.ReviewPeriodRequestVm) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -854,12 +814,7 @@ func (s *reviewPeriodService) ReSubmitReviewPeriod(ctx context.Context, req inte
 }
 
 // CancelReviewPeriod cancels a Draft review period.
-func (s *reviewPeriodService) CancelReviewPeriod(ctx context.Context, req interface{}) (interface{}, error) {
-	vm, ok := req.(*performance.ReviewPeriodRequestVm)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type: expected *performance.ReviewPeriodRequestVm")
-	}
-
+func (s *reviewPeriodService) CancelReviewPeriod(ctx context.Context, vm *performance.ReviewPeriodRequestVm) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -893,12 +848,7 @@ func (s *reviewPeriodService) CancelReviewPeriod(ctx context.Context, req interf
 }
 
 // CloseReviewPeriod closes an Active review period.
-func (s *reviewPeriodService) CloseReviewPeriod(ctx context.Context, req interface{}) (interface{}, error) {
-	vm, ok := req.(*performance.ReviewPeriodRequestVm)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type: expected *performance.ReviewPeriodRequestVm")
-	}
-
+func (s *reviewPeriodService) CloseReviewPeriod(ctx context.Context, vm *performance.ReviewPeriodRequestVm) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -939,12 +889,7 @@ func (s *reviewPeriodService) CloseReviewPeriod(ctx context.Context, req interfa
 // Toggle Methods
 // ===========================================================================
 
-func (s *reviewPeriodService) toggleReviewPeriodFlag(ctx context.Context, req interface{}, flagName string, value bool) (interface{}, error) {
-	vm, ok := req.(*performance.ReviewPeriodRequestVm)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type: expected *performance.ReviewPeriodRequestVm")
-	}
-
+func (s *reviewPeriodService) toggleReviewPeriodFlag(ctx context.Context, vm *performance.ReviewPeriodRequestVm, flagName string, value bool) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -994,33 +939,33 @@ func (s *reviewPeriodService) toggleReviewPeriodFlag(ctx context.Context, req in
 }
 
 // EnableObjectivePlanning enables objective planning for a review period.
-func (s *reviewPeriodService) EnableObjectivePlanning(ctx context.Context, req interface{}) (interface{}, error) {
-	return s.toggleReviewPeriodFlag(ctx, req, "AllowObjectivePlanning", true)
+func (s *reviewPeriodService) EnableObjectivePlanning(ctx context.Context, vm *performance.ReviewPeriodRequestVm) (*performance.ResponseVm, error) {
+	return s.toggleReviewPeriodFlag(ctx, vm, "AllowObjectivePlanning", true)
 }
 
 // DisableObjectivePlanning disables objective planning for a review period.
-func (s *reviewPeriodService) DisableObjectivePlanning(ctx context.Context, req interface{}) (interface{}, error) {
-	return s.toggleReviewPeriodFlag(ctx, req, "AllowObjectivePlanning", false)
+func (s *reviewPeriodService) DisableObjectivePlanning(ctx context.Context, vm *performance.ReviewPeriodRequestVm) (*performance.ResponseVm, error) {
+	return s.toggleReviewPeriodFlag(ctx, vm, "AllowObjectivePlanning", false)
 }
 
 // EnableWorkProductPlanning enables work product planning for a review period.
-func (s *reviewPeriodService) EnableWorkProductPlanning(ctx context.Context, req interface{}) (interface{}, error) {
-	return s.toggleReviewPeriodFlag(ctx, req, "AllowWorkProductPlanning", true)
+func (s *reviewPeriodService) EnableWorkProductPlanning(ctx context.Context, vm *performance.ReviewPeriodRequestVm) (*performance.ResponseVm, error) {
+	return s.toggleReviewPeriodFlag(ctx, vm, "AllowWorkProductPlanning", true)
 }
 
 // DisableWorkProductPlanning disables work product planning for a review period.
-func (s *reviewPeriodService) DisableWorkProductPlanning(ctx context.Context, req interface{}) (interface{}, error) {
-	return s.toggleReviewPeriodFlag(ctx, req, "AllowWorkProductPlanning", false)
+func (s *reviewPeriodService) DisableWorkProductPlanning(ctx context.Context, vm *performance.ReviewPeriodRequestVm) (*performance.ResponseVm, error) {
+	return s.toggleReviewPeriodFlag(ctx, vm, "AllowWorkProductPlanning", false)
 }
 
 // EnableWorkProductEvaluation enables work product evaluation for a review period.
-func (s *reviewPeriodService) EnableWorkProductEvaluation(ctx context.Context, req interface{}) (interface{}, error) {
-	return s.toggleReviewPeriodFlag(ctx, req, "AllowWorkProductEvaluation", true)
+func (s *reviewPeriodService) EnableWorkProductEvaluation(ctx context.Context, vm *performance.ReviewPeriodRequestVm) (*performance.ResponseVm, error) {
+	return s.toggleReviewPeriodFlag(ctx, vm, "AllowWorkProductEvaluation", true)
 }
 
 // DisableWorkProductEvaluation disables work product evaluation for a review period.
-func (s *reviewPeriodService) DisableWorkProductEvaluation(ctx context.Context, req interface{}) (interface{}, error) {
-	return s.toggleReviewPeriodFlag(ctx, req, "AllowWorkProductEvaluation", false)
+func (s *reviewPeriodService) DisableWorkProductEvaluation(ctx context.Context, vm *performance.ReviewPeriodRequestVm) (*performance.ResponseVm, error) {
+	return s.toggleReviewPeriodFlag(ctx, vm, "AllowWorkProductEvaluation", false)
 }
 
 // ===========================================================================
@@ -1029,7 +974,7 @@ func (s *reviewPeriodService) DisableWorkProductEvaluation(ctx context.Context, 
 
 // GetActiveReviewPeriod retrieves the currently active review period.
 // Checks extensions if the period is Closed.
-func (s *reviewPeriodService) GetActiveReviewPeriod(ctx context.Context) (interface{}, error) {
+func (s *reviewPeriodService) GetActiveReviewPeriod(ctx context.Context) (*performance.ReviewPeriodResponseVm, error) {
 	response := &performance.ReviewPeriodResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -1070,7 +1015,7 @@ func (s *reviewPeriodService) GetActiveReviewPeriod(ctx context.Context) (interf
 }
 
 // GetStaffActiveReviewPeriod retrieves the active review period for a specific staff.
-func (s *reviewPeriodService) GetStaffActiveReviewPeriod(ctx context.Context, staffID string) (interface{}, error) {
+func (s *reviewPeriodService) GetStaffActiveReviewPeriod(ctx context.Context, staffID string) (*performance.ReviewPeriodResponseVm, error) {
 	response := &performance.ReviewPeriodResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -1117,7 +1062,7 @@ func (s *reviewPeriodService) GetStaffActiveReviewPeriod(ctx context.Context, st
 }
 
 // GetReviewPeriodDetails retrieves complete details for a review period.
-func (s *reviewPeriodService) GetReviewPeriodDetails(ctx context.Context, reviewPeriodID string) (interface{}, error) {
+func (s *reviewPeriodService) GetReviewPeriodDetails(ctx context.Context, reviewPeriodID string) (*performance.PerformanceReviewPeriodResponseVm, error) {
 	response := &performance.PerformanceReviewPeriodResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -1167,12 +1112,7 @@ func (s *reviewPeriodService) GetReviewPeriodDetails(ctx context.Context, review
 // ===========================================================================
 
 // SaveDraftReviewPeriodObjective saves a period objective in Draft status.
-func (s *reviewPeriodService) SaveDraftReviewPeriodObjective(ctx context.Context, req interface{}) (interface{}, error) {
-	vm, ok := req.(*performance.SaveDraftPeriodObjectiveVm)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type: expected *performance.SaveDraftPeriodObjectiveVm")
-	}
-
+func (s *reviewPeriodService) SaveDraftReviewPeriodObjective(ctx context.Context, vm *performance.SaveDraftPeriodObjectiveVm) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -1231,12 +1171,7 @@ func (s *reviewPeriodService) SaveDraftReviewPeriodObjective(ctx context.Context
 }
 
 // AddReviewPeriodObjective adds period objectives in PendingApproval status.
-func (s *reviewPeriodService) AddReviewPeriodObjective(ctx context.Context, req interface{}) (interface{}, error) {
-	vm, ok := req.(*performance.AddPeriodObjectiveVm)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type: expected *performance.AddPeriodObjectiveVm")
-	}
-
+func (s *reviewPeriodService) AddReviewPeriodObjective(ctx context.Context, vm *performance.AddPeriodObjectiveVm) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -1294,12 +1229,7 @@ func (s *reviewPeriodService) AddReviewPeriodObjective(ctx context.Context, req 
 }
 
 // SubmitDraftReviewPeriodObjective submits a draft period objective (CommitDraft).
-func (s *reviewPeriodService) SubmitDraftReviewPeriodObjective(ctx context.Context, req interface{}) (interface{}, error) {
-	vm, ok := req.(*performance.PeriodObjectiveRequestVm)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type: expected *performance.PeriodObjectiveRequestVm")
-	}
-
+func (s *reviewPeriodService) SubmitDraftReviewPeriodObjective(ctx context.Context, vm *performance.PeriodObjectiveRequestVm) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -1332,12 +1262,7 @@ func (s *reviewPeriodService) SubmitDraftReviewPeriodObjective(ctx context.Conte
 }
 
 // CancelReviewPeriodObjective cancels a period objective.
-func (s *reviewPeriodService) CancelReviewPeriodObjective(ctx context.Context, req interface{}) (interface{}, error) {
-	vm, ok := req.(*performance.PeriodObjectiveRequestVm)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type: expected *performance.PeriodObjectiveRequestVm")
-	}
-
+func (s *reviewPeriodService) CancelReviewPeriodObjective(ctx context.Context, vm *performance.PeriodObjectiveRequestVm) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -1371,7 +1296,7 @@ func (s *reviewPeriodService) CancelReviewPeriodObjective(ctx context.Context, r
 }
 
 // GetReviewPeriodObjectives retrieves all objectives for a review period.
-func (s *reviewPeriodService) GetReviewPeriodObjectives(ctx context.Context, reviewPeriodID string) (interface{}, error) {
+func (s *reviewPeriodService) GetReviewPeriodObjectives(ctx context.Context, reviewPeriodID string) (*performance.ReviewPeriodObjectivesResponseVm, error) {
 	response := &performance.ReviewPeriodObjectivesResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -1476,12 +1401,7 @@ func (s *reviewPeriodService) validateCategoryDefinition(ctx context.Context, re
 }
 
 // SaveDraftCategoryDefinition saves a category definition in Draft status.
-func (s *reviewPeriodService) SaveDraftCategoryDefinition(ctx context.Context, req interface{}) (interface{}, error) {
-	vm, ok := req.(*performance.CategoryDefinitionRequestVm)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type: expected *performance.CategoryDefinitionRequestVm")
-	}
-
+func (s *reviewPeriodService) SaveDraftCategoryDefinition(ctx context.Context, vm *performance.CategoryDefinitionRequestVm) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -1559,12 +1479,7 @@ func (s *reviewPeriodService) SaveDraftCategoryDefinition(ctx context.Context, r
 }
 
 // AddCategoryDefinition adds a category definition.
-func (s *reviewPeriodService) AddCategoryDefinition(ctx context.Context, req interface{}) (interface{}, error) {
-	vm, ok := req.(*performance.CategoryDefinitionRequestVm)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type: expected *performance.CategoryDefinitionRequestVm")
-	}
-
+func (s *reviewPeriodService) AddCategoryDefinition(ctx context.Context, vm *performance.CategoryDefinitionRequestVm) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -1635,12 +1550,7 @@ func (s *reviewPeriodService) AddCategoryDefinition(ctx context.Context, req int
 }
 
 // SubmitDraftCategoryDefinition submits a Draft category definition (CommitDraft).
-func (s *reviewPeriodService) SubmitDraftCategoryDefinition(ctx context.Context, req interface{}) (interface{}, error) {
-	vm, ok := req.(*performance.CategoryDefinitionRequestVm)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type: expected *performance.CategoryDefinitionRequestVm")
-	}
-
+func (s *reviewPeriodService) SubmitDraftCategoryDefinition(ctx context.Context, vm *performance.CategoryDefinitionRequestVm) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -1693,12 +1603,7 @@ func (s *reviewPeriodService) SubmitDraftCategoryDefinition(ctx context.Context,
 }
 
 // ApproveCategoryDefinition approves a PendingApproval category definition.
-func (s *reviewPeriodService) ApproveCategoryDefinition(ctx context.Context, req interface{}) (interface{}, error) {
-	vm, ok := req.(*performance.CategoryDefinitionRequestVm)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type: expected *performance.CategoryDefinitionRequestVm")
-	}
-
+func (s *reviewPeriodService) ApproveCategoryDefinition(ctx context.Context, vm *performance.CategoryDefinitionRequestVm) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -1740,12 +1645,7 @@ func (s *reviewPeriodService) ApproveCategoryDefinition(ctx context.Context, req
 }
 
 // RejectCategoryDefinition rejects a PendingApproval category definition.
-func (s *reviewPeriodService) RejectCategoryDefinition(ctx context.Context, req interface{}) (interface{}, error) {
-	vm, ok := req.(*performance.CategoryDefinitionRequestVm)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type: expected *performance.CategoryDefinitionRequestVm")
-	}
-
+func (s *reviewPeriodService) RejectCategoryDefinition(ctx context.Context, vm *performance.CategoryDefinitionRequestVm) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -1791,12 +1691,7 @@ func (s *reviewPeriodService) RejectCategoryDefinition(ctx context.Context, req 
 // ===========================================================================
 
 // AddReviewPeriodExtension adds a review period extension.
-func (s *reviewPeriodService) AddReviewPeriodExtension(ctx context.Context, req interface{}) (interface{}, error) {
-	vm, ok := req.(*performance.ReviewPeriodExtensionRequestModel)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type: expected *performance.ReviewPeriodExtensionRequestModel")
-	}
-
+func (s *reviewPeriodService) AddReviewPeriodExtension(ctx context.Context, vm *performance.ReviewPeriodExtensionRequestModel) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -1875,7 +1770,7 @@ func (s *reviewPeriodService) AddReviewPeriodExtension(ctx context.Context, req 
 }
 
 // GetReviewPeriodExtensions retrieves all extensions for a review period.
-func (s *reviewPeriodService) GetReviewPeriodExtensions(ctx context.Context, reviewPeriodID string) (interface{}, error) {
+func (s *reviewPeriodService) GetReviewPeriodExtensions(ctx context.Context, reviewPeriodID string) (*performance.ReviewPeriodExtensionListResponseVm, error) {
 	response := &performance.ReviewPeriodExtensionListResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -1920,12 +1815,7 @@ func (s *reviewPeriodService) GetReviewPeriodExtensions(ctx context.Context, rev
 // ===========================================================================
 
 // AddReviewPeriod360Review adds a 360 review configuration for a review period.
-func (s *reviewPeriodService) AddReviewPeriod360Review(ctx context.Context, req interface{}) (interface{}, error) {
-	vm, ok := req.(*performance.CreateReviewPeriod360ReviewRequestModel)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type: expected *performance.CreateReviewPeriod360ReviewRequestModel")
-	}
-
+func (s *reviewPeriodService) AddReviewPeriod360Review(ctx context.Context, vm *performance.CreateReviewPeriod360ReviewRequestModel) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -1977,7 +1867,7 @@ func (s *reviewPeriodService) AddReviewPeriod360Review(ctx context.Context, req 
 }
 
 // GetReviewPeriod360Reviews retrieves all 360 reviews for a review period.
-func (s *reviewPeriodService) GetReviewPeriod360Reviews(ctx context.Context, reviewPeriodID string) (interface{}, error) {
+func (s *reviewPeriodService) GetReviewPeriod360Reviews(ctx context.Context, reviewPeriodID string) (*performance.ReviewPeriod360ReviewListResponseVm, error) {
 	reviews, err := s.review360Repo.WhereWithPreload(ctx,
 		[]string{"ReviewPeriod"},
 		"review_period_id = ? AND record_status != ?",
@@ -1987,12 +1877,28 @@ func (s *reviewPeriodService) GetReviewPeriod360Reviews(ctx context.Context, rev
 		return nil, err
 	}
 
-	return map[string]interface{}{
-		"hasError":     false,
-		"message":      "Operation completed",
-		"totalRecords": len(reviews),
-		"reviews":      reviews,
-	}, nil
+	data := make([]performance.ReviewPeriod360ReviewData, 0, len(reviews))
+	for _, r := range reviews {
+		d := performance.ReviewPeriod360ReviewData{
+			ReviewPeriod360ReviewID: r.ReviewPeriod360ReviewID,
+			ReviewPeriodID:          r.ReviewPeriodID,
+			TargetType:              int(r.TargetType),
+			TargetReference:         r.TargetReference,
+			RecordStatus:            r.RecordStatus,
+			IsActive:                r.IsActive,
+		}
+		if r.ReviewPeriod != nil {
+			d.ReviewPeriod = r.ReviewPeriod.Name
+		}
+		data = append(data, d)
+	}
+
+	response := &performance.ReviewPeriod360ReviewListResponseVm{}
+	response.TotalRecords = len(data)
+	response.Reviews = data
+	response.HasError = false
+	response.Message = "Operation completed"
+	return response, nil
 }
 
 // ===========================================================================
@@ -2000,12 +1906,7 @@ func (s *reviewPeriodService) GetReviewPeriod360Reviews(ctx context.Context, rev
 // ===========================================================================
 
 // SaveDraftIndividualPlannedObjective saves a planned objective in Draft status.
-func (s *reviewPeriodService) SaveDraftIndividualPlannedObjective(ctx context.Context, req interface{}) (interface{}, error) {
-	vm, ok := req.(*performance.AddReviewPeriodIndividualPlannedObjectiveRequestModel)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type: expected *performance.AddReviewPeriodIndividualPlannedObjectiveRequestModel")
-	}
-
+func (s *reviewPeriodService) SaveDraftIndividualPlannedObjective(ctx context.Context, vm *performance.AddReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -2067,12 +1968,7 @@ func (s *reviewPeriodService) SaveDraftIndividualPlannedObjective(ctx context.Co
 }
 
 // AddIndividualPlannedObjective adds a planned objective in PendingApproval status.
-func (s *reviewPeriodService) AddIndividualPlannedObjective(ctx context.Context, req interface{}) (interface{}, error) {
-	vm, ok := req.(*performance.AddReviewPeriodIndividualPlannedObjectiveRequestModel)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type: expected *performance.AddReviewPeriodIndividualPlannedObjectiveRequestModel")
-	}
-
+func (s *reviewPeriodService) AddIndividualPlannedObjective(ctx context.Context, vm *performance.AddReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -2134,12 +2030,7 @@ func (s *reviewPeriodService) AddIndividualPlannedObjective(ctx context.Context,
 }
 
 // SubmitDraftIndividualPlannedObjective submits a draft planned objective.
-func (s *reviewPeriodService) SubmitDraftIndividualPlannedObjective(ctx context.Context, req interface{}) (interface{}, error) {
-	vm, ok := req.(*performance.ReviewPeriodIndividualPlannedObjectiveRequestModel)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type: expected *performance.ReviewPeriodIndividualPlannedObjectiveRequestModel")
-	}
-
+func (s *reviewPeriodService) SubmitDraftIndividualPlannedObjective(ctx context.Context, vm *performance.ReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -2172,12 +2063,7 @@ func (s *reviewPeriodService) SubmitDraftIndividualPlannedObjective(ctx context.
 }
 
 // ApproveIndividualPlannedObjective approves a planned objective.
-func (s *reviewPeriodService) ApproveIndividualPlannedObjective(ctx context.Context, req interface{}) (interface{}, error) {
-	vm, ok := req.(*performance.ReviewPeriodIndividualPlannedObjectiveRequestModel)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type: expected *performance.ReviewPeriodIndividualPlannedObjectiveRequestModel")
-	}
-
+func (s *reviewPeriodService) ApproveIndividualPlannedObjective(ctx context.Context, vm *performance.ReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -2227,12 +2113,7 @@ func (s *reviewPeriodService) ApproveIndividualPlannedObjective(ctx context.Cont
 }
 
 // RejectIndividualPlannedObjective rejects a planned objective.
-func (s *reviewPeriodService) RejectIndividualPlannedObjective(ctx context.Context, req interface{}) (interface{}, error) {
-	vm, ok := req.(*performance.ReviewPeriodIndividualPlannedObjectiveRequestModel)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type: expected *performance.ReviewPeriodIndividualPlannedObjectiveRequestModel")
-	}
-
+func (s *reviewPeriodService) RejectIndividualPlannedObjective(ctx context.Context, vm *performance.ReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -2276,12 +2157,7 @@ func (s *reviewPeriodService) RejectIndividualPlannedObjective(ctx context.Conte
 
 // ReturnIndividualPlannedObjective returns a planned objective for revisions.
 // Auto-triggers grievance if max return count is reached.
-func (s *reviewPeriodService) ReturnIndividualPlannedObjective(ctx context.Context, req interface{}) (interface{}, error) {
-	vm, ok := req.(*performance.ReviewPeriodIndividualPlannedObjectiveRequestModel)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type: expected *performance.ReviewPeriodIndividualPlannedObjectiveRequestModel")
-	}
-
+func (s *reviewPeriodService) ReturnIndividualPlannedObjective(ctx context.Context, vm *performance.ReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -2330,12 +2206,7 @@ func (s *reviewPeriodService) ReturnIndividualPlannedObjective(ctx context.Conte
 }
 
 // CancelIndividualPlannedObjective cancels a planned objective.
-func (s *reviewPeriodService) CancelIndividualPlannedObjective(ctx context.Context, req interface{}) (interface{}, error) {
-	vm, ok := req.(*performance.ReviewPeriodIndividualPlannedObjectiveRequestModel)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type: expected *performance.ReviewPeriodIndividualPlannedObjectiveRequestModel")
-	}
-
+func (s *reviewPeriodService) CancelIndividualPlannedObjective(ctx context.Context, vm *performance.ReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -2369,7 +2240,7 @@ func (s *reviewPeriodService) CancelIndividualPlannedObjective(ctx context.Conte
 }
 
 // GetStaffIndividualPlannedObjectives retrieves planned objectives for a staff member.
-func (s *reviewPeriodService) GetStaffIndividualPlannedObjectives(ctx context.Context, staffID, reviewPeriodID string) (interface{}, error) {
+func (s *reviewPeriodService) GetStaffIndividualPlannedObjectives(ctx context.Context, staffID, reviewPeriodID string) (*performance.PlannedOperationalObjectivesResponseVm, error) {
 	response := &performance.PlannedOperationalObjectivesResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -2449,12 +2320,7 @@ func (s *reviewPeriodService) GetStaffIndividualPlannedObjectives(ctx context.Co
 // ===========================================================================
 
 // CreatePeriodObjectiveEvaluation creates or updates a period objective evaluation.
-func (s *reviewPeriodService) CreatePeriodObjectiveEvaluation(ctx context.Context, req interface{}) (interface{}, error) {
-	vm, ok := req.(*performance.AddPeriodObjectiveEvaluationRequestModel)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type: expected *performance.AddPeriodObjectiveEvaluationRequestModel")
-	}
-
+func (s *reviewPeriodService) CreatePeriodObjectiveEvaluation(ctx context.Context, vm *performance.AddPeriodObjectiveEvaluationRequestModel) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -2518,12 +2384,7 @@ func (s *reviewPeriodService) CreatePeriodObjectiveEvaluation(ctx context.Contex
 }
 
 // CreatePeriodObjectiveDepartmentEvaluation creates or updates a department evaluation.
-func (s *reviewPeriodService) CreatePeriodObjectiveDepartmentEvaluation(ctx context.Context, req interface{}) (interface{}, error) {
-	vm, ok := req.(*performance.AddPeriodObjectiveDepartmentEvaluationRequestModel)
-	if !ok {
-		return nil, fmt.Errorf("invalid request type: expected *performance.AddPeriodObjectiveDepartmentEvaluationRequestModel")
-	}
-
+func (s *reviewPeriodService) CreatePeriodObjectiveDepartmentEvaluation(ctx context.Context, vm *performance.AddPeriodObjectiveDepartmentEvaluationRequestModel) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -2589,7 +2450,7 @@ func (s *reviewPeriodService) CreatePeriodObjectiveDepartmentEvaluation(ctx cont
 }
 
 // GetPeriodObjectiveEvaluations retrieves evaluations for a review period.
-func (s *reviewPeriodService) GetPeriodObjectiveEvaluations(ctx context.Context, reviewPeriodID string) (interface{}, error) {
+func (s *reviewPeriodService) GetPeriodObjectiveEvaluations(ctx context.Context, reviewPeriodID string) (*performance.PeriodObjectiveEvaluationListResponseVm, error) {
 	response := &performance.PeriodObjectiveEvaluationListResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -2641,7 +2502,7 @@ func (s *reviewPeriodService) GetPeriodObjectiveEvaluations(ctx context.Context,
 }
 
 // GetPeriodObjectiveDepartmentEvaluations retrieves department evaluations.
-func (s *reviewPeriodService) GetPeriodObjectiveDepartmentEvaluations(ctx context.Context, reviewPeriodID string) (interface{}, error) {
+func (s *reviewPeriodService) GetPeriodObjectiveDepartmentEvaluations(ctx context.Context, reviewPeriodID string) (*performance.PeriodObjectiveDepartmentEvaluationListResponseVm, error) {
 	response := &performance.PeriodObjectiveDepartmentEvaluationListResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -2703,7 +2564,7 @@ func (s *reviewPeriodService) GetPeriodObjectiveDepartmentEvaluations(ctx contex
 // ===========================================================================
 
 // GetStaffPeriodScore retrieves the period score for a staff member.
-func (s *reviewPeriodService) GetStaffPeriodScore(ctx context.Context, staffID, reviewPeriodID string) (interface{}, error) {
+func (s *reviewPeriodService) GetStaffPeriodScore(ctx context.Context, staffID, reviewPeriodID string) (*performance.PeriodScoreResponseVm, error) {
 	response := &performance.PeriodScoreResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -2765,7 +2626,7 @@ func (s *reviewPeriodService) GetStaffPeriodScore(ctx context.Context, staffID, 
 
 // GetReviewPeriods returns all review periods ordered by year (desc) and start
 // date, checking each for an active extension. Mirrors .NET GetReviewPeriods().
-func (s *reviewPeriodService) GetReviewPeriods(ctx context.Context) (interface{}, error) {
+func (s *reviewPeriodService) GetReviewPeriods(ctx context.Context) (*performance.GetAllReviewPeriodResponseVm, error) {
 	response := &performance.GetAllReviewPeriodResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -2827,7 +2688,7 @@ func (s *reviewPeriodService) GetReviewPeriods(ctx context.Context) (interface{}
 // GetReviewPeriodCategoryDefinitions retrieves category definitions for a
 // review period, preloading Category and ReviewPeriod associations.
 // Mirrors .NET GetReviewPeriodCategoryDefinitions(reviewPeriodId).
-func (s *reviewPeriodService) GetReviewPeriodCategoryDefinitions(ctx context.Context, reviewPeriodID string) (interface{}, error) {
+func (s *reviewPeriodService) GetReviewPeriodCategoryDefinitions(ctx context.Context, reviewPeriodID string) (*performance.ReviewPeriodCategoryDefinitionResponseVm, error) {
 	response := &performance.ReviewPeriodCategoryDefinitionResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -2906,7 +2767,7 @@ func (s *reviewPeriodService) GetReviewPeriodCategoryDefinitions(ctx context.Con
 // NOTE: The .NET version also fetches ERP employee data to determine the
 // objective level dynamically. In Go the objective level is stored directly on
 // the entity, so we use that instead.
-func (s *reviewPeriodService) GetPlannedObjective(ctx context.Context, plannedObjectiveID string) (interface{}, error) {
+func (s *reviewPeriodService) GetPlannedObjective(ctx context.Context, plannedObjectiveID string) (*performance.PlannedObjectiveResponseVm, error) {
 	response := &performance.PlannedObjectiveResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -2992,7 +2853,7 @@ func (s *reviewPeriodService) GetPlannedObjective(ctx context.Context, plannedOb
 // GetEnterpriseObjectiveByLevel traces an objective at the given hierarchy
 // level back to its root enterprise objective and returns the aggregated data.
 // Mirrors .NET GetEnterpriseObjectiveByLevelAsync(objectiveId, objectiveLevel).
-func (s *reviewPeriodService) GetEnterpriseObjectiveByLevel(ctx context.Context, objectiveID string, objectiveLevel int) (interface{}, error) {
+func (s *reviewPeriodService) GetEnterpriseObjectiveByLevel(ctx context.Context, objectiveID string, objectiveLevel int) (*performance.EnterpriseObjectiveResponseVm, error) {
 	response := &performance.EnterpriseObjectiveResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -3164,7 +3025,7 @@ func (s *reviewPeriodService) GetEnterpriseObjectiveByLevel(ctx context.Context,
 // ArchiveCancelledObjectives soft-deletes all cancelled planned objectives for
 // a given staff member and review period by calling the stored procedure.
 // Mirrors .NET ArchiveCancelledObjectiveAsync(StaffId, ReviewperiodId).
-func (s *reviewPeriodService) ArchiveCancelledObjectives(ctx context.Context, staffID string, reviewPeriodID string) (interface{}, error) {
+func (s *reviewPeriodService) ArchiveCancelledObjectives(ctx context.Context, staffID string, reviewPeriodID string) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"
@@ -3185,7 +3046,7 @@ func (s *reviewPeriodService) ArchiveCancelledObjectives(ctx context.Context, st
 // ArchiveCancelledWorkProducts soft-deletes all cancelled work products for a
 // given staff member and review period by calling the stored procedure.
 // Mirrors .NET ArchiveCancelledWorkProductAsync(StaffId, ReviewperiodId).
-func (s *reviewPeriodService) ArchiveCancelledWorkProducts(ctx context.Context, staffID string, reviewPeriodID string) (interface{}, error) {
+func (s *reviewPeriodService) ArchiveCancelledWorkProducts(ctx context.Context, staffID string, reviewPeriodID string) (*performance.ResponseVm, error) {
 	response := &performance.ResponseVm{}
 	response.HasError = true
 	response.Message = "An error occurred"

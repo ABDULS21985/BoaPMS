@@ -275,6 +275,45 @@ type AuditLogListResponseVm struct {
 }
 
 // ===========================================================================
+// Dashboard Pending Actions
+// ===========================================================================
+
+// DashboardPendingAction represents a single pending action item on the dashboard.
+type DashboardPendingAction struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Type        string `json:"type"`
+}
+
+// ===========================================================================
+// Work Product Statistics
+// ===========================================================================
+
+// WorkProductStatisticsVm holds work product statistics for a staff member's dashboard.
+type WorkProductStatisticsVm struct {
+	StaffID                        string `json:"staff_id"`
+	ReviewPeriodID                 string `json:"review_period_id"`
+	NoAllWorkProducts              int    `json:"no_all_work_products"`
+	NoActiveWorkProducts           int    `json:"no_active_work_products"`
+	NoWorkProductsAwaitingEvaluation int  `json:"no_work_products_awaiting_evaluation"`
+	NoWorkProductsClosed           int    `json:"no_work_products_closed"`
+	NoWorkProductsPendingApproval  int    `json:"no_work_products_pending_approval"`
+	TotalWorkProductTasks          int    `json:"total_work_product_tasks"`
+}
+
+// ===========================================================================
+// Chart Data
+// ===========================================================================
+
+// ChartDataset holds data for rendering charts on the dashboard.
+type ChartDataset struct {
+	Label           string   `json:"label"`
+	BackgroundColor []string `json:"background_color"`
+	Data            []int    `json:"data"`
+}
+
+// ===========================================================================
 // View Model DTOs (Vm suffix – handler-layer representations)
 // ===========================================================================
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/enterprise-pms/pms-api/internal/domain/auth"
 	"github.com/enterprise-pms/pms-api/internal/domain/enums"
 	"github.com/enterprise-pms/pms-api/internal/domain/performance"
 )
@@ -250,80 +251,81 @@ type PmsSetupService interface {
 // --- Review Period ---
 
 // ReviewPeriodService manages review periods and objectives planning.
+// All methods use typed DTOs from the performance domain package.
 type ReviewPeriodService interface {
 	// Lifecycle
-	SaveDraftReviewPeriod(ctx context.Context, req interface{}) (interface{}, error)
-	AddReviewPeriod(ctx context.Context, req interface{}) (interface{}, error)
-	SubmitDraftReviewPeriod(ctx context.Context, req interface{}) (interface{}, error)
-	ApproveReviewPeriod(ctx context.Context, req interface{}) (interface{}, error)
-	RejectReviewPeriod(ctx context.Context, req interface{}) (interface{}, error)
-	ReturnReviewPeriod(ctx context.Context, req interface{}) (interface{}, error)
-	ReSubmitReviewPeriod(ctx context.Context, req interface{}) (interface{}, error)
-	UpdateReviewPeriod(ctx context.Context, req interface{}) (interface{}, error)
-	CancelReviewPeriod(ctx context.Context, req interface{}) (interface{}, error)
-	CloseReviewPeriod(ctx context.Context, req interface{}) (interface{}, error)
+	SaveDraftReviewPeriod(ctx context.Context, req *performance.CreateNewReviewPeriodVm) (*performance.ResponseVm, error)
+	AddReviewPeriod(ctx context.Context, req *performance.CreateNewReviewPeriodVm) (*performance.ResponseVm, error)
+	SubmitDraftReviewPeriod(ctx context.Context, req *performance.ReviewPeriodRequestVm) (*performance.ResponseVm, error)
+	ApproveReviewPeriod(ctx context.Context, req *performance.ReviewPeriodRequestVm) (*performance.ResponseVm, error)
+	RejectReviewPeriod(ctx context.Context, req *performance.ReviewPeriodRequestVm) (*performance.ResponseVm, error)
+	ReturnReviewPeriod(ctx context.Context, req *performance.ReviewPeriodRequestVm) (*performance.ResponseVm, error)
+	ReSubmitReviewPeriod(ctx context.Context, req *performance.ReviewPeriodRequestVm) (*performance.ResponseVm, error)
+	UpdateReviewPeriod(ctx context.Context, req *performance.ReviewPeriodRequestVm) (*performance.ResponseVm, error)
+	CancelReviewPeriod(ctx context.Context, req *performance.ReviewPeriodRequestVm) (*performance.ResponseVm, error)
+	CloseReviewPeriod(ctx context.Context, req *performance.ReviewPeriodRequestVm) (*performance.ResponseVm, error)
 
 	// Toggles
-	EnableObjectivePlanning(ctx context.Context, req interface{}) (interface{}, error)
-	DisableObjectivePlanning(ctx context.Context, req interface{}) (interface{}, error)
-	EnableWorkProductPlanning(ctx context.Context, req interface{}) (interface{}, error)
-	DisableWorkProductPlanning(ctx context.Context, req interface{}) (interface{}, error)
-	EnableWorkProductEvaluation(ctx context.Context, req interface{}) (interface{}, error)
-	DisableWorkProductEvaluation(ctx context.Context, req interface{}) (interface{}, error)
+	EnableObjectivePlanning(ctx context.Context, req *performance.ReviewPeriodRequestVm) (*performance.ResponseVm, error)
+	DisableObjectivePlanning(ctx context.Context, req *performance.ReviewPeriodRequestVm) (*performance.ResponseVm, error)
+	EnableWorkProductPlanning(ctx context.Context, req *performance.ReviewPeriodRequestVm) (*performance.ResponseVm, error)
+	DisableWorkProductPlanning(ctx context.Context, req *performance.ReviewPeriodRequestVm) (*performance.ResponseVm, error)
+	EnableWorkProductEvaluation(ctx context.Context, req *performance.ReviewPeriodRequestVm) (*performance.ResponseVm, error)
+	DisableWorkProductEvaluation(ctx context.Context, req *performance.ReviewPeriodRequestVm) (*performance.ResponseVm, error)
 
 	// Retrieval
-	GetActiveReviewPeriod(ctx context.Context) (interface{}, error)
-	GetStaffActiveReviewPeriod(ctx context.Context, staffID string) (interface{}, error)
-	GetReviewPeriodDetails(ctx context.Context, reviewPeriodID string) (interface{}, error)
+	GetActiveReviewPeriod(ctx context.Context) (*performance.ReviewPeriodResponseVm, error)
+	GetStaffActiveReviewPeriod(ctx context.Context, staffID string) (*performance.ReviewPeriodResponseVm, error)
+	GetReviewPeriodDetails(ctx context.Context, reviewPeriodID string) (*performance.PerformanceReviewPeriodResponseVm, error)
 
 	// Period Objectives
-	SaveDraftReviewPeriodObjective(ctx context.Context, req interface{}) (interface{}, error)
-	AddReviewPeriodObjective(ctx context.Context, req interface{}) (interface{}, error)
-	SubmitDraftReviewPeriodObjective(ctx context.Context, req interface{}) (interface{}, error)
-	CancelReviewPeriodObjective(ctx context.Context, req interface{}) (interface{}, error)
-	GetReviewPeriodObjectives(ctx context.Context, reviewPeriodID string) (interface{}, error)
+	SaveDraftReviewPeriodObjective(ctx context.Context, req *performance.SaveDraftPeriodObjectiveVm) (*performance.ResponseVm, error)
+	AddReviewPeriodObjective(ctx context.Context, req *performance.AddPeriodObjectiveVm) (*performance.ResponseVm, error)
+	SubmitDraftReviewPeriodObjective(ctx context.Context, req *performance.PeriodObjectiveRequestVm) (*performance.ResponseVm, error)
+	CancelReviewPeriodObjective(ctx context.Context, req *performance.PeriodObjectiveRequestVm) (*performance.ResponseVm, error)
+	GetReviewPeriodObjectives(ctx context.Context, reviewPeriodID string) (*performance.ReviewPeriodObjectivesResponseVm, error)
 
 	// Category Definitions
-	SaveDraftCategoryDefinition(ctx context.Context, req interface{}) (interface{}, error)
-	AddCategoryDefinition(ctx context.Context, req interface{}) (interface{}, error)
-	SubmitDraftCategoryDefinition(ctx context.Context, req interface{}) (interface{}, error)
-	ApproveCategoryDefinition(ctx context.Context, req interface{}) (interface{}, error)
-	RejectCategoryDefinition(ctx context.Context, req interface{}) (interface{}, error)
+	SaveDraftCategoryDefinition(ctx context.Context, req *performance.CategoryDefinitionRequestVm) (*performance.ResponseVm, error)
+	AddCategoryDefinition(ctx context.Context, req *performance.CategoryDefinitionRequestVm) (*performance.ResponseVm, error)
+	SubmitDraftCategoryDefinition(ctx context.Context, req *performance.CategoryDefinitionRequestVm) (*performance.ResponseVm, error)
+	ApproveCategoryDefinition(ctx context.Context, req *performance.CategoryDefinitionRequestVm) (*performance.ResponseVm, error)
+	RejectCategoryDefinition(ctx context.Context, req *performance.CategoryDefinitionRequestVm) (*performance.ResponseVm, error)
 
 	// Extensions
-	AddReviewPeriodExtension(ctx context.Context, req interface{}) (interface{}, error)
-	GetReviewPeriodExtensions(ctx context.Context, reviewPeriodID string) (interface{}, error)
+	AddReviewPeriodExtension(ctx context.Context, req *performance.ReviewPeriodExtensionRequestModel) (*performance.ResponseVm, error)
+	GetReviewPeriodExtensions(ctx context.Context, reviewPeriodID string) (*performance.ReviewPeriodExtensionListResponseVm, error)
 
 	// 360 Reviews
-	AddReviewPeriod360Review(ctx context.Context, req interface{}) (interface{}, error)
-	GetReviewPeriod360Reviews(ctx context.Context, reviewPeriodID string) (interface{}, error)
+	AddReviewPeriod360Review(ctx context.Context, req *performance.CreateReviewPeriod360ReviewRequestModel) (*performance.ResponseVm, error)
+	GetReviewPeriod360Reviews(ctx context.Context, reviewPeriodID string) (*performance.ReviewPeriod360ReviewListResponseVm, error)
 
 	// Individual Planned Objectives
-	SaveDraftIndividualPlannedObjective(ctx context.Context, req interface{}) (interface{}, error)
-	AddIndividualPlannedObjective(ctx context.Context, req interface{}) (interface{}, error)
-	SubmitDraftIndividualPlannedObjective(ctx context.Context, req interface{}) (interface{}, error)
-	ApproveIndividualPlannedObjective(ctx context.Context, req interface{}) (interface{}, error)
-	RejectIndividualPlannedObjective(ctx context.Context, req interface{}) (interface{}, error)
-	ReturnIndividualPlannedObjective(ctx context.Context, req interface{}) (interface{}, error)
-	CancelIndividualPlannedObjective(ctx context.Context, req interface{}) (interface{}, error)
-	GetStaffIndividualPlannedObjectives(ctx context.Context, staffID, reviewPeriodID string) (interface{}, error)
+	SaveDraftIndividualPlannedObjective(ctx context.Context, req *performance.AddReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error)
+	AddIndividualPlannedObjective(ctx context.Context, req *performance.AddReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error)
+	SubmitDraftIndividualPlannedObjective(ctx context.Context, req *performance.ReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error)
+	ApproveIndividualPlannedObjective(ctx context.Context, req *performance.ReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error)
+	RejectIndividualPlannedObjective(ctx context.Context, req *performance.ReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error)
+	ReturnIndividualPlannedObjective(ctx context.Context, req *performance.ReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error)
+	CancelIndividualPlannedObjective(ctx context.Context, req *performance.ReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error)
+	GetStaffIndividualPlannedObjectives(ctx context.Context, staffID, reviewPeriodID string) (*performance.PlannedOperationalObjectivesResponseVm, error)
 
 	// Period Objective Evaluations
-	CreatePeriodObjectiveEvaluation(ctx context.Context, req interface{}) (interface{}, error)
-	CreatePeriodObjectiveDepartmentEvaluation(ctx context.Context, req interface{}) (interface{}, error)
-	GetPeriodObjectiveEvaluations(ctx context.Context, reviewPeriodID string) (interface{}, error)
-	GetPeriodObjectiveDepartmentEvaluations(ctx context.Context, reviewPeriodID string) (interface{}, error)
+	CreatePeriodObjectiveEvaluation(ctx context.Context, req *performance.AddPeriodObjectiveEvaluationRequestModel) (*performance.ResponseVm, error)
+	CreatePeriodObjectiveDepartmentEvaluation(ctx context.Context, req *performance.AddPeriodObjectiveDepartmentEvaluationRequestModel) (*performance.ResponseVm, error)
+	GetPeriodObjectiveEvaluations(ctx context.Context, reviewPeriodID string) (*performance.PeriodObjectiveEvaluationListResponseVm, error)
+	GetPeriodObjectiveDepartmentEvaluations(ctx context.Context, reviewPeriodID string) (*performance.PeriodObjectiveDepartmentEvaluationListResponseVm, error)
 
 	// Period Scores
-	GetStaffPeriodScore(ctx context.Context, staffID, reviewPeriodID string) (interface{}, error)
+	GetStaffPeriodScore(ctx context.Context, staffID, reviewPeriodID string) (*performance.PeriodScoreResponseVm, error)
 
 	// Additional Retrieval (mirrors remaining .NET IReviewPeriodService methods)
-	GetReviewPeriods(ctx context.Context) (interface{}, error)
-	GetReviewPeriodCategoryDefinitions(ctx context.Context, reviewPeriodID string) (interface{}, error)
-	GetPlannedObjective(ctx context.Context, plannedObjectiveID string) (interface{}, error)
-	GetEnterpriseObjectiveByLevel(ctx context.Context, objectiveID string, objectiveLevel int) (interface{}, error)
-	ArchiveCancelledObjectives(ctx context.Context, staffID string, reviewPeriodID string) (interface{}, error)
-	ArchiveCancelledWorkProducts(ctx context.Context, staffID string, reviewPeriodID string) (interface{}, error)
+	GetReviewPeriods(ctx context.Context) (*performance.GetAllReviewPeriodResponseVm, error)
+	GetReviewPeriodCategoryDefinitions(ctx context.Context, reviewPeriodID string) (*performance.ReviewPeriodCategoryDefinitionResponseVm, error)
+	GetPlannedObjective(ctx context.Context, plannedObjectiveID string) (*performance.PlannedObjectiveResponseVm, error)
+	GetEnterpriseObjectiveByLevel(ctx context.Context, objectiveID string, objectiveLevel int) (*performance.EnterpriseObjectiveResponseVm, error)
+	ArchiveCancelledObjectives(ctx context.Context, staffID string, reviewPeriodID string) (*performance.ResponseVm, error)
+	ArchiveCancelledWorkProducts(ctx context.Context, staffID string, reviewPeriodID string) (*performance.ResponseVm, error)
 }
 
 // --- Grievance Management ---
@@ -452,7 +454,7 @@ type AuthService interface {
 	AuthenticateAD(ctx context.Context, username, password string) (interface{}, error)
 	GenerateTokenPair(ctx context.Context, userID string, roles []string) (accessToken string, refreshToken string, err error)
 	ValidateToken(ctx context.Context, token string) (claims interface{}, err error)
-	RefreshAccessToken(ctx context.Context, refreshToken string) (string, error)
+	RefreshAccessToken(ctx context.Context, refreshToken string) (*auth.TokenResponse, error)
 }
 
 // --- Email ---
@@ -639,6 +641,22 @@ type CompetencyService interface {
 	// Email / Sync
 	EmailService(ctx context.Context, req interface{}) (interface{}, error)
 	SyncJobRoleUpdateSOA(ctx context.Context, req interface{}) (interface{}, error)
+}
+
+// --- Bitly URL Shortening ---
+
+// BitlyService shortens URLs via the Bitly API.
+type BitlyService interface {
+	ShortenURL(ctx context.Context, longURL string) (string, error)
+}
+
+// --- RSA Adaptive Authentication ---
+
+// RSAAuthService is an HTTP client for RSA Adaptive Authentication.
+// It calls external /initialize and /verify endpoints for token-based MFA.
+type RSAAuthService interface {
+	Initialize(ctx context.Context, req *RSAInitializeRequest) (*RSAInitializeResponse, error)
+	Verify(ctx context.Context, req *RSAVerifyRequest) (*RSAVerifyResponse, error)
 }
 
 // --- Password Generator ---

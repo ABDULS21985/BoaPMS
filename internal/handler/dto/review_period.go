@@ -103,6 +103,20 @@ type ReviewPeriodIndividualPlannedObjectiveRequestModel struct {
 }
 
 // ---------------------------------------------------------------------------
+// Staff Objective Planning Request VM
+// ---------------------------------------------------------------------------
+
+// StaffObjectivePlanningRequestVm is the request for a staff member to plan their objectives.
+type StaffObjectivePlanningRequestVm struct {
+	PlannedObjectiveID string `json:"planned_objective_id,omitempty"`
+	ObjectiveID        string `json:"objective_id"`
+	StaffID            string `json:"staff_id"`
+	ObjectiveLevel     string `json:"objective_level"`
+	ReviewPeriodID     string `json:"review_period_id"`
+	RejectionReason    string `json:"rejection_reason,omitempty"`
+}
+
+// ---------------------------------------------------------------------------
 // Review Period Extension VMs
 // ---------------------------------------------------------------------------
 

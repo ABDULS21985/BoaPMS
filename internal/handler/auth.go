@@ -61,15 +61,13 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newAccessToken, err := h.authSvc.RefreshAccessToken(r.Context(), req.RefreshToken)
+	tokenResp, err := h.authSvc.RefreshAccessToken(r.Context(), req.RefreshToken)
 	if err != nil {
 		response.Error(w, http.StatusUnauthorized, "Invalid or expired refresh token")
 		return
 	}
 
-	response.OK(w, map[string]string{
-		"access_token": newAccessToken,
-	})
+	response.OK(w, tokenResp)
 }
 
 // ValidateToken handles GET /api/v1/auth/validate

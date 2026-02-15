@@ -10,24 +10,25 @@ import (
 
 // Config holds all application configuration.
 type Config struct {
-	Server           ServerConfig           `mapstructure:"server"`
-	Database         DatabaseConfig         `mapstructure:"database"`
-	JWT              JWTConfig              `mapstructure:"jwt"`
-	ActiveDirectory  ActiveDirectoryConfig  `mapstructure:"active_directory"`
-	Email            EmailConfig            `mapstructure:"email"`
-	Bitly            BitlyConfig            `mapstructure:"bitly"`
-	CORS             CORSConfig             `mapstructure:"cors"`
-	Logging          LoggingConfig          `mapstructure:"logging"`
-	Redis            RedisConfig            `mapstructure:"redis"`
-	Jobs             JobsConfig             `mapstructure:"jobs"`
-	APIKey           string                 `mapstructure:"api_key"`
-	HangfireSchema   string                 `mapstructure:"hangfire_schema"`
-	ReCaptcha        GoogleReCaptchaConfig  `mapstructure:"recaptcha"`
-	PasswordGen      PasswordGenConfig      `mapstructure:"password_gen"`
-	General          GeneralConfig          `mapstructure:"general"`
-	RSA              RSAConfig              `mapstructure:"rsa"`
-	Storage          StorageConfig          `mapstructure:"storage"`
-	Encryption       EncryptionConfig       `mapstructure:"encryption"`
+	Server          ServerConfig          `mapstructure:"server"`
+	Database        DatabaseConfig        `mapstructure:"database"`
+	JWT             JWTConfig             `mapstructure:"jwt"`
+	ActiveDirectory ActiveDirectoryConfig `mapstructure:"active_directory"`
+	Email           EmailConfig           `mapstructure:"email"`
+	Bitly           BitlyConfig           `mapstructure:"bitly"`
+	CORS            CORSConfig            `mapstructure:"cors"`
+	Logging         LoggingConfig         `mapstructure:"logging"`
+	Redis           RedisConfig           `mapstructure:"redis"`
+	Jobs            JobsConfig            `mapstructure:"jobs"`
+	APIKey          string                `mapstructure:"api_key"`
+	HangfireSchema  string                `mapstructure:"hangfire_schema"`
+	ReCaptcha       GoogleReCaptchaConfig `mapstructure:"recaptcha"`
+	PasswordGen     PasswordGenConfig     `mapstructure:"password_gen"`
+	General         GeneralConfig         `mapstructure:"general"`
+	RSA             RSAConfig             `mapstructure:"rsa"`
+	Storage         StorageConfig         `mapstructure:"storage"`
+	Encryption      EncryptionConfig      `mapstructure:"encryption"`
+	SOA             SOAConfig             `mapstructure:"soa"`
 }
 
 // JobsConfig holds background job processing settings.
@@ -35,7 +36,7 @@ type JobsConfig struct {
 	WorkerPoolSize     int           `mapstructure:"worker_pool_size"`
 	WorkerQueueSize    int           `mapstructure:"worker_queue_size"`
 	MailSenderInterval time.Duration `mapstructure:"mail_sender_interval"`
-	CronSchedule       string       `mapstructure:"cron_schedule"`
+	CronSchedule       string        `mapstructure:"cron_schedule"`
 }
 
 // ServerConfig holds HTTP server settings.
@@ -48,24 +49,24 @@ type ServerConfig struct {
 
 // DatabaseConfig holds all database connection settings.
 type DatabaseConfig struct {
-	Core        PostgresConfig   `mapstructure:"core"`
-	Hangfire    PostgresConfig   `mapstructure:"hangfire"`
-	ErpData     SQLServerConfig  `mapstructure:"erp_data"`
-	StaffIDMask SQLServerConfig  `mapstructure:"staff_id_mask"`
-	EmailSvc    SQLServerConfig  `mapstructure:"email_service"`
-	Sas         SQLServerConfig  `mapstructure:"sas"`
+	Core        PostgresConfig  `mapstructure:"core"`
+	Hangfire    PostgresConfig  `mapstructure:"hangfire"`
+	ErpData     SQLServerConfig `mapstructure:"erp_data"`
+	StaffIDMask SQLServerConfig `mapstructure:"staff_id_mask"`
+	EmailSvc    SQLServerConfig `mapstructure:"email_service"`
+	Sas         SQLServerConfig `mapstructure:"sas"`
 }
 
 // PostgresConfig holds PostgreSQL connection settings.
 type PostgresConfig struct {
-	Host            string `mapstructure:"host"`
-	Port            int    `mapstructure:"port"`
-	Database        string `mapstructure:"database"`
-	Username        string `mapstructure:"username"`
-	Password        string `mapstructure:"password"`
-	SSLMode         string `mapstructure:"ssl_mode"`
-	MaxOpenConns    int    `mapstructure:"max_open_conns"`
-	MaxIdleConns    int    `mapstructure:"max_idle_conns"`
+	Host            string        `mapstructure:"host"`
+	Port            int           `mapstructure:"port"`
+	Database        string        `mapstructure:"database"`
+	Username        string        `mapstructure:"username"`
+	Password        string        `mapstructure:"password"`
+	SSLMode         string        `mapstructure:"ssl_mode"`
+	MaxOpenConns    int           `mapstructure:"max_open_conns"`
+	MaxIdleConns    int           `mapstructure:"max_idle_conns"`
 	ConnMaxLifetime time.Duration `mapstructure:"conn_max_lifetime"`
 }
 
@@ -124,8 +125,10 @@ type EmailConfig struct {
 
 // BitlyConfig holds Bitly API settings.
 type BitlyConfig struct {
-	APIKey  string `mapstructure:"api_key"`
-	BaseURL string `mapstructure:"base_url"`
+	APIKey    string `mapstructure:"api_key"`
+	BaseURL   string `mapstructure:"base_url"`
+	GroupGUID string `mapstructure:"group_guid"`
+	Domain    string `mapstructure:"domain"`
 }
 
 // CORSConfig holds CORS settings.
@@ -167,13 +170,13 @@ type GoogleReCaptchaConfig struct {
 // PasswordGenConfig holds password generation policy settings.
 type PasswordGenConfig struct {
 	MaxIdenticalConsecutiveChars int    `mapstructure:"max_identical_consecutive_chars"`
-	LowercaseChars              string `mapstructure:"lowercase_chars"`
-	UppercaseChars              string `mapstructure:"uppercase_chars"`
-	NumericChars                string `mapstructure:"numeric_chars"`
-	SpecialChars                string `mapstructure:"special_chars"`
-	SpaceChar                   string `mapstructure:"space_char"`
-	PasswordLengthMin           int    `mapstructure:"password_length_min"`
-	PasswordLengthMax           int    `mapstructure:"password_length_max"`
+	LowercaseChars               string `mapstructure:"lowercase_chars"`
+	UppercaseChars               string `mapstructure:"uppercase_chars"`
+	NumericChars                 string `mapstructure:"numeric_chars"`
+	SpecialChars                 string `mapstructure:"special_chars"`
+	SpaceChar                    string `mapstructure:"space_char"`
+	PasswordLengthMin            int    `mapstructure:"password_length_min"`
+	PasswordLengthMax            int    `mapstructure:"password_length_max"`
 }
 
 // GeneralConfig holds general application settings.
@@ -198,6 +201,12 @@ type StorageConfig struct {
 // EncryptionConfig holds AES encryption settings.
 type EncryptionConfig struct {
 	Key string `mapstructure:"key"`
+}
+
+// SOAConfig holds SOA/ERP integration settings.
+// Mirrors the .NET WebAppAPIConfig:SoaAPIUrl configuration key.
+type SOAConfig struct {
+	APIUrl string `mapstructure:"api_url"`
 }
 
 // Load reads the configuration from files and environment variables.
@@ -305,6 +314,10 @@ func setDefaults(v *viper.Viper) {
 	// Email
 	v.SetDefault("email.smtp_port", 25)
 
+	// Bitly
+	v.SetDefault("bitly.group_guid", "")
+	v.SetDefault("bitly.domain", "bit.ly")
+
 	// CORS
 	v.SetDefault("cors.allow_all", true)
 	v.SetDefault("cors.allowed_methods", []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"})
@@ -365,4 +378,7 @@ func setDefaults(v *viper.Viper) {
 
 	// Encryption
 	v.SetDefault("encryption.key", "")
+
+	// SOA / ERP integration
+	v.SetDefault("soa.api_url", "")
 }

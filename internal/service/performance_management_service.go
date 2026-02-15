@@ -78,7 +78,7 @@ func newPerformanceManagementService(
 	svc.project = newProjectService(db, cfg, svc.log, svc)
 	svc.committee = newCommitteeService(db, cfg, svc.log, svc)
 	svc.workProduct = newWorkProductService(db, cfg, svc.log, svc)
-	svc.feedbackReq = newFeedbackRequestService(db, cfg, svc.log, svc)
+	svc.feedbackReq = newFeedbackRequestService(db, cfg, svc.log, svc, repos.Erp, repos.Sas)
 	svc.competencyReview = newCompetencyReviewService(db, cfg, svc.log, svc)
 	svc.evaluation = newEvaluationService(db, cfg, svc.log, svc)
 

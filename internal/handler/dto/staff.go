@@ -131,3 +131,22 @@ type AssignRoleVm struct {
 	UserID    string   `json:"user_id"`
 	RoleNames []string `json:"role_names"`
 }
+
+// RemoveRoleFromUserVm is the request body for removing a role from a user.
+type RemoveRoleFromUserVm struct {
+	UserID   string `json:"user_id"`
+	RoleName string `json:"role_name"`
+}
+
+// RolePermissionVm represents a role with its assigned permissions.
+type RolePermissionVm struct {
+	RoleID      string         `json:"role_id"`
+	RoleName    string         `json:"role_name"`
+	Permissions []PermissionVm `json:"permissions"`
+}
+
+// GetRolePermissionVm wraps all permissions alongside a specific role's permissions.
+type GetRolePermissionVm struct {
+	AllPermissions      []PermissionVm   `json:"all_permissions"`
+	RolesAndPermissions RolePermissionVm `json:"roles_and_permissions"`
+}

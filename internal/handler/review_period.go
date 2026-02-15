@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/enterprise-pms/pms-api/internal/domain/performance"
 	"github.com/enterprise-pms/pms-api/internal/service"
 	"github.com/enterprise-pms/pms-api/pkg/response"
 	"github.com/rs/zerolog"
@@ -124,13 +125,13 @@ type PeriodObjectiveEvaluationRequest struct {
 // SaveDraftReviewPeriod handles POST /api/v1/review-periods/draft
 // Mirrors .NET PerformanceMgtController.SaveDraftReviewPeriod.
 func (h *ReviewPeriodHandler) SaveDraftReviewPeriod(w http.ResponseWriter, r *http.Request) {
-	var req ReviewPeriodRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.CreateNewReviewPeriodVm
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.SaveDraftReviewPeriod(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.SaveDraftReviewPeriod(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "SaveDraftReviewPeriod").Msg("Failed to save draft review period")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -143,13 +144,13 @@ func (h *ReviewPeriodHandler) SaveDraftReviewPeriod(w http.ResponseWriter, r *ht
 // AddReviewPeriod handles POST /api/v1/review-periods
 // Mirrors .NET PerformanceMgtController.AddReviewPeriod.
 func (h *ReviewPeriodHandler) AddReviewPeriod(w http.ResponseWriter, r *http.Request) {
-	var req ReviewPeriodRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.CreateNewReviewPeriodVm
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.AddReviewPeriod(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.AddReviewPeriod(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "AddReviewPeriod").Msg("Failed to add review period")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -162,13 +163,13 @@ func (h *ReviewPeriodHandler) AddReviewPeriod(w http.ResponseWriter, r *http.Req
 // SubmitDraftReviewPeriod handles POST /api/v1/review-periods/submit-draft
 // Mirrors .NET PerformanceMgtController.SubmitDraftReviewPeriod.
 func (h *ReviewPeriodHandler) SubmitDraftReviewPeriod(w http.ResponseWriter, r *http.Request) {
-	var req ReviewPeriodRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.ReviewPeriodRequestVm
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.SubmitDraftReviewPeriod(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.SubmitDraftReviewPeriod(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "SubmitDraftReviewPeriod").Msg("Failed to submit draft review period")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -181,13 +182,13 @@ func (h *ReviewPeriodHandler) SubmitDraftReviewPeriod(w http.ResponseWriter, r *
 // ApproveReviewPeriod handles POST /api/v1/review-periods/approve
 // Mirrors .NET PerformanceMgtController.ApproveReviewPeriod.
 func (h *ReviewPeriodHandler) ApproveReviewPeriod(w http.ResponseWriter, r *http.Request) {
-	var req ReviewPeriodRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.ReviewPeriodRequestVm
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.ApproveReviewPeriod(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.ApproveReviewPeriod(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "ApproveReviewPeriod").Msg("Failed to approve review period")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -200,13 +201,13 @@ func (h *ReviewPeriodHandler) ApproveReviewPeriod(w http.ResponseWriter, r *http
 // RejectReviewPeriod handles POST /api/v1/review-periods/reject
 // Mirrors .NET PerformanceMgtController.RejectReviewPeriod.
 func (h *ReviewPeriodHandler) RejectReviewPeriod(w http.ResponseWriter, r *http.Request) {
-	var req ReviewPeriodRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.ReviewPeriodRequestVm
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.RejectReviewPeriod(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.RejectReviewPeriod(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "RejectReviewPeriod").Msg("Failed to reject review period")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -219,13 +220,13 @@ func (h *ReviewPeriodHandler) RejectReviewPeriod(w http.ResponseWriter, r *http.
 // ReturnReviewPeriod handles POST /api/v1/review-periods/return
 // Mirrors .NET PerformanceMgtController.ReturnReviewPeriod.
 func (h *ReviewPeriodHandler) ReturnReviewPeriod(w http.ResponseWriter, r *http.Request) {
-	var req ReviewPeriodRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.ReviewPeriodRequestVm
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.ReturnReviewPeriod(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.ReturnReviewPeriod(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "ReturnReviewPeriod").Msg("Failed to return review period")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -238,13 +239,13 @@ func (h *ReviewPeriodHandler) ReturnReviewPeriod(w http.ResponseWriter, r *http.
 // ReSubmitReviewPeriod handles POST /api/v1/review-periods/resubmit
 // Mirrors .NET PerformanceMgtController.ReSubmitReviewPeriod.
 func (h *ReviewPeriodHandler) ReSubmitReviewPeriod(w http.ResponseWriter, r *http.Request) {
-	var req ReviewPeriodRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.ReviewPeriodRequestVm
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.ReSubmitReviewPeriod(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.ReSubmitReviewPeriod(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "ReSubmitReviewPeriod").Msg("Failed to resubmit review period")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -257,13 +258,13 @@ func (h *ReviewPeriodHandler) ReSubmitReviewPeriod(w http.ResponseWriter, r *htt
 // UpdateReviewPeriod handles PUT /api/v1/review-periods
 // Mirrors .NET PerformanceMgtController.UpdateReviewPeriod.
 func (h *ReviewPeriodHandler) UpdateReviewPeriod(w http.ResponseWriter, r *http.Request) {
-	var req ReviewPeriodRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.ReviewPeriodRequestVm
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.UpdateReviewPeriod(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.UpdateReviewPeriod(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "UpdateReviewPeriod").Msg("Failed to update review period")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -276,13 +277,13 @@ func (h *ReviewPeriodHandler) UpdateReviewPeriod(w http.ResponseWriter, r *http.
 // CancelReviewPeriod handles POST /api/v1/review-periods/cancel
 // Mirrors .NET PerformanceMgtController.CancelReviewPeriod.
 func (h *ReviewPeriodHandler) CancelReviewPeriod(w http.ResponseWriter, r *http.Request) {
-	var req ReviewPeriodRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.ReviewPeriodRequestVm
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.CancelReviewPeriod(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.CancelReviewPeriod(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "CancelReviewPeriod").Msg("Failed to cancel review period")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -295,13 +296,13 @@ func (h *ReviewPeriodHandler) CancelReviewPeriod(w http.ResponseWriter, r *http.
 // CloseReviewPeriod handles POST /api/v1/review-periods/close
 // Mirrors .NET PerformanceMgtController.CloseReviewPeriod.
 func (h *ReviewPeriodHandler) CloseReviewPeriod(w http.ResponseWriter, r *http.Request) {
-	var req ReviewPeriodRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.ReviewPeriodRequestVm
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.CloseReviewPeriod(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.CloseReviewPeriod(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "CloseReviewPeriod").Msg("Failed to close review period")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -318,13 +319,13 @@ func (h *ReviewPeriodHandler) CloseReviewPeriod(w http.ResponseWriter, r *http.R
 // EnableObjectivePlanning handles POST /api/v1/review-periods/enable-objective-planning
 // Mirrors .NET PerformanceMgtController.EnableObjectivePlanning.
 func (h *ReviewPeriodHandler) EnableObjectivePlanning(w http.ResponseWriter, r *http.Request) {
-	var req ReviewPeriodRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.ReviewPeriodRequestVm
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.EnableObjectivePlanning(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.EnableObjectivePlanning(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "EnableObjectivePlanning").Msg("Failed to enable objective planning")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -337,13 +338,13 @@ func (h *ReviewPeriodHandler) EnableObjectivePlanning(w http.ResponseWriter, r *
 // DisableObjectivePlanning handles POST /api/v1/review-periods/disable-objective-planning
 // Mirrors .NET PerformanceMgtController.DisableObjectivePlanning.
 func (h *ReviewPeriodHandler) DisableObjectivePlanning(w http.ResponseWriter, r *http.Request) {
-	var req ReviewPeriodRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.ReviewPeriodRequestVm
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.DisableObjectivePlanning(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.DisableObjectivePlanning(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "DisableObjectivePlanning").Msg("Failed to disable objective planning")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -356,13 +357,13 @@ func (h *ReviewPeriodHandler) DisableObjectivePlanning(w http.ResponseWriter, r 
 // EnableWorkProductPlanning handles POST /api/v1/review-periods/enable-work-product-planning
 // Mirrors .NET PerformanceMgtController.EnableWorkProductPlanning.
 func (h *ReviewPeriodHandler) EnableWorkProductPlanning(w http.ResponseWriter, r *http.Request) {
-	var req ReviewPeriodRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.ReviewPeriodRequestVm
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.EnableWorkProductPlanning(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.EnableWorkProductPlanning(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "EnableWorkProductPlanning").Msg("Failed to enable work product planning")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -375,13 +376,13 @@ func (h *ReviewPeriodHandler) EnableWorkProductPlanning(w http.ResponseWriter, r
 // DisableWorkProductPlanning handles POST /api/v1/review-periods/disable-work-product-planning
 // Mirrors .NET PerformanceMgtController.DisableWorkProductPlanning.
 func (h *ReviewPeriodHandler) DisableWorkProductPlanning(w http.ResponseWriter, r *http.Request) {
-	var req ReviewPeriodRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.ReviewPeriodRequestVm
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.DisableWorkProductPlanning(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.DisableWorkProductPlanning(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "DisableWorkProductPlanning").Msg("Failed to disable work product planning")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -394,13 +395,13 @@ func (h *ReviewPeriodHandler) DisableWorkProductPlanning(w http.ResponseWriter, 
 // EnableWorkProductEvaluation handles POST /api/v1/review-periods/enable-work-product-evaluation
 // Mirrors .NET PerformanceMgtController.EnableWorkProductEvaluation.
 func (h *ReviewPeriodHandler) EnableWorkProductEvaluation(w http.ResponseWriter, r *http.Request) {
-	var req ReviewPeriodRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.ReviewPeriodRequestVm
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.EnableWorkProductEvaluation(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.EnableWorkProductEvaluation(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "EnableWorkProductEvaluation").Msg("Failed to enable work product evaluation")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -413,13 +414,13 @@ func (h *ReviewPeriodHandler) EnableWorkProductEvaluation(w http.ResponseWriter,
 // DisableWorkProductEvaluation handles POST /api/v1/review-periods/disable-work-product-evaluation
 // Mirrors .NET PerformanceMgtController.DisableWorkProductEvaluation.
 func (h *ReviewPeriodHandler) DisableWorkProductEvaluation(w http.ResponseWriter, r *http.Request) {
-	var req ReviewPeriodRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.ReviewPeriodRequestVm
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.DisableWorkProductEvaluation(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.DisableWorkProductEvaluation(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "DisableWorkProductEvaluation").Msg("Failed to disable work product evaluation")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -492,18 +493,18 @@ func (h *ReviewPeriodHandler) GetReviewPeriodDetails(w http.ResponseWriter, r *h
 // Mirrors .NET PerformanceMgtController.SaveDraftReviewPeriodObjective.
 // Iterates over ObjectiveIds and creates a draft for each.
 func (h *ReviewPeriodHandler) SaveDraftReviewPeriodObjective(w http.ResponseWriter, r *http.Request) {
-	var req AddPeriodObjectiveRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.SaveDraftPeriodObjectiveVm
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	if req.ReviewPeriodID == "" || len(req.ObjectiveIds) == 0 {
+	if vm.ReviewPeriodID == "" || len(vm.ObjectiveIDs) == 0 {
 		response.Error(w, http.StatusBadRequest, "reviewPeriodId and at least one objectiveId are required")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.SaveDraftReviewPeriodObjective(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.SaveDraftReviewPeriodObjective(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "SaveDraftReviewPeriodObjective").Msg("Failed to save draft review period objective")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -517,18 +518,18 @@ func (h *ReviewPeriodHandler) SaveDraftReviewPeriodObjective(w http.ResponseWrit
 // Mirrors .NET PerformanceMgtController.AddReviewPeriodObjective.
 // Iterates over ObjectiveIds and adds each to the period.
 func (h *ReviewPeriodHandler) AddReviewPeriodObjective(w http.ResponseWriter, r *http.Request) {
-	var req AddPeriodObjectiveRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.AddPeriodObjectiveVm
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	if req.ReviewPeriodID == "" || len(req.ObjectiveIds) == 0 {
+	if vm.ReviewPeriodID == "" || len(vm.ObjectiveIDs) == 0 {
 		response.Error(w, http.StatusBadRequest, "reviewPeriodId and at least one objectiveId are required")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.AddReviewPeriodObjective(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.AddReviewPeriodObjective(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "AddReviewPeriodObjective").Msg("Failed to add review period objective")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -541,18 +542,18 @@ func (h *ReviewPeriodHandler) AddReviewPeriodObjective(w http.ResponseWriter, r 
 // SubmitDraftReviewPeriodObjective handles POST /api/v1/review-periods/objectives/submit-draft
 // Mirrors .NET PerformanceMgtController.SubmitDraftReviewPeriodObjective.
 func (h *ReviewPeriodHandler) SubmitDraftReviewPeriodObjective(w http.ResponseWriter, r *http.Request) {
-	var req AddPeriodObjectiveRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.PeriodObjectiveRequestVm
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	if req.ReviewPeriodID == "" || len(req.ObjectiveIds) == 0 {
-		response.Error(w, http.StatusBadRequest, "reviewPeriodId and at least one objectiveId are required")
+	if vm.ReviewPeriodID == "" {
+		response.Error(w, http.StatusBadRequest, "reviewPeriodId is required")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.SubmitDraftReviewPeriodObjective(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.SubmitDraftReviewPeriodObjective(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "SubmitDraftReviewPeriodObjective").Msg("Failed to submit draft review period objective")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -565,18 +566,18 @@ func (h *ReviewPeriodHandler) SubmitDraftReviewPeriodObjective(w http.ResponseWr
 // CancelReviewPeriodObjective handles POST /api/v1/review-periods/objectives/cancel
 // Mirrors .NET PerformanceMgtController.CancelReviewPeriodObjective.
 func (h *ReviewPeriodHandler) CancelReviewPeriodObjective(w http.ResponseWriter, r *http.Request) {
-	var req AddPeriodObjectiveRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.PeriodObjectiveRequestVm
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	if req.ReviewPeriodID == "" || len(req.ObjectiveIds) == 0 {
-		response.Error(w, http.StatusBadRequest, "reviewPeriodId and at least one objectiveId are required")
+	if vm.ReviewPeriodID == "" {
+		response.Error(w, http.StatusBadRequest, "reviewPeriodId is required")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.CancelReviewPeriodObjective(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.CancelReviewPeriodObjective(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "CancelReviewPeriodObjective").Msg("Failed to cancel review period objective")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -612,13 +613,13 @@ func (h *ReviewPeriodHandler) GetReviewPeriodObjectives(w http.ResponseWriter, r
 // SaveDraftReviewPeriodObjectiveCategoryDefinition handles POST /api/v1/review-periods/category-definitions/draft
 // Mirrors .NET PerformanceMgtController.SaveDraftReviewPeriodObjectiveCategoryDefinition.
 func (h *ReviewPeriodHandler) SaveDraftReviewPeriodObjectiveCategoryDefinition(w http.ResponseWriter, r *http.Request) {
-	var req CategoryDefinitionRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.CategoryDefinitionRequestVm
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.SaveDraftCategoryDefinition(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.SaveDraftCategoryDefinition(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "SaveDraftReviewPeriodObjectiveCategoryDefinition").Msg("Failed to save draft category definition")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -631,13 +632,13 @@ func (h *ReviewPeriodHandler) SaveDraftReviewPeriodObjectiveCategoryDefinition(w
 // AddReviewPeriodObjectiveCategoryDefinition handles POST /api/v1/review-periods/category-definitions
 // Mirrors .NET PerformanceMgtController.AddObjectiveCategoryDefinition.
 func (h *ReviewPeriodHandler) AddReviewPeriodObjectiveCategoryDefinition(w http.ResponseWriter, r *http.Request) {
-	var req CategoryDefinitionRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.CategoryDefinitionRequestVm
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.AddCategoryDefinition(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.AddCategoryDefinition(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "AddReviewPeriodObjectiveCategoryDefinition").Msg("Failed to add category definition")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -650,13 +651,13 @@ func (h *ReviewPeriodHandler) AddReviewPeriodObjectiveCategoryDefinition(w http.
 // SubmitDraftReviewPeriodObjectiveCategoryDefinition handles POST /api/v1/review-periods/category-definitions/submit-draft
 // Mirrors .NET PerformanceMgtController.SubmitDraftObjectiveCategoryDefinition.
 func (h *ReviewPeriodHandler) SubmitDraftReviewPeriodObjectiveCategoryDefinition(w http.ResponseWriter, r *http.Request) {
-	var req CategoryDefinitionRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.CategoryDefinitionRequestVm
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.SubmitDraftCategoryDefinition(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.SubmitDraftCategoryDefinition(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "SubmitDraftReviewPeriodObjectiveCategoryDefinition").Msg("Failed to submit draft category definition")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -669,13 +670,13 @@ func (h *ReviewPeriodHandler) SubmitDraftReviewPeriodObjectiveCategoryDefinition
 // ApproveReviewPeriodObjectiveCategoryDefinition handles POST /api/v1/review-periods/category-definitions/approve
 // Mirrors .NET PerformanceMgtController.ApproveObjectiveCategoryDefinition.
 func (h *ReviewPeriodHandler) ApproveReviewPeriodObjectiveCategoryDefinition(w http.ResponseWriter, r *http.Request) {
-	var req CategoryDefinitionRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.CategoryDefinitionRequestVm
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.ApproveCategoryDefinition(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.ApproveCategoryDefinition(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "ApproveReviewPeriodObjectiveCategoryDefinition").Msg("Failed to approve category definition")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -688,13 +689,13 @@ func (h *ReviewPeriodHandler) ApproveReviewPeriodObjectiveCategoryDefinition(w h
 // RejectReviewPeriodObjectiveCategoryDefinition handles POST /api/v1/review-periods/category-definitions/reject
 // Mirrors .NET PerformanceMgtController.CancelObjectiveCategoryDefinition (reject operation).
 func (h *ReviewPeriodHandler) RejectReviewPeriodObjectiveCategoryDefinition(w http.ResponseWriter, r *http.Request) {
-	var req CategoryDefinitionRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.CategoryDefinitionRequestVm
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.RejectCategoryDefinition(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.RejectCategoryDefinition(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "RejectReviewPeriodObjectiveCategoryDefinition").Msg("Failed to reject category definition")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -711,13 +712,13 @@ func (h *ReviewPeriodHandler) RejectReviewPeriodObjectiveCategoryDefinition(w ht
 // AddReviewPeriodExtension handles POST /api/v1/review-periods/extensions
 // Mirrors .NET PerformanceMgtController.AddReviewPeriodExtension.
 func (h *ReviewPeriodHandler) AddReviewPeriodExtension(w http.ResponseWriter, r *http.Request) {
-	var req ReviewPeriodExtensionRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.ReviewPeriodExtensionRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.AddReviewPeriodExtension(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.AddReviewPeriodExtension(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "AddReviewPeriodExtension").Msg("Failed to add review period extension")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -752,13 +753,13 @@ func (h *ReviewPeriodHandler) GetReviewPeriodExtensions(w http.ResponseWriter, r
 
 // AddReviewPeriod360Review handles POST /api/v1/review-periods/360-reviews
 func (h *ReviewPeriodHandler) AddReviewPeriod360Review(w http.ResponseWriter, r *http.Request) {
-	var req ReviewPeriod360ReviewRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.CreateReviewPeriod360ReviewRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.AddReviewPeriod360Review(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.AddReviewPeriod360Review(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "AddReviewPeriod360Review").Msg("Failed to add 360 review")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -793,13 +794,13 @@ func (h *ReviewPeriodHandler) GetReviewPeriod360Reviews(w http.ResponseWriter, r
 // SaveDraftIndividualPlannedObjective handles POST /api/v1/review-periods/individual-planned-objectives/draft
 // Mirrors .NET PerformanceMgtController.SaveDraftReviewPeriodOperationalObjective.
 func (h *ReviewPeriodHandler) SaveDraftIndividualPlannedObjective(w http.ResponseWriter, r *http.Request) {
-	var req IndividualPlannedObjectiveRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.AddReviewPeriodIndividualPlannedObjectiveRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.SaveDraftIndividualPlannedObjective(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.SaveDraftIndividualPlannedObjective(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "SaveDraftIndividualPlannedObjective").Msg("Failed to save draft individual planned objective")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -812,13 +813,13 @@ func (h *ReviewPeriodHandler) SaveDraftIndividualPlannedObjective(w http.Respons
 // AddIndividualPlannedObjective handles POST /api/v1/review-periods/individual-planned-objectives
 // Mirrors .NET PerformanceMgtController.AddReviewPeriodOperationalObjective.
 func (h *ReviewPeriodHandler) AddIndividualPlannedObjective(w http.ResponseWriter, r *http.Request) {
-	var req IndividualPlannedObjectiveRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.AddReviewPeriodIndividualPlannedObjectiveRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.AddIndividualPlannedObjective(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.AddIndividualPlannedObjective(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "AddIndividualPlannedObjective").Msg("Failed to add individual planned objective")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -831,13 +832,13 @@ func (h *ReviewPeriodHandler) AddIndividualPlannedObjective(w http.ResponseWrite
 // SubmitDraftIndividualPlannedObjective handles POST /api/v1/review-periods/individual-planned-objectives/submit-draft
 // Mirrors .NET PerformanceMgtController.SubmitDraftReviewPeriodOperationalObjective.
 func (h *ReviewPeriodHandler) SubmitDraftIndividualPlannedObjective(w http.ResponseWriter, r *http.Request) {
-	var req IndividualPlannedObjectiveRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.ReviewPeriodIndividualPlannedObjectiveRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.SubmitDraftIndividualPlannedObjective(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.SubmitDraftIndividualPlannedObjective(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "SubmitDraftIndividualPlannedObjective").Msg("Failed to submit draft individual planned objective")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -850,13 +851,13 @@ func (h *ReviewPeriodHandler) SubmitDraftIndividualPlannedObjective(w http.Respo
 // ApproveIndividualPlannedObjective handles POST /api/v1/review-periods/individual-planned-objectives/approve
 // Mirrors .NET PerformanceMgtController.ApproveReviewPeriodOperationalObjective.
 func (h *ReviewPeriodHandler) ApproveIndividualPlannedObjective(w http.ResponseWriter, r *http.Request) {
-	var req IndividualPlannedObjectiveRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.ReviewPeriodIndividualPlannedObjectiveRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.ApproveIndividualPlannedObjective(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.ApproveIndividualPlannedObjective(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "ApproveIndividualPlannedObjective").Msg("Failed to approve individual planned objective")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -869,13 +870,13 @@ func (h *ReviewPeriodHandler) ApproveIndividualPlannedObjective(w http.ResponseW
 // RejectIndividualPlannedObjective handles POST /api/v1/review-periods/individual-planned-objectives/reject
 // Mirrors .NET PerformanceMgtController.RejectReviewPeriodOperationalObjective.
 func (h *ReviewPeriodHandler) RejectIndividualPlannedObjective(w http.ResponseWriter, r *http.Request) {
-	var req IndividualPlannedObjectiveRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.ReviewPeriodIndividualPlannedObjectiveRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.RejectIndividualPlannedObjective(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.RejectIndividualPlannedObjective(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "RejectIndividualPlannedObjective").Msg("Failed to reject individual planned objective")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -888,13 +889,13 @@ func (h *ReviewPeriodHandler) RejectIndividualPlannedObjective(w http.ResponseWr
 // ReturnIndividualPlannedObjective handles POST /api/v1/review-periods/individual-planned-objectives/return
 // Mirrors .NET PerformanceMgtController.ReturnReviewPeriodOperationalObjective.
 func (h *ReviewPeriodHandler) ReturnIndividualPlannedObjective(w http.ResponseWriter, r *http.Request) {
-	var req IndividualPlannedObjectiveRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.ReviewPeriodIndividualPlannedObjectiveRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.ReturnIndividualPlannedObjective(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.ReturnIndividualPlannedObjective(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "ReturnIndividualPlannedObjective").Msg("Failed to return individual planned objective")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -907,13 +908,13 @@ func (h *ReviewPeriodHandler) ReturnIndividualPlannedObjective(w http.ResponseWr
 // CancelIndividualPlannedObjective handles POST /api/v1/review-periods/individual-planned-objectives/cancel
 // Mirrors .NET PerformanceMgtController.CancelReviewPeriodOperationalObjective.
 func (h *ReviewPeriodHandler) CancelIndividualPlannedObjective(w http.ResponseWriter, r *http.Request) {
-	var req IndividualPlannedObjectiveRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.ReviewPeriodIndividualPlannedObjectiveRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.CancelIndividualPlannedObjective(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.CancelIndividualPlannedObjective(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "CancelIndividualPlannedObjective").Msg("Failed to cancel individual planned objective")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -950,13 +951,13 @@ func (h *ReviewPeriodHandler) GetStaffIndividualPlannedObjectives(w http.Respons
 
 // CreatePeriodObjectiveEvaluation handles POST /api/v1/review-periods/objective-evaluations
 func (h *ReviewPeriodHandler) CreatePeriodObjectiveEvaluation(w http.ResponseWriter, r *http.Request) {
-	var req PeriodObjectiveEvaluationRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.AddPeriodObjectiveEvaluationRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.CreatePeriodObjectiveEvaluation(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.CreatePeriodObjectiveEvaluation(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "CreatePeriodObjectiveEvaluation").Msg("Failed to create period objective evaluation")
 		response.Error(w, http.StatusBadRequest, err.Error())
@@ -968,13 +969,13 @@ func (h *ReviewPeriodHandler) CreatePeriodObjectiveEvaluation(w http.ResponseWri
 
 // CreatePeriodObjectiveDepartmentEvaluation handles POST /api/v1/review-periods/objective-evaluations/department
 func (h *ReviewPeriodHandler) CreatePeriodObjectiveDepartmentEvaluation(w http.ResponseWriter, r *http.Request) {
-	var req PeriodObjectiveEvaluationRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var vm performance.AddPeriodObjectiveDepartmentEvaluationRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	result, err := h.svc.ReviewPeriod.CreatePeriodObjectiveDepartmentEvaluation(r.Context(), req)
+	result, err := h.svc.ReviewPeriod.CreatePeriodObjectiveDepartmentEvaluation(r.Context(), &vm)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "CreatePeriodObjectiveDepartmentEvaluation").Msg("Failed to create department objective evaluation")
 		response.Error(w, http.StatusBadRequest, err.Error())

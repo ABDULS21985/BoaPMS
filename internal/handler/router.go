@@ -173,7 +173,7 @@ func NewRouter(svc *service.Container, mw *middleware.Stack, cfg *config.Config,
 	mux.Handle("POST /api/v1/review-periods/objectives", jwtProtect(mw, rpHandler.AddReviewPeriodObjective))
 	mux.Handle("POST /api/v1/review-periods/objectives/submit-draft", jwtProtect(mw, rpHandler.SubmitDraftReviewPeriodObjective))
 	mux.Handle("POST /api/v1/review-periods/objectives/cancel", jwtProtect(mw, rpHandler.CancelReviewPeriodObjective))
-	mux.Handle("GET /api/v1/review-periods/objectives", jwtProtect(mw, rpHandler.GetReviewPeriodObjectives))
+	mux.Handle("GET /api/v1/review-periods/{reviewPeriodId}/objectives", jwtProtect(mw, rpHandler.GetReviewPeriodObjectives))
 
 	// -- Review Period Objective Category Definitions --
 	mux.Handle("POST /api/v1/review-periods/category-definitions/draft", jwtProtect(mw, rpHandler.SaveDraftReviewPeriodObjectiveCategoryDefinition))
@@ -184,11 +184,11 @@ func NewRouter(svc *service.Container, mw *middleware.Stack, cfg *config.Config,
 
 	// -- Review Period Extensions --
 	mux.Handle("POST /api/v1/review-periods/extensions", jwtProtect(mw, rpHandler.AddReviewPeriodExtension))
-	mux.Handle("GET /api/v1/review-periods/extensions", jwtProtect(mw, rpHandler.GetReviewPeriodExtensions))
+	mux.Handle("GET /api/v1/review-periods/{reviewPeriodId}/extensions", jwtProtect(mw, rpHandler.GetReviewPeriodExtensions))
 
 	// -- Review Period 360 Reviews --
 	mux.Handle("POST /api/v1/review-periods/360-reviews", jwtProtect(mw, rpHandler.AddReviewPeriod360Review))
-	mux.Handle("GET /api/v1/review-periods/360-reviews", jwtProtect(mw, rpHandler.GetReviewPeriod360Reviews))
+	mux.Handle("GET /api/v1/review-periods/{reviewPeriodId}/360-reviews", jwtProtect(mw, rpHandler.GetReviewPeriod360Reviews))
 
 	// -- Individual Planned Objectives --
 	mux.Handle("POST /api/v1/review-periods/individual-objectives/draft", jwtProtect(mw, rpHandler.SaveDraftIndividualPlannedObjective))
@@ -203,8 +203,8 @@ func NewRouter(svc *service.Container, mw *middleware.Stack, cfg *config.Config,
 	// -- Period Objective Evaluations --
 	mux.Handle("POST /api/v1/review-periods/evaluations", jwtProtect(mw, rpHandler.CreatePeriodObjectiveEvaluation))
 	mux.Handle("POST /api/v1/review-periods/evaluations/department", jwtProtect(mw, rpHandler.CreatePeriodObjectiveDepartmentEvaluation))
-	mux.Handle("GET /api/v1/review-periods/evaluations", jwtProtect(mw, rpHandler.GetPeriodObjectiveEvaluations))
-	mux.Handle("GET /api/v1/review-periods/evaluations/department", jwtProtect(mw, rpHandler.GetPeriodObjectiveDepartmentEvaluations))
+	mux.Handle("GET /api/v1/review-periods/{reviewPeriodId}/evaluations", jwtProtect(mw, rpHandler.GetPeriodObjectiveEvaluations))
+	mux.Handle("GET /api/v1/review-periods/{reviewPeriodId}/evaluations/department", jwtProtect(mw, rpHandler.GetPeriodObjectiveDepartmentEvaluations))
 
 	// -- Period Scores --
 	mux.Handle("GET /api/v1/review-periods/scores", jwtProtect(mw, rpHandler.GetStaffPeriodScore))

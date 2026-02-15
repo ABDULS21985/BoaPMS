@@ -96,6 +96,23 @@ type ReviewPeriodExtensionListResponseVm struct {
 	ReviewPeriodExtensions []ReviewPeriodExtensionData `json:"reviewPeriodExtensions"`
 }
 
+// ReviewPeriod360ReviewData is the flat DTO for a 360 review configuration.
+type ReviewPeriod360ReviewData struct {
+	ReviewPeriod360ReviewID string `json:"reviewPeriod360ReviewId"`
+	ReviewPeriodID          string `json:"reviewPeriodId"`
+	ReviewPeriod            string `json:"reviewPeriod"`
+	TargetType              int    `json:"targetType"`
+	TargetReference         string `json:"targetReference"`
+	RecordStatus            string `json:"recordStatus"`
+	IsActive                bool   `json:"isActive"`
+}
+
+// ReviewPeriod360ReviewListResponseVm wraps a list of 360 review records.
+type ReviewPeriod360ReviewListResponseVm struct {
+	GenericListResponseVm
+	Reviews []ReviewPeriod360ReviewData `json:"reviews"`
+}
+
 // ReviewPeriodExtensionData is the flat DTO for a review period extension.
 type ReviewPeriodExtensionData struct {
 	ReviewPeriodExtensionID string       `json:"reviewPeriodExtensionId"`

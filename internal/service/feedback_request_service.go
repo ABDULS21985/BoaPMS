@@ -3,10 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/enterprise-pms/pms-api/internal/config"
 	"github.com/enterprise-pms/pms-api/internal/domain/enums"
+	"github.com/enterprise-pms/pms-api/internal/domain/erp"
 	"github.com/enterprise-pms/pms-api/internal/domain/performance"
 	"github.com/enterprise-pms/pms-api/internal/repository"
 	"github.com/rs/zerolog"
@@ -45,6 +47,10 @@ type feedbackRequestService struct {
 
 	feedbackLogRepo  *repository.PMSRepository[performance.FeedbackRequestLog]
 	reviewPeriodRepo *repository.PMSRepository[performance.PerformanceReviewPeriod]
+
+	// External database repositories for HR integration (SLA calculation).
+	erpRepo *repository.ErpRepository
+	sasRepo *repository.SasRepository
 }
 
 func newFeedbackRequestService(
@@ -52,6 +58,8 @@ func newFeedbackRequestService(
 	cfg *config.Config,
 	log zerolog.Logger,
 	parent *performanceManagementService,
+	erpRepo *repository.ErpRepository,
+	sasRepo *repository.SasRepository,
 ) *feedbackRequestService {
 	return &feedbackRequestService{
 		db:     db,
@@ -61,6 +69,8 @@ func newFeedbackRequestService(
 
 		feedbackLogRepo:  repository.NewPMSRepository[performance.FeedbackRequestLog](db),
 		reviewPeriodRepo: repository.NewPMSRepository[performance.PerformanceReviewPeriod](db),
+		erpRepo:          erpRepo,
+		sasRepo:          sasRepo,
 	}
 }
 
@@ -581,12 +591,63 @@ func (s *feedbackRequestService) HasLineManager(ctx context.Context, staffID str
 	return subordinates != nil, nil
 }
 
-// HasVacationRule – checks if a staff member has vacation/delegation rules.
-// Mirrors .NET HasVacationRule.
-// NOTE: Vacation rule checking requires external HR system integration.
+// HasVacationRule checks if a staff member has an active vacation/delegation rule.
+// Mirrors .NET PerformanceManagementService.HasVacationRule.
+//
+// The method queries the ERP VACATIONSRULE_DATA table for an active delegation
+// rule where the rule_owner matches the staff member's username and the current
+// date falls within the rule's begin_date / end_date range. If found, returns
+// true indicating the staff is currently on leave with a delegation in place.
+//
+// When the ERP repository is not available, returns false gracefully so that
+// SLA calculations proceed without vacation adjustments.
 func (s *feedbackRequestService) HasVacationRule(ctx context.Context, staffID string) (bool, error) {
-	// Placeholder: vacation rule checking is not yet integrated
-	s.log.Debug().Str("staffID", staffID).Msg("HasVacationRule: stub - external HR integration pending")
+	if s.erpRepo == nil {
+		s.log.Debug().Str("staffID", staffID).Msg("HasVacationRule: ERP repo not configured, returning false")
+		return false, nil
+	}
+
+	// Resolve the employee's username for matching against vacation rule owners.
+	if s.parent.erpEmployeeSvc == nil {
+		s.log.Debug().Str("staffID", staffID).Msg("HasVacationRule: ERP employee service not available, returning false")
+		return false, nil
+	}
+
+	empDetail, err := s.parent.erpEmployeeSvc.GetEmployeeDetail(ctx, staffID)
+	if err != nil || empDetail == nil {
+		s.log.Debug().Err(err).Str("staffID", staffID).Msg("HasVacationRule: employee not found")
+		return false, nil
+	}
+
+	// Extract the username for matching. The .NET code matches on user.UserName (case-insensitive).
+	userName := ""
+	if empData, ok := empDetail.(*erp.EmployeeData); ok {
+		userName = strings.ToLower(strings.TrimSpace(empData.UserName))
+	}
+	if userName == "" {
+		userName = strings.ToLower(strings.TrimSpace(staffID))
+	}
+
+	// Query vacation rules active as of now.
+	now := time.Now()
+	rules, err := s.erpRepo.GetVacationRules(ctx, now)
+	if err != nil {
+		s.log.Warn().Err(err).Str("staffID", staffID).Msg("HasVacationRule: failed to query vacation rules, returning false")
+		return false, nil
+	}
+
+	// Find a matching rule by username (case-insensitive match on rule_owner).
+	for _, rule := range rules {
+		if rule.RuleOwner == nil {
+			continue
+		}
+		if strings.EqualFold(strings.TrimSpace(*rule.RuleOwner), userName) {
+			s.log.Info().Str("staffID", staffID).Msg("HasVacationRule: active vacation rule found")
+			return true, nil
+		}
+	}
+
+	s.log.Debug().Str("staffID", staffID).Msg("HasVacationRule: no active vacation rule found")
 	return false, nil
 }
 
@@ -595,32 +656,108 @@ func (s *feedbackRequestService) HasVacationRule(ctx context.Context, staffID st
 // Mirrors .NET GetStaffLeaveDays.
 // =========================================================================
 
+// GetStaffLeaveDays retrieves the count of approved leave days for a staff member
+// between the given start and end dates. Used in SLA calculation to exclude
+// leave days from the breach window.
+//
+// Mirrors .NET PerformanceManagementService.GetStaffLeaveDays.
+//
+// The method queries the SAS StaffLunchAttendance table for approved absence
+// records (where AttendanceStatus != PRESENT_ABSENCE_ID) within the date range.
+// The PRESENT_ABSENCE_ID is read from GlobalSettings; defaults to 19.
+//
+// When the SAS database is not available, returns zero leave days gracefully.
 func (s *feedbackRequestService) GetStaffLeaveDays(ctx context.Context, staffID string, startDate, endDate time.Time) (performance.LeaveResponseVm, error) {
 	resp := performance.LeaveResponseVm{}
 	resp.Message = "an error occurred"
 
-	// NOTE: Leave days calculation requires external HR system integration.
-	// In the .NET implementation, this calls an ERP API to get approved leave
-	// records for the staff member between the given dates.
-	s.log.Debug().Str("staffID", staffID).Msg("GetStaffLeaveDays: stub - external HR integration pending")
+	if s.sasRepo == nil {
+		s.log.Debug().Str("staffID", staffID).Msg("GetStaffLeaveDays: SAS repo not configured, returning 0")
+		resp.NoLeaveDays = 0
+		resp.Message = "operation completed successfully"
+		return resp, nil
+	}
 
-	resp.NoLeaveDays = 0
+	// Resolve the PRESENT_ABSENCE_ID from global settings (default: 19).
+	// In the .NET code: PRESENT_ABSENCE_ID = await _globalSetting.GetIntValue("PRESENT_ABSENCE_ID")
+	presentAbsenceID := 19
+	if s.parent.globalSettingSvc != nil {
+		if val, err := s.parent.globalSettingSvc.GetIntValue(ctx, "PRESENT_ABSENCE_ID"); err == nil {
+			presentAbsenceID = val
+		}
+	}
+
+	// Validate the employee exists before querying leave.
+	if s.parent.erpEmployeeSvc != nil {
+		empDetail, err := s.parent.erpEmployeeSvc.GetEmployeeDetail(ctx, staffID)
+		if err != nil || empDetail == nil {
+			s.log.Debug().Err(err).Str("staffID", staffID).Msg("GetStaffLeaveDays: employee not found, returning 0")
+			resp.NoLeaveDays = 0
+			resp.Message = "operation completed successfully"
+			return resp, nil
+		}
+	}
+
+	// Query approved leave records from SAS database.
+	leaveRecords, err := s.sasRepo.GetStaffLeaveDaysBetween(ctx, staffID, startDate, endDate, presentAbsenceID)
+	if err != nil {
+		s.log.Warn().Err(err).Str("staffID", staffID).Msg("GetStaffLeaveDays: failed to query leave records, returning 0")
+		resp.NoLeaveDays = 0
+		resp.Message = "operation completed successfully"
+		return resp, nil
+	}
+
+	resp.NoLeaveDays = len(leaveRecords)
+	resp.HasError = false
 	resp.Message = "operation completed successfully"
+
+	s.log.Debug().
+		Str("staffID", staffID).
+		Int("leaveDays", resp.NoLeaveDays).
+		Msg("GetStaffLeaveDays: leave days retrieved")
+
 	return resp, nil
 }
 
-// GetPublicDays – retrieves public holidays count.
-// Mirrors .NET GetPublicDays.
+// GetPublicDays retrieves the count of public holidays between the given dates.
+// Used in SLA calculation to exclude public holidays from the breach window.
+//
+// Mirrors .NET PerformanceManagementService.GetPublicDays.
+//
+// The method queries the ERP HOLIDAYS_T24 table for holidays where HDate falls
+// within the [startDate, endDate] range.
+//
+// When the ERP repository is not available, returns zero holidays gracefully.
 func (s *feedbackRequestService) GetPublicDays(ctx context.Context, startDate, endDate time.Time) (performance.PublicHolidaysResponseVm, error) {
 	resp := performance.PublicHolidaysResponseVm{}
 	resp.Message = "an error occurred"
 
-	// NOTE: Public holidays calculation requires external calendar service.
-	// In the .NET implementation, this calls an ERP API.
-	s.log.Debug().Msg("GetPublicDays: stub - external calendar integration pending")
+	if s.erpRepo == nil {
+		s.log.Debug().Msg("GetPublicDays: ERP repo not configured, returning 0")
+		resp.NoPublicDays = 0
+		resp.Message = "operation completed successfully"
+		return resp, nil
+	}
 
-	resp.NoPublicDays = 0
+	// Query public holidays from the ERP database within the date range.
+	holidays, err := s.erpRepo.GetPublicHolidaysBetween(ctx, startDate, endDate)
+	if err != nil {
+		s.log.Warn().Err(err).Msg("GetPublicDays: failed to query public holidays, returning 0")
+		resp.NoPublicDays = 0
+		resp.Message = "operation completed successfully"
+		return resp, nil
+	}
+
+	resp.NoPublicDays = len(holidays)
+	resp.HasError = false
 	resp.Message = "operation completed successfully"
+
+	s.log.Debug().
+		Int("publicDays", resp.NoPublicDays).
+		Time("startDate", startDate).
+		Time("endDate", endDate).
+		Msg("GetPublicDays: public holidays retrieved")
+
 	return resp, nil
 }
 

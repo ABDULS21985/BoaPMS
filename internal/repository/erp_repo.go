@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/enterprise-pms/pms-api/internal/domain/erp"
 	"github.com/jmoiron/sqlx"
@@ -512,7 +513,7 @@ func (r *ErpRepository) GetAllLocations(ctx context.Context) ([]erp.ErpLocationD
 
 // ─── Holiday / Vacation Data ─────────────────────────────────────────────────
 
-// GetPublicHolidays retrieves public holiday records.
+// GetPublicHolidays retrieves all public holiday records.
 func (r *ErpRepository) GetPublicHolidays(ctx context.Context) ([]erp.PublicHolidayData, error) {
 	if r.db == nil {
 		return nil, fmt.Errorf("erpRepo.GetPublicHolidays: ERP database not configured")
@@ -525,14 +526,38 @@ func (r *ErpRepository) GetPublicHolidays(ctx context.Context) ([]erp.PublicHoli
 	return results, nil
 }
 
-// GetVacationRules retrieves vacation rules for an employee.
-func (r *ErpRepository) GetVacationRules(ctx context.Context, employeeID string) ([]erp.VacationRuleData, error) {
+// GetPublicHolidaysBetween retrieves public holidays between two dates.
+// Mirrors the .NET query: WHERE HDate >= @start AND HDate <= @end.
+func (r *ErpRepository) GetPublicHolidaysBetween(ctx context.Context, startDate, endDate time.Time) ([]erp.PublicHolidayData, error) {
+	if r.db == nil {
+		return nil, fmt.Errorf("erpRepo.GetPublicHolidaysBetween: ERP database not configured")
+	}
+	var results []erp.PublicHolidayData
+	err := r.db.SelectContext(ctx, &results,
+		`SELECT * FROM dbo.HOLIDAYS_T24
+		 WHERE HDate IS NOT NULL AND HDate >= @p1 AND HDate <= @p2`,
+		startDate, endDate)
+	if err != nil {
+		return nil, fmt.Errorf("erpRepo.GetPublicHolidaysBetween: %w", err)
+	}
+	return results, nil
+}
+
+// GetVacationRules retrieves all vacation rules for a given date.
+// Mirrors the .NET LINQ: WHERE rule_owner IS NOT NULL
+//   AND begin_date <= startDate AND (end_date IS NULL OR end_date >= startDate).
+func (r *ErpRepository) GetVacationRules(ctx context.Context, startDate time.Time) ([]erp.VacationRuleData, error) {
 	if r.db == nil {
 		return nil, fmt.Errorf("erpRepo.GetVacationRules: ERP database not configured")
 	}
 	var results []erp.VacationRuleData
 	err := r.db.SelectContext(ctx, &results,
-		`SELECT * FROM dbo.VACATIONSRULE_DATA WHERE EMPLOYEE_ID = @p1`, employeeID)
+		`SELECT rule_owner, assigned_to, begin_date, end_date
+		 FROM dbo.VACATIONSRULE_DATA
+		 WHERE rule_owner IS NOT NULL
+		   AND begin_date <= @p1
+		   AND (end_date IS NULL OR end_date >= @p2)`,
+		startDate, startDate)
 	if err != nil {
 		return nil, fmt.Errorf("erpRepo.GetVacationRules: %w", err)
 	}

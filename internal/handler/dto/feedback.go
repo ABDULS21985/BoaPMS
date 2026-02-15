@@ -265,6 +265,69 @@ type CompetencyGapClosureListResponseVm struct {
 }
 
 // ===========================================================================
+// Competency Review Feedback Details (with organisational context)
+// ===========================================================================
+
+// CompetencyReviewFeedbackDetails holds a detailed competency review feedback with organisational context.
+type CompetencyReviewFeedbackDetails struct {
+	CompetencyReviewFeedbackID string                                `json:"competency_review_feedback_id"`
+	StaffID                    string                                `json:"staff_id"`
+	StaffName                  string                                `json:"staff_name"`
+	OfficeID                   int                                   `json:"office_id"`
+	OfficeCode                 string                                `json:"office_code"`
+	OfficeName                 string                                `json:"office_name"`
+	DivisionID                 int                                   `json:"division_id"`
+	DivisionCode               string                                `json:"division_code"`
+	DivisionName               string                                `json:"division_name"`
+	DepartmentID               int                                   `json:"department_id"`
+	DepartmentCode             string                                `json:"department_code"`
+	DepartmentName             string                                `json:"department_name"`
+	MaxPoints                  float64                               `json:"max_points"`
+	FinalScore                 float64                               `json:"final_score"`
+	FinalScorePercentage       float64                               `json:"final_score_percentage"`
+	ReviewPeriodID             string                                `json:"review_period_id"`
+	RecordStatusName           string                                `json:"record_status_name"`
+	Ratings                    []CompetencyReviewerRatingSummaryData `json:"ratings,omitempty"`
+}
+
+// CompetencyReviewFeedbackDetailsResponseVm wraps a detailed competency review feedback.
+type CompetencyReviewFeedbackDetailsResponseVm struct {
+	BaseAPIResponse
+	CompetencyReviewFeedback CompetencyReviewFeedbackDetails `json:"competency_review_feedback"`
+}
+
+// CompetencyReviewerRatingSummaryData holds a summarised rating per competency.
+type CompetencyReviewerRatingSummaryData struct {
+	PmsCompetencyID string  `json:"pms_competency_id"`
+	PmsCompetency   string  `json:"pms_competency"`
+	AverageRating   float64 `json:"average_rating"`
+}
+
+// ===========================================================================
+// Staff Pending Request VMs
+// ===========================================================================
+
+// StaffPendingRequestVm represents a pending feedback request for a staff member.
+type StaffPendingRequestVm struct {
+	FeedbackRequestLogID string    `json:"feedback_request_log_id"`
+	FeedBackRequestType  int       `json:"feedback_request_type"`
+	ReferenceID          string    `json:"reference_id"`
+	TimeInitiated        time.Time `json:"time_initiated"`
+	AssignedStaffID      string    `json:"assigned_staff_id"`
+	RequestOwnerStaffID  string    `json:"request_owner_staff_id"`
+	RecordStatus         int       `json:"record_status"`
+	HasSla               bool      `json:"has_sla"`
+	ID                   int       `json:"id"`
+	IsActive             bool      `json:"is_active"`
+}
+
+// StaffPendingRequestListResponseVm wraps a list of staff pending requests.
+type StaffPendingRequestListResponseVm struct {
+	GenericListResponseVm
+	Requests []StaffPendingRequestVm `json:"requests"`
+}
+
+// ===========================================================================
 // View Model DTOs (Vm suffix – handler-layer representations)
 // ===========================================================================
 
@@ -339,6 +402,31 @@ type QuestionnaireVm struct {
 	PmsCompetencyName      string                        `json:"pms_competency_name"`
 	RecordStatus           string                        `json:"record_status"`
 	Options                []FeedbackQuestionaireOptionData `json:"options,omitempty"`
+}
+
+// ---------------------------------------------------------------------------
+// 360 Review Completion View Models
+// ---------------------------------------------------------------------------
+
+// CompleteCompetencyReviewVm is the request body for completing a competency review by the review owner.
+type CompleteCompetencyReviewVm struct {
+	ReviewStaffID              string `json:"review_staff_id"`
+	CompetencyReviewFeedbackID string `json:"competency_review_feedback_id"`
+}
+
+// CompleteFeedbackVm is the request body for a reviewer completing their feedback submission.
+type CompleteFeedbackVm struct {
+	ReviewStaffID              string `json:"review_staff_id"`
+	CompetencyReviewFeedbackID string `json:"competency_review_feedback_id"`
+	CompetencyReviewerID       string `json:"competency_reviewer_id"`
+}
+
+// SavePmsCompetencyRatingRequestVm is the request for saving a PMS competency rating.
+type SavePmsCompetencyRatingRequestVm struct {
+	PmsCompetencyID              string `json:"pms_competency_id"`
+	FeedbackQuestionaireOptionID string `json:"feedback_questionaire_option_id"`
+	CompetencyReviewerID         string `json:"competency_reviewer_id"`
+	CompetencyReviewerRatingID   string `json:"competency_reviewer_rating_id,omitempty"`
 }
 
 // ---------------------------------------------------------------------------

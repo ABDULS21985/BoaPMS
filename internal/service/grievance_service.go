@@ -1028,20 +1028,16 @@ func (s *grievanceManagementService) resolveReviewPeriodID(
 	// Try active review period first.
 	rpResult, err := s.reviewPeriodSvc.GetActiveReviewPeriod(ctx)
 	if err == nil && rpResult != nil {
-		if rpResp, ok := rpResult.(*performance.ReviewPeriodResponseVm); ok {
-			if !rpResp.HasError && rpResp.PerformanceReviewPeriod != nil {
-				return rpResp.PerformanceReviewPeriod.PeriodID
-			}
+		if !rpResult.HasError && rpResult.PerformanceReviewPeriod != nil {
+			return rpResult.PerformanceReviewPeriod.PeriodID
 		}
 	}
 
 	// Fall back to staff-specific active period.
 	rpResult, err = s.reviewPeriodSvc.GetStaffActiveReviewPeriod(ctx, assigneeStaffID)
 	if err == nil && rpResult != nil {
-		if rpResp, ok := rpResult.(*performance.ReviewPeriodResponseVm); ok {
-			if !rpResp.HasError && rpResp.PerformanceReviewPeriod != nil {
-				return rpResp.PerformanceReviewPeriod.PeriodID
-			}
+		if !rpResult.HasError && rpResult.PerformanceReviewPeriod != nil {
+			return rpResult.PerformanceReviewPeriod.PeriodID
 		}
 	}
 

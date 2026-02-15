@@ -9,24 +9,26 @@ import (
 // Container holds all service implementations.
 // This is the Go equivalent of the .NET DI container for services.
 type Container struct {
-	Performance  PerformanceManagementService
-	Competency   CompetencyService
-	PmsSetup     PmsSetupService
-	ReviewPeriod ReviewPeriodService
-	Grievance    GrievanceManagementService
-	RoleMgt      RoleManagementService
-	StaffMgt     StaffManagementService
-	Organogram   OrganogramService
-	ErpEmployee  ErpEmployeeService
+	Performance   PerformanceManagementService
+	Competency    CompetencyService
+	PmsSetup      PmsSetupService
+	ReviewPeriod  ReviewPeriodService
+	Grievance     GrievanceManagementService
+	RoleMgt       RoleManagementService
+	StaffMgt      StaffManagementService
+	Organogram    OrganogramService
+	ErpEmployee   ErpEmployeeService
 	GlobalSetting GlobalSettingService
-	Auth         AuthService
-	Email        EmailService
-	FileStorage  FileStorageService
-	Notification NotificationService
-	Encryption   EncryptionService
-	AD           ActiveDirectoryService
+	Auth          AuthService
+	Email         EmailService
+	FileStorage   FileStorageService
+	Notification  NotificationService
+	Encryption    EncryptionService
+	AD            ActiveDirectoryService
 	UserContext   UserContextService
-	PasswordGen  PasswordGenerator
+	PasswordGen   PasswordGenerator
+	Bitly         BitlyService
+	RSAAuth       RSAAuthService
 }
 
 // New creates the service container with all dependencies wired up.
@@ -38,6 +40,8 @@ func New(repos *repository.Container, cfg *config.Config, log zerolog.Logger) *C
 	authSvc := newAuthService(repos, cfg, log)
 	ucSvc := newUserContextService(log)
 	pwGen := newPasswordGenerator()
+	bitlySvc := newBitlyService(cfg.Bitly, log)
+	rsaAuthSvc := newRSAAuthService(cfg.RSA, gsSvc, log)
 	emailSvc := newEmailService(repos, cfg, log, gsSvc)
 	encSvc := newEncryptionService(cfg, log)
 	fsSvc := newFileStorageService(cfg, log)
@@ -46,7 +50,7 @@ func New(repos *repository.Container, cfg *config.Config, log zerolog.Logger) *C
 
 	// --- Domain services ---
 	rpSvc := newReviewPeriodService(repos, cfg, log)
-	competencySvc := newCompetencyService(repos, cfg, log)
+	competencySvc := newCompetencyService(repos, cfg, log, emailSvc)
 	staffMgtSvc := newStaffManagementService(repos, cfg, log, userMgr)
 	erpSvc := newErpEmployeeService(repos, cfg, log)
 	perfSvc := newPerformanceManagementService(repos, cfg, log, rpSvc, erpSvc, gsSvc, ucSvc)
@@ -77,7 +81,9 @@ func New(repos *repository.Container, cfg *config.Config, log zerolog.Logger) *C
 		Notification:  newNotificationService(emailSvc, cfg, log),
 		Encryption:    encSvc,
 		AD:            adSvc,
-		UserContext:    ucSvc,
+		UserContext:   ucSvc,
 		PasswordGen:   pwGen,
+		Bitly:         bitlySvc,
+		RSAAuth:       rsaAuthSvc,
 	}
 }

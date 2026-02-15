@@ -1,14 +1,19 @@
 package service
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
+	"time"
 
 	"github.com/enterprise-pms/pms-api/internal/config"
 	"github.com/enterprise-pms/pms-api/internal/domain"
 	"github.com/enterprise-pms/pms-api/internal/domain/competency"
 	"github.com/enterprise-pms/pms-api/internal/domain/identity"
+	"github.com/enterprise-pms/pms-api/internal/domain/performance"
 	"github.com/enterprise-pms/pms-api/internal/repository"
 	"github.com/rs/zerolog"
 	"gorm.io/gorm"
@@ -16,39 +21,45 @@ import (
 
 // competencyService implements CompetencyService.
 type competencyService struct {
-	db  *gorm.DB
-	cfg *config.Config
-	log zerolog.Logger
+	db         *gorm.DB
+	cfg        *config.Config
+	log        zerolog.Logger
+	emailSvc   EmailService // for sending competency-related email notifications
+	httpClient *http.Client // for external SOA/ERP API calls
 
 	reviewAgent *reviewAgentService // handles population & calculation
 
-	competencyRepo          *repository.Repository[competency.Competency]
-	categoryRepo            *repository.Repository[competency.CompetencyCategory]
-	categoryGradingRepo     *repository.Repository[competency.CompetencyCategoryGrading]
-	ratingDefRepo           *repository.Repository[competency.CompetencyRatingDefinition]
-	reviewRepo              *repository.Repository[competency.CompetencyReview]
-	reviewProfileRepo       *repository.Repository[competency.CompetencyReviewProfile]
-	developmentPlanRepo     *repository.Repository[competency.DevelopmentPlan]
-	jobRoleRepo             *repository.Repository[competency.JobRole]
-	officeJobRoleRepo       *repository.Repository[competency.OfficeJobRole]
-	jobRoleCompetencyRepo   *repository.Repository[competency.JobRoleCompetency]
+	competencyRepo           *repository.Repository[competency.Competency]
+	categoryRepo             *repository.Repository[competency.CompetencyCategory]
+	categoryGradingRepo      *repository.Repository[competency.CompetencyCategoryGrading]
+	ratingDefRepo            *repository.Repository[competency.CompetencyRatingDefinition]
+	reviewRepo               *repository.Repository[competency.CompetencyReview]
+	reviewProfileRepo        *repository.Repository[competency.CompetencyReviewProfile]
+	developmentPlanRepo      *repository.Repository[competency.DevelopmentPlan]
+	jobRoleRepo              *repository.Repository[competency.JobRole]
+	officeJobRoleRepo        *repository.Repository[competency.OfficeJobRole]
+	jobRoleCompetencyRepo    *repository.Repository[competency.JobRoleCompetency]
 	behavioralCompetencyRepo *repository.Repository[competency.BehavioralCompetency]
-	jobRoleGradeRepo        *repository.Repository[competency.JobRoleGrade]
-	jobGradeRepo            *repository.Repository[competency.JobGrade]
-	jobGradeGroupRepo       *repository.Repository[competency.JobGradeGroup]
-	assignJobGradeGroupRepo *repository.Repository[competency.AssignJobGradeGroup]
-	ratingRepo              *repository.Repository[competency.Rating]
-	reviewPeriodRepo        *repository.Repository[competency.ReviewPeriod]
-	reviewTypeRepo          *repository.Repository[competency.ReviewType]
-	trainingTypeRepo        *repository.Repository[competency.TrainingType]
-	bankYearRepo            *repository.Repository[identity.BankYear]
+	jobRoleGradeRepo         *repository.Repository[competency.JobRoleGrade]
+	jobGradeRepo             *repository.Repository[competency.JobGrade]
+	jobGradeGroupRepo        *repository.Repository[competency.JobGradeGroup]
+	assignJobGradeGroupRepo  *repository.Repository[competency.AssignJobGradeGroup]
+	ratingRepo               *repository.Repository[competency.Rating]
+	reviewPeriodRepo         *repository.Repository[competency.ReviewPeriod]
+	reviewTypeRepo           *repository.Repository[competency.ReviewType]
+	trainingTypeRepo         *repository.Repository[competency.TrainingType]
+	bankYearRepo             *repository.Repository[identity.BankYear]
 }
 
-func newCompetencyService(repos *repository.Container, cfg *config.Config, log zerolog.Logger) CompetencyService {
+func newCompetencyService(repos *repository.Container, cfg *config.Config, log zerolog.Logger, emailSvc EmailService) CompetencyService {
 	return &competencyService{
-		db:                       repos.GormDB,
-		cfg:                      cfg,
-		log:                      log.With().Str("service", "competency").Logger(),
+		db:       repos.GormDB,
+		cfg:      cfg,
+		log:      log.With().Str("service", "competency").Logger(),
+		emailSvc: emailSvc,
+		httpClient: &http.Client{
+			Timeout: 30 * time.Second,
+		},
 		reviewAgent:              newReviewAgentService(repos, cfg, log),
 		competencyRepo:           repository.NewRepository[competency.Competency](repos.GormDB),
 		categoryRepo:             repository.NewRepository[competency.CompetencyCategory](repos.GormDB),
@@ -138,7 +149,7 @@ func (s *competencyService) GetCompetencies(ctx context.Context, req interface{}
 			IsRejected:             e.IsRejected,
 			RejectedBy:             e.RejectedBy,
 			RejectionReason:        e.RejectionReason,
-			BaseAuditVm:           toBaseAuditVm(e.BaseWorkFlowData.BaseAudit),
+			BaseAuditVm:            toBaseAuditVm(e.BaseWorkFlowData.BaseAudit),
 		})
 	}
 
@@ -601,13 +612,13 @@ func (s *competencyService) SaveCompetencyReview(ctx context.Context, req interf
 		message = "Competency Review has been updated successfully"
 	} else {
 		entity := competency.CompetencyReview{
-			EmployeeNumber: vm.EmployeeNumber,
-			CompetencyID:   vm.CompetencyID,
-			ReviewDate:     vm.ReviewDate,
-			ReviewPeriodID: vm.ReviewPeriodID,
-			ReviewTypeID:   vm.ReviewTypeID,
-			ReviewerID:     vm.ReviewerID,
-			ReviewerName:   vm.ReviewerName,
+			EmployeeNumber:   vm.EmployeeNumber,
+			CompetencyID:     vm.CompetencyID,
+			ReviewDate:       vm.ReviewDate,
+			ReviewPeriodID:   vm.ReviewPeriodID,
+			ReviewTypeID:     vm.ReviewTypeID,
+			ReviewerID:       vm.ReviewerID,
+			ReviewerName:     vm.ReviewerName,
 			ExpectedRatingID: vm.ExpectedRatingID,
 		}
 		entity.IsActive = vm.IsActive
@@ -666,10 +677,10 @@ func (s *competencyService) GetOfficeCompetencyReviews(ctx context.Context, offi
 	}
 
 	type managerOverview struct {
-		NoNotStartedReviews int                 `json:"noNotStartedReviews"`
-		NoStartedReviews    int                 `json:"noStartedReviews"`
-		NoOfCompletedReviews int                `json:"noOfCompletedReviews"`
-		BasicEmployeeDatas  []basicEmployeeData `json:"basicEmployeeDatas"`
+		NoNotStartedReviews  int                 `json:"noNotStartedReviews"`
+		NoStartedReviews     int                 `json:"noStartedReviews"`
+		NoOfCompletedReviews int                 `json:"noOfCompletedReviews"`
+		BasicEmployeeDatas   []basicEmployeeData `json:"basicEmployeeDatas"`
 	}
 
 	result := managerOverview{BasicEmployeeDatas: []basicEmployeeData{}}
@@ -740,13 +751,13 @@ func (s *competencyService) GetGroupCompetencyReviewProfiles(ctx context.Context
 		StaffPercentage float64 `json:"staffPercentage"`
 	}
 	type categoryDetailStat struct {
-		CategoryName          string                 `json:"categoryName"`
-		AverageRating         float64                `json:"averageRating"`
-		HighestRating         int                    `json:"highestRating"`
-		LowestRating          int                    `json:"lowestRating"`
-		MostCommonRating      float64                `json:"mostCommonRating"`
-		GroupCompetencyRatings []chartData           `json:"groupCompetencyRatings"`
-		CompetencyRatingStat  []competencyRatingStat `json:"competencyRatingStat"`
+		CategoryName           string                 `json:"categoryName"`
+		AverageRating          float64                `json:"averageRating"`
+		HighestRating          int                    `json:"highestRating"`
+		LowestRating           int                    `json:"lowestRating"`
+		MostCommonRating       float64                `json:"mostCommonRating"`
+		GroupCompetencyRatings []chartData            `json:"groupCompetencyRatings"`
+		CompetencyRatingStat   []competencyRatingStat `json:"competencyRatingStat"`
 	}
 	type categoryStat struct {
 		CategoryName string  `json:"categoryName"`
@@ -775,13 +786,13 @@ func (s *competencyService) GetGroupCompetencyReviewProfiles(ctx context.Context
 		})
 
 		detail := categoryDetailStat{
-			CategoryName:          cat,
-			AverageRating:         avgField(catProfiles, func(p competency.CompetencyReviewProfile) int { return p.AverageRatingValue }),
-			HighestRating:         maxField(catProfiles, func(p competency.CompetencyReviewProfile) int { return p.AverageRatingValue }),
-			LowestRating:          minField(catProfiles, func(p competency.CompetencyReviewProfile) int { return p.AverageRatingValue }),
-			MostCommonRating:      avgField(catProfiles, func(p competency.CompetencyReviewProfile) int { return p.AverageRatingValue }),
+			CategoryName:           cat,
+			AverageRating:          avgField(catProfiles, func(p competency.CompetencyReviewProfile) int { return p.AverageRatingValue }),
+			HighestRating:          maxField(catProfiles, func(p competency.CompetencyReviewProfile) int { return p.AverageRatingValue }),
+			LowestRating:           minField(catProfiles, func(p competency.CompetencyReviewProfile) int { return p.AverageRatingValue }),
+			MostCommonRating:       avgField(catProfiles, func(p competency.CompetencyReviewProfile) int { return p.AverageRatingValue }),
 			GroupCompetencyRatings: []chartData{},
-			CompetencyRatingStat:  []competencyRatingStat{},
+			CompetencyRatingStat:   []competencyRatingStat{},
 		}
 
 		compNames := uniqueStrings(catProfiles, func(p competency.CompetencyReviewProfile) string { return p.CompetencyName })
@@ -883,28 +894,28 @@ func (s *competencyService) SaveCompetencyReviewProfile(ctx context.Context, req
 		message = "Competency Review Profile has been updated successfully"
 	} else {
 		entity := competency.CompetencyReviewProfile{
-			EmployeeNumber:     vm.EmployeeNumber,
-			CompetencyID:       vm.CompetencyID,
-			CompetencyName:     vm.CompetencyName,
-			ExpectedRatingID:   vm.ExpectedRatingID,
-			ExpectedRatingName: vm.ExpectedRatingName,
-			ExpectedRatingValue: vm.ExpectedRatingValue,
-			ReviewPeriodID:     vm.ReviewPeriodID,
-			ReviewPeriodName:   vm.ReviewPeriodName,
-			AverageRatingID:    vm.AverageRatingID,
-			AverageRatingName:  vm.AverageRatingName,
-			AverageRatingValue: vm.AverageRatingValue,
-			AverageScore:       vm.AverageScore,
+			EmployeeNumber:         vm.EmployeeNumber,
+			CompetencyID:           vm.CompetencyID,
+			CompetencyName:         vm.CompetencyName,
+			ExpectedRatingID:       vm.ExpectedRatingID,
+			ExpectedRatingName:     vm.ExpectedRatingName,
+			ExpectedRatingValue:    vm.ExpectedRatingValue,
+			ReviewPeriodID:         vm.ReviewPeriodID,
+			ReviewPeriodName:       vm.ReviewPeriodName,
+			AverageRatingID:        vm.AverageRatingID,
+			AverageRatingName:      vm.AverageRatingName,
+			AverageRatingValue:     vm.AverageRatingValue,
+			AverageScore:           vm.AverageScore,
 			CompetencyCategoryName: vm.CompetencyCategoryName,
-			OfficeID:           vm.OfficeID,
-			OfficeName:         vm.OfficeName,
-			DivisionID:         vm.DivisionID,
-			DivisionName:       vm.DivisionName,
-			DepartmentID:       vm.DepartmentID,
-			DepartmentName:     vm.DepartmentName,
-			JobRoleID:          vm.JobRoleID,
-			JobRoleName:        vm.JobRoleName,
-			GradeName:          vm.GradeName,
+			OfficeID:               vm.OfficeID,
+			OfficeName:             vm.OfficeName,
+			DivisionID:             vm.DivisionID,
+			DivisionName:           vm.DivisionName,
+			DepartmentID:           vm.DepartmentID,
+			DepartmentName:         vm.DepartmentName,
+			JobRoleID:              vm.JobRoleID,
+			JobRoleName:            vm.JobRoleName,
+			GradeName:              vm.GradeName,
 		}
 		entity.IsActive = vm.IsActive
 
@@ -1001,7 +1012,7 @@ func (s *competencyService) GetDevelopmentPlans(ctx context.Context, competencyP
 			TargetDate:                e.TargetDate,
 			TaskStatus:                e.TaskStatus,
 			TrainingTypeName:          e.TrainingTypeName,
-			BaseAuditVm:              toBaseAuditVm(e.BaseAudit),
+			BaseAuditVm:               toBaseAuditVm(e.BaseAudit),
 		}
 		if e.CompetencyReviewProfile != nil {
 			vm.CompetencyCategoryName = e.CompetencyReviewProfile.CompetencyCategoryName
@@ -1619,8 +1630,8 @@ func (s *competencyService) GetJobGradeGroups(ctx context.Context) (interface{},
 	for _, g := range groups {
 		vms = append(vms, competency.JobGradeGroupVm{
 			JobGradeGroupID: g.JobGradeGroupID,
-			GroupName:        g.GroupName,
-			Order:            g.Order,
+			GroupName:       g.GroupName,
+			Order:           g.Order,
 			BaseAuditVm:     toBaseAuditVm(g.BaseAudit),
 		})
 	}
@@ -2230,19 +2241,145 @@ func (s *competencyService) RecalculateReviewsProfiles(ctx context.Context, req 
 
 func (s *competencyService) EmailService(ctx context.Context, req interface{}) (interface{}, error) {
 	s.log.Info().Msg("EmailService: processing email request")
-	// TODO: integrate with the Email service to send competency-related notifications.
-	return &responseVm{IsSuccess: true, Message: "Email request processed"}, nil
+
+	// Convert the loosely-typed request into a *performance.EmailRequest.
+	// The handler decodes the JSON body into interface{} (map[string]interface{}),
+	// so we re-marshal and unmarshal to get the typed struct.
+	emailReq, err := toEmailRequest(req)
+	if err != nil {
+		s.log.Error().Err(err).Msg("EmailService: invalid request payload")
+		return &responseVm{IsSuccess: false, Message: "Invalid email request payload"}, fmt.Errorf("parsing email request: %w", err)
+	}
+
+	s.log.Info().
+		Str("title", emailReq.Title).
+		Str("userId", emailReq.UserID).
+		Str("description", emailReq.EmailDescription).
+		Msg("EmailService: delegating to email service ProcessEmail")
+
+	// Delegate to the existing EmailService.ProcessEmail which handles
+	// template rendering, subject selection, and email persistence.
+	// This mirrors the .NET CompetencyMgtController calling MailServices.ProcessEmail.
+	result, err := s.emailSvc.ProcessEmail(ctx, emailReq)
+	if err != nil {
+		// Graceful degradation: log the error but do not fail the whole operation.
+		// The .NET implementation wraps each notification in a try/catch.
+		s.log.Error().Err(err).
+			Str("title", emailReq.Title).
+			Msg("EmailService: failed to process email, continuing gracefully")
+		return &responseVm{IsSuccess: false, Message: fmt.Sprintf("Email processing failed: %s", err.Error())}, nil
+	}
+
+	return result, nil
 }
 
 func (s *competencyService) SyncJobRoleUpdateSOA(ctx context.Context, req interface{}) (interface{}, error) {
 	s.log.Info().Msg("SyncJobRoleUpdateSOA: syncing job role update to SOA ERP")
-	// TODO: post job role update to the SOA API endpoint configured in cfg.
-	return &responseVm{IsSuccess: true, Message: "SOA sync request processed"}, nil
+
+	// Read the SOA API URL from config. If not configured, skip silently
+	// (mirrors the .NET pattern: if string.IsNullOrEmpty(url) return).
+	soaURL := s.cfg.SOA.APIUrl
+	if soaURL == "" {
+		s.log.Warn().Msg("SyncJobRoleUpdateSOA: SOA API URL is not configured, skipping sync")
+		return &responseVm{IsSuccess: true, Message: "SOA sync skipped (endpoint not configured)"}, nil
+	}
+
+	// Convert the loosely-typed request into a *performance.SoaJobRoleVm.
+	soaReq, err := toSoaJobRoleVm(req)
+	if err != nil {
+		s.log.Error().Err(err).Msg("SyncJobRoleUpdateSOA: invalid request payload")
+		return &responseVm{IsSuccess: false, Message: "Invalid SOA job role request payload"}, fmt.Errorf("parsing SOA job role request: %w", err)
+	}
+
+	s.log.Info().
+		Int("personId", soaReq.PersonID).
+		Str("jobRole", soaReq.JobRole).
+		Str("soaUrl", soaURL).
+		Msg("SyncJobRoleUpdateSOA: posting job role update to SOA")
+
+	// Serialize the request to JSON and POST to the SOA endpoint.
+	// Mirrors the .NET: client.PostAsync(url, new StringContent(json, ...)).
+	body, err := json.Marshal(soaReq)
+	if err != nil {
+		s.log.Error().Err(err).Msg("SyncJobRoleUpdateSOA: failed to marshal request")
+		return &responseVm{IsSuccess: false, Message: "Failed to serialize SOA request"}, fmt.Errorf("marshaling SOA request: %w", err)
+	}
+
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, soaURL, bytes.NewReader(body))
+	if err != nil {
+		s.log.Error().Err(err).Msg("SyncJobRoleUpdateSOA: failed to create HTTP request")
+		return &responseVm{IsSuccess: false, Message: "Failed to create SOA HTTP request"}, fmt.Errorf("creating SOA HTTP request: %w", err)
+	}
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	resp, err := s.httpClient.Do(httpReq)
+	if err != nil {
+		// Graceful degradation: log the error but return success since SOA sync
+		// is a best-effort operation. The .NET side calls EnsureSuccessStatusCode
+		// but the caller is fire-and-forget (Hangfire enqueue).
+		s.log.Error().Err(err).
+			Str("soaUrl", soaURL).
+			Msg("SyncJobRoleUpdateSOA: SOA endpoint unreachable, continuing gracefully")
+		return &responseVm{IsSuccess: true, Message: "SOA sync attempted but endpoint unreachable"}, nil
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		s.log.Warn().
+			Int("statusCode", resp.StatusCode).
+			Str("soaUrl", soaURL).
+			Msg("SyncJobRoleUpdateSOA: SOA endpoint returned non-success status")
+		return &responseVm{IsSuccess: true, Message: fmt.Sprintf("SOA sync completed with status %d", resp.StatusCode)}, nil
+	}
+
+	s.log.Info().
+		Int("statusCode", resp.StatusCode).
+		Msg("SyncJobRoleUpdateSOA: job role update synced to SOA successfully")
+	return &responseVm{IsSuccess: true, Message: "SOA sync request processed successfully"}, nil
 }
 
 // ===========================================================================
 // Helper functions
 // ===========================================================================
+
+// toEmailRequest converts a loosely-typed request (map[string]interface{} from
+// JSON decoding) into a *performance.EmailRequest. It re-marshals and unmarshals
+// to leverage the JSON struct tags.
+func toEmailRequest(req interface{}) (*performance.EmailRequest, error) {
+	// If it's already the correct type, return directly.
+	if er, ok := req.(*performance.EmailRequest); ok {
+		return er, nil
+	}
+
+	raw, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("marshaling request to JSON: %w", err)
+	}
+	var emailReq performance.EmailRequest
+	if err := json.Unmarshal(raw, &emailReq); err != nil {
+		return nil, fmt.Errorf("unmarshaling to EmailRequest: %w", err)
+	}
+	return &emailReq, nil
+}
+
+// toSoaJobRoleVm converts a loosely-typed request (map[string]interface{} from
+// JSON decoding) into a *performance.SoaJobRoleVm.
+func toSoaJobRoleVm(req interface{}) (*performance.SoaJobRoleVm, error) {
+	// If it's already the correct type, return directly.
+	if sr, ok := req.(*performance.SoaJobRoleVm); ok {
+		return sr, nil
+	}
+
+	raw, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("marshaling request to JSON: %w", err)
+	}
+	var soaReq performance.SoaJobRoleVm
+	if err := json.Unmarshal(raw, &soaReq); err != nil {
+		return nil, fmt.Errorf("unmarshaling to SoaJobRoleVm: %w", err)
+	}
+	return &soaReq, nil
+}
 
 // toBaseAuditVm converts domain.BaseAudit to the DTO BaseAuditVm.
 func toBaseAuditVm(a domain.BaseAudit) competency.BaseAuditVm {
@@ -2353,7 +2490,7 @@ func mapProfilesToVms(entities []competency.CompetencyReviewProfile) []competenc
 			GradeName:                 e.GradeName,
 			JobRoleName:               e.JobRoleName,
 			JobRoleID:                 e.JobRoleID,
-			NumberOfDevelopmentPlans:   len(e.DevelopmentPlans),
+			NumberOfDevelopmentPlans:  len(e.DevelopmentPlans),
 			ProgressCount:             progressCount,
 			CompletedCount:            completedCount,
 			BaseAuditVm:               toBaseAuditVm(e.BaseAudit),
@@ -2380,31 +2517,31 @@ func applyOrgFilter(q *gorm.DB, reviewPeriodId, officeId, divisionId, department
 // buildMatrixResult constructs the competency matrix overview from profiles.
 func buildMatrixResult(profiles []competency.CompetencyReviewProfile) interface{} {
 	type matrixDetail struct {
-		CompetencyName     string  `json:"competencyName"`
-		AverageScore       int     `json:"averageScore"`
+		CompetencyName      string `json:"competencyName"`
+		AverageScore        int    `json:"averageScore"`
 		ExpectedRatingValue int    `json:"expectedRatingValue"`
 	}
 	type matrixProfile struct {
-		EmployeeId             string         `json:"employeeId"`
-		EmployeeName           string         `json:"employeeName"`
-		OfficeName             string         `json:"officeName"`
-		DivisionName           string         `json:"divisionName"`
-		DepartmentName         string         `json:"departmentName"`
-		Grade                  string         `json:"grade"`
-		Position               string         `json:"position"`
-		GapCount               int            `json:"gapCount"`
-		NoOfCompetent          int            `json:"noOfCompetent"`
-		NoOfCompetencies       int            `json:"noOfCompetencies"`
-		OverallAverage         float64        `json:"overallAverage"`
+		EmployeeId              string         `json:"employeeId"`
+		EmployeeName            string         `json:"employeeName"`
+		OfficeName              string         `json:"officeName"`
+		DivisionName            string         `json:"divisionName"`
+		DepartmentName          string         `json:"departmentName"`
+		Grade                   string         `json:"grade"`
+		Position                string         `json:"position"`
+		GapCount                int            `json:"gapCount"`
+		NoOfCompetent           int            `json:"noOfCompetent"`
+		NoOfCompetencies        int            `json:"noOfCompetencies"`
+		OverallAverage          float64        `json:"overallAverage"`
 		CompetencyMatrixDetails []matrixDetail `json:"competencyMatrixDetails"`
 	}
 	type matrixOverview struct {
-		CompetencyNames               []string        `json:"competencyNames"`
+		CompetencyNames                []string        `json:"competencyNames"`
 		CompetencyMatrixReviewProfiles []matrixProfile `json:"competencyMatrixReviewProfiles"`
 	}
 
 	result := matrixOverview{
-		CompetencyNames:               []string{},
+		CompetencyNames:                []string{},
 		CompetencyMatrixReviewProfiles: []matrixProfile{},
 	}
 

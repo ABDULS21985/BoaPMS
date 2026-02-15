@@ -77,6 +77,8 @@ email:
 bitly:
   api_key: ""
   base_url: "https://api-ssl.bitly.com/v4"
+  group_guid: ""
+  domain: "bit.ly"
 
 cors:
   allow_all: true
