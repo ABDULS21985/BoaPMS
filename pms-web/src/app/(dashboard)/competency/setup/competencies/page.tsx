@@ -70,10 +70,10 @@ export default function CompetenciesPage() {
     } catch { toast.error("An error occurred."); } finally { setApproveItem(null); }
   };
 
-  const handleReject = async () => {
+  const handleReject = async (reason?: string) => {
     if (!rejectItem) return;
     try {
-      const res = await rejectCompetency({ competencyId: rejectItem.competencyId, rejectionReason: rejectReason });
+      const res = await rejectCompetency({ competencyId: rejectItem.competencyId, rejectionReason: reason ?? rejectReason });
       if (res?.isSuccess) { toast.success("Competency rejected."); loadData(); }
       else toast.error(res?.message || "Rejection failed.");
     } catch { toast.error("An error occurred."); } finally { setRejectItem(null); setRejectReason(""); }
@@ -137,9 +137,7 @@ export default function CompetenciesPage() {
 
       <ConfirmationDialog open={!!approveItem} onOpenChange={() => setApproveItem(null)} title="Approve Competency" description={`Approve "${approveItem?.competencyName}"?`} confirmLabel="Approve" onConfirm={handleApprove} />
 
-      <ConfirmationDialog open={!!rejectItem} onOpenChange={() => { setRejectItem(null); setRejectReason(""); }} title="Reject Competency" description={`Reject "${rejectItem?.competencyName}"? Please provide a reason.`} confirmLabel="Reject" variant="destructive" onConfirm={handleReject}>
-        <div className="space-y-2 mt-2"><Label>Rejection Reason</Label><Input value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder="Enter reason..." /></div>
-      </ConfirmationDialog>
+      <ConfirmationDialog open={!!rejectItem} onOpenChange={() => { setRejectItem(null); setRejectReason(""); }} title="Reject Competency" description={`Reject "${rejectItem?.competencyName}"? Please provide a reason.`} confirmLabel="Reject" variant="destructive" showReasonInput reasonLabel="Rejection Reason" onConfirm={handleReject} />
     </div>
   );
 }

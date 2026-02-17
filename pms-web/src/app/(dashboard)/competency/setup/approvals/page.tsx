@@ -2,11 +2,9 @@
 
 import { useEffect, useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { CheckCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/shared/page-header";
@@ -61,11 +59,11 @@ export default function CompetencyApprovalsPage() {
     } catch { toast.error("An error occurred."); } finally { setActionLoading(false); setApproveItem(null); }
   };
 
-  const handleReject = async () => {
+  const handleReject = async (reason?: string) => {
     if (!rejectItem) return;
     setActionLoading(true);
     try {
-      const res = await rejectCompetency({ competencyId: rejectItem.id, rejectionReason: rejectReason });
+      const res = await rejectCompetency({ competencyId: rejectItem.id, rejectionReason: reason ?? rejectReason });
       if (res?.isSuccess) { toast.success("Competency rejected."); loadData(); }
       else toast.error(res?.message || "Rejection failed.");
     } catch { toast.error("An error occurred."); } finally { setActionLoading(false); setRejectItem(null); setRejectReason(""); }
@@ -140,9 +138,7 @@ export default function CompetencyApprovalsPage() {
 
       <ConfirmationDialog open={!!approveItem} onOpenChange={() => setApproveItem(null)} title="Approve" description={`Approve "${approveItem?.name}"?`} confirmLabel={actionLoading ? "Approving..." : "Approve"} onConfirm={handleApprove} />
 
-      <ConfirmationDialog open={!!rejectItem} onOpenChange={() => { setRejectItem(null); setRejectReason(""); }} title="Reject Competency" description={`Reject "${rejectItem?.name}"?`} confirmLabel={actionLoading ? "Rejecting..." : "Reject"} variant="destructive" onConfirm={handleReject}>
-        <div className="space-y-2 mt-2"><Label>Reason</Label><Input value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder="Enter rejection reason..." /></div>
-      </ConfirmationDialog>
+      <ConfirmationDialog open={!!rejectItem} onOpenChange={() => { setRejectItem(null); setRejectReason(""); }} title="Reject Competency" description={`Reject "${rejectItem?.name}"?`} confirmLabel={actionLoading ? "Rejecting..." : "Reject"} variant="destructive" showReasonInput reasonLabel="Rejection Reason" onConfirm={handleReject} />
     </div>
   );
 }

@@ -17,12 +17,11 @@ import { PageSkeleton } from "@/components/shared/loading-skeleton";
 import { getStrategies, createStrategy, updateStrategy, approveRecords } from "@/lib/api/performance";
 import { getBankYears } from "@/lib/api/competency";
 import type { Strategy } from "@/types/performance";
-
-interface BankYear { bankYearId: number; name: string; }
+import type { CompetencyBankYear } from "@/types/competency";
 
 export default function StrategiesPage() {
   const [items, setItems] = useState<Strategy[]>([]);
-  const [bankYears, setBankYears] = useState<BankYear[]>([]);
+  const [bankYears, setBankYears] = useState<CompetencyBankYear[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -36,7 +35,7 @@ export default function StrategiesPage() {
     try {
       const [res, yearsRes] = await Promise.all([getStrategies(), getBankYears()]);
       if (res?.data) setItems(Array.isArray(res.data) ? res.data : []);
-      if (yearsRes?.data) setBankYears(yearsRes.data as BankYear[]);
+      if (yearsRes?.data) setBankYears(Array.isArray(yearsRes.data) ? yearsRes.data : []);
     } catch { /* */ } finally { setLoading(false); }
   };
 
@@ -85,7 +84,7 @@ export default function StrategiesPage() {
     { accessorKey: "description", header: "Description", cell: ({ row }) => <span className="line-clamp-1">{row.original.description}</span> },
     {
       accessorKey: "bankYearId", header: "Year",
-      cell: ({ row }) => bankYears.find((y) => y.bankYearId === row.original.bankYearId)?.name ?? row.original.bankYearId,
+      cell: ({ row }) => bankYears.find((y) => y.bankYearId === row.original.bankYearId)?.yearName ?? row.original.bankYearId,
     },
     {
       accessorKey: "isActive", header: "Status",
@@ -124,7 +123,7 @@ export default function StrategiesPage() {
             <Label>Bank Year *</Label>
             <Select value={formData.bankYearId} onValueChange={(v) => setFormData({ ...formData, bankYearId: v })}>
               <SelectTrigger><SelectValue placeholder="Select year" /></SelectTrigger>
-              <SelectContent>{bankYears.map((y) => <SelectItem key={y.bankYearId} value={String(y.bankYearId)}>{y.name}</SelectItem>)}</SelectContent>
+              <SelectContent>{bankYears.map((y) => <SelectItem key={y.bankYearId} value={String(y.bankYearId)}>{y.yearName}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div className="grid grid-cols-2 gap-4">

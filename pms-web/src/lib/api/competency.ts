@@ -20,7 +20,7 @@ import type {
   ReviewType,
   TrainingType,
   OfficeJobRole,
-  BankYear,
+  CompetencyBankYear,
   OfficeCompetencyReview,
 } from "@/types/competency";
 
@@ -190,7 +190,7 @@ export const saveTrainingType = (data: unknown) =>
 
 // --- Bank Years ---
 export const getBankYears = () =>
-  get<BaseAPIResponse<BankYear[]>>("/competency/bank-years");
+  get<BaseAPIResponse<CompetencyBankYear[]>>("/competency/bank-years");
 export const saveBankYear = (data: unknown) =>
   post<ResponseVm>("/competency/bank-years", data);
 

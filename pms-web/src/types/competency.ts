@@ -284,8 +284,8 @@ export interface TrainingType {
   dateCreated: string;
 }
 
-// --- Bank Year ---
-export interface BankYear {
+// --- Bank Year (Competency module DTO) ---
+export interface CompetencyBankYear {
   bankYearId: number;
   yearName: string;
   isActive: boolean;
