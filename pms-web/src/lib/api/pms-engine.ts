@@ -5,6 +5,7 @@ import type {
   Committee,
   WorkProduct,
   WorkProductTask,
+  WorkProductEvaluation,
   IndividualPlannedObjective,
   ProjectMember,
   CommitteeMember,
@@ -84,29 +85,48 @@ export const getStaffWorkProducts = (staffId: string, reviewPeriodId: string) =>
   get<BaseAPIResponse<WorkProduct[]>>(`/pms-engine/work-products?staffId=${staffId}&reviewPeriodId=${reviewPeriodId}`);
 export const getAllStaffWorkProducts = () =>
   get<BaseAPIResponse<WorkProduct[]>>("/pms-engine/work-products/all");
+export const getWorkProductDetails = (workProductId: string) =>
+  get<BaseAPIResponse<WorkProduct>>(`/pms-engine/work-products/${workProductId}`);
 export const createWorkProduct = (data: unknown) => post<ResponseVm>("/pms-engine/work-products", data);
+export const updateWorkProduct = (data: unknown) => put<ResponseVm>("/pms-engine/work-products", data);
 export const submitDraftWorkProduct = (data: unknown) =>
   post<ResponseVm>("/pms-engine/work-products/submit-draft", data);
 export const saveDraftWorkProduct = (data: unknown) => post<ResponseVm>("/pms-engine/work-products/draft", data);
 export const approveWorkProduct = (data: unknown) => post<ResponseVm>("/pms-engine/work-products/approve", data);
 export const rejectWorkProduct = (data: unknown) => post<ResponseVm>("/pms-engine/work-products/reject", data);
 export const returnWorkProduct = (data: unknown) => post<ResponseVm>("/pms-engine/work-products/return", data);
+export const reSubmitWorkProduct = (data: unknown) => post<ResponseVm>("/pms-engine/work-products/resubmit", data);
 export const cancelWorkProduct = (data: unknown) => post<ResponseVm>("/pms-engine/work-products/cancel", data);
+export const completeWorkProduct = (data: unknown) => post<ResponseVm>("/pms-engine/work-products/complete", data);
+export const pauseWorkProduct = (data: unknown) => post<ResponseVm>("/pms-engine/work-products/pause", data);
+export const resumeWorkProduct = (data: unknown) => post<ResponseVm>("/pms-engine/work-products/resume", data);
+export const suspendWorkProduct = (data: unknown) => post<ResponseVm>("/pms-engine/work-products/suspend", data);
+export const reInstateWorkProduct = (data: unknown) => post<ResponseVm>("/pms-engine/work-products/reinstate", data);
 
 // --- Work Product Tasks ---
 export const getWorkProductTasks = (workProductId: string) =>
   get<BaseAPIResponse<WorkProductTask[]>>(`/pms-engine/work-products/${workProductId}/tasks`);
+export const getWorkProductTaskDetail = (taskId: string) =>
+  get<BaseAPIResponse<WorkProductTask>>(`/pms-engine/work-products/tasks/${taskId}`);
 export const createWorkProductTask = (data: unknown) => post<ResponseVm>("/pms-engine/work-products/tasks", data);
+export const updateWorkProductTask = (data: unknown) => put<ResponseVm>("/pms-engine/work-products/tasks", data);
+export const completeWorkProductTask = (data: unknown) => post<ResponseVm>("/pms-engine/work-products/tasks/complete", data);
+export const cancelWorkProductTask = (data: unknown) => post<ResponseVm>("/pms-engine/work-products/tasks/cancel", data);
 
 // --- Work Product Evaluation ---
 export const evaluateWorkProduct = (data: unknown) =>
   post<ResponseVm>("/pms-engine/work-products/evaluation", data);
+export const updateWorkProductEvaluation = (data: unknown) =>
+  put<ResponseVm>("/pms-engine/work-products/evaluation", data);
 export const getWorkProductEvaluation = (workProductId: string) =>
-  get<BaseAPIResponse<unknown>>(`/pms-engine/work-products/${workProductId}/evaluation`);
+  get<BaseAPIResponse<WorkProductEvaluation>>(`/pms-engine/work-products/${workProductId}/evaluation`);
+export const initiateReEvaluation = (workProductId: string) =>
+  post<ResponseVm>(`/pms-engine/work-products/${workProductId}/re-evaluate`, {});
 
 // --- Individual Objectives ---
 export const getStaffIndividualObjectives = (staffId: string, reviewPeriodId: string) =>
   get<BaseAPIResponse<IndividualPlannedObjective[]>>(`/pms-engine/individual-objectives?staffId=${staffId}&reviewPeriodId=${reviewPeriodId}`);
+export const getStaffObjectives = getStaffIndividualObjectives;
 export const saveDraftIndividualObjective = (data: unknown) => post<ResponseVm>("/pms-engine/individual-objectives/draft", data);
 export const addIndividualObjective = (data: unknown) => post<ResponseVm>("/pms-engine/individual-objectives", data);
 export const submitDraftIndividualObjective = (data: unknown) => post<ResponseVm>("/pms-engine/individual-objectives/submit-draft", data);
