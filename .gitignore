@@ -33,3 +33,8 @@ docs/
 
 # Vendor (if not committed)
 # vendor/
+
+# Frontend (pms-web)
+pms-web/node_modules/
+pms-web/.next/
+pms-web/.env.local
