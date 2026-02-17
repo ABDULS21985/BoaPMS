@@ -3,7 +3,9 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
+	"github.com/enterprise-pms/pms-api/internal/domain/enums"
 	"github.com/enterprise-pms/pms-api/internal/domain/performance"
 	"github.com/enterprise-pms/pms-api/internal/service"
 	"github.com/enterprise-pms/pms-api/pkg/response"
@@ -747,6 +749,180 @@ func (h *ReviewPeriodHandler) GetReviewPeriodExtensions(w http.ResponseWriter, r
 	response.OK(w, result)
 }
 
+// SaveDraftReviewPeriodExtension handles POST /api/v1/review-periods/extensions/draft
+func (h *ReviewPeriodHandler) SaveDraftReviewPeriodExtension(w http.ResponseWriter, r *http.Request) {
+	var vm performance.CreateReviewPeriodExtensionRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
+		response.Error(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	result, err := h.svc.ReviewPeriod.SaveDraftReviewPeriodExtension(r.Context(), &vm)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "SaveDraftReviewPeriodExtension").Msg("Failed to save draft extension")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.OK(w, result)
+}
+
+// SubmitDraftReviewPeriodExtension handles POST /api/v1/review-periods/extensions/submit-draft
+func (h *ReviewPeriodHandler) SubmitDraftReviewPeriodExtension(w http.ResponseWriter, r *http.Request) {
+	var vm performance.ReviewPeriodExtensionRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
+		response.Error(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	result, err := h.svc.ReviewPeriod.SubmitDraftReviewPeriodExtension(r.Context(), &vm)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "SubmitDraftReviewPeriodExtension").Msg("Failed to submit draft extension")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.OK(w, result)
+}
+
+// ApproveReviewPeriodExtension handles POST /api/v1/review-periods/extensions/approve
+func (h *ReviewPeriodHandler) ApproveReviewPeriodExtension(w http.ResponseWriter, r *http.Request) {
+	var vm performance.ReviewPeriodExtensionRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
+		response.Error(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	result, err := h.svc.ReviewPeriod.ApproveReviewPeriodExtension(r.Context(), &vm)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "ApproveReviewPeriodExtension").Msg("Failed to approve extension")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.OK(w, result)
+}
+
+// RejectReviewPeriodExtension handles POST /api/v1/review-periods/extensions/reject
+func (h *ReviewPeriodHandler) RejectReviewPeriodExtension(w http.ResponseWriter, r *http.Request) {
+	var vm performance.ReviewPeriodExtensionRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
+		response.Error(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	result, err := h.svc.ReviewPeriod.RejectReviewPeriodExtension(r.Context(), &vm)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "RejectReviewPeriodExtension").Msg("Failed to reject extension")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.OK(w, result)
+}
+
+// ReturnReviewPeriodExtension handles POST /api/v1/review-periods/extensions/return
+func (h *ReviewPeriodHandler) ReturnReviewPeriodExtension(w http.ResponseWriter, r *http.Request) {
+	var vm performance.ReviewPeriodExtensionRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
+		response.Error(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	result, err := h.svc.ReviewPeriod.ReturnReviewPeriodExtension(r.Context(), &vm)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "ReturnReviewPeriodExtension").Msg("Failed to return extension")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.OK(w, result)
+}
+
+// ReSubmitReviewPeriodExtension handles POST /api/v1/review-periods/extensions/resubmit
+func (h *ReviewPeriodHandler) ReSubmitReviewPeriodExtension(w http.ResponseWriter, r *http.Request) {
+	var vm performance.ReviewPeriodExtensionRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
+		response.Error(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	result, err := h.svc.ReviewPeriod.ReSubmitReviewPeriodExtension(r.Context(), &vm)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "ReSubmitReviewPeriodExtension").Msg("Failed to re-submit extension")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.OK(w, result)
+}
+
+// UpdateReviewPeriodExtension handles PUT /api/v1/review-periods/extensions
+func (h *ReviewPeriodHandler) UpdateReviewPeriodExtension(w http.ResponseWriter, r *http.Request) {
+	var vm performance.ReviewPeriodExtensionRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
+		response.Error(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	result, err := h.svc.ReviewPeriod.UpdateReviewPeriodExtension(r.Context(), &vm)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "UpdateReviewPeriodExtension").Msg("Failed to update extension")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.OK(w, result)
+}
+
+// CancelReviewPeriodExtension handles POST /api/v1/review-periods/extensions/cancel
+func (h *ReviewPeriodHandler) CancelReviewPeriodExtension(w http.ResponseWriter, r *http.Request) {
+	var vm performance.ReviewPeriodExtensionRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
+		response.Error(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	result, err := h.svc.ReviewPeriod.CancelReviewPeriodExtension(r.Context(), &vm)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "CancelReviewPeriodExtension").Msg("Failed to cancel extension")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.OK(w, result)
+}
+
+// CloseReviewPeriodExtension handles POST /api/v1/review-periods/extensions/close
+func (h *ReviewPeriodHandler) CloseReviewPeriodExtension(w http.ResponseWriter, r *http.Request) {
+	var vm performance.ReviewPeriodExtensionRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
+		response.Error(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	result, err := h.svc.ReviewPeriod.CloseReviewPeriodExtension(r.Context(), &vm)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "CloseReviewPeriodExtension").Msg("Failed to close extension")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.OK(w, result)
+}
+
+// GetAllReviewPeriodExtensions handles GET /api/v1/review-periods/extensions/all
+func (h *ReviewPeriodHandler) GetAllReviewPeriodExtensions(w http.ResponseWriter, r *http.Request) {
+	result, err := h.svc.ReviewPeriod.GetAllReviewPeriodExtensions(r.Context())
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetAllReviewPeriodExtensions").Msg("Failed to get all review period extensions")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.OK(w, result)
+}
+
 // ===========================================================================
 // 360 REVIEWS
 // ===========================================================================
@@ -945,6 +1121,114 @@ func (h *ReviewPeriodHandler) GetStaffIndividualPlannedObjectives(w http.Respons
 	response.OK(w, result)
 }
 
+// AcceptIndividualPlannedObjective handles POST /api/v1/review-periods/individual-objectives/accept
+func (h *ReviewPeriodHandler) AcceptIndividualPlannedObjective(w http.ResponseWriter, r *http.Request) {
+	var vm performance.ReviewPeriodIndividualPlannedObjectiveRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
+		response.Error(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	result, err := h.svc.ReviewPeriod.AcceptIndividualPlannedObjective(r.Context(), &vm)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "AcceptIndividualPlannedObjective").Msg("Failed to accept individual planned objective")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.OK(w, result)
+}
+
+// ReInstateIndividualPlannedObjective handles POST /api/v1/review-periods/individual-objectives/reinstate
+func (h *ReviewPeriodHandler) ReInstateIndividualPlannedObjective(w http.ResponseWriter, r *http.Request) {
+	var vm performance.ReviewPeriodIndividualPlannedObjectiveRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
+		response.Error(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	result, err := h.svc.ReviewPeriod.ReInstateIndividualPlannedObjective(r.Context(), &vm)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "ReInstateIndividualPlannedObjective").Msg("Failed to reinstate individual planned objective")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.OK(w, result)
+}
+
+// PauseIndividualPlannedObjective handles POST /api/v1/review-periods/individual-objectives/pause
+func (h *ReviewPeriodHandler) PauseIndividualPlannedObjective(w http.ResponseWriter, r *http.Request) {
+	var vm performance.ReviewPeriodIndividualPlannedObjectiveRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
+		response.Error(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	result, err := h.svc.ReviewPeriod.PauseIndividualPlannedObjective(r.Context(), &vm)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "PauseIndividualPlannedObjective").Msg("Failed to pause individual planned objective")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.OK(w, result)
+}
+
+// SuspendIndividualPlannedObjective handles POST /api/v1/review-periods/individual-objectives/suspend
+func (h *ReviewPeriodHandler) SuspendIndividualPlannedObjective(w http.ResponseWriter, r *http.Request) {
+	var vm performance.ReviewPeriodIndividualPlannedObjectiveRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
+		response.Error(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	result, err := h.svc.ReviewPeriod.SuspendIndividualPlannedObjective(r.Context(), &vm)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "SuspendIndividualPlannedObjective").Msg("Failed to suspend individual planned objective")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.OK(w, result)
+}
+
+// ResumeIndividualPlannedObjective handles POST /api/v1/review-periods/individual-objectives/resume
+func (h *ReviewPeriodHandler) ResumeIndividualPlannedObjective(w http.ResponseWriter, r *http.Request) {
+	var vm performance.ReviewPeriodIndividualPlannedObjectiveRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
+		response.Error(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	result, err := h.svc.ReviewPeriod.ResumeIndividualPlannedObjective(r.Context(), &vm)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "ResumeIndividualPlannedObjective").Msg("Failed to resume individual planned objective")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.OK(w, result)
+}
+
+// ReSubmitIndividualPlannedObjective handles POST /api/v1/review-periods/individual-objectives/resubmit
+func (h *ReviewPeriodHandler) ReSubmitIndividualPlannedObjective(w http.ResponseWriter, r *http.Request) {
+	var vm performance.ReviewPeriodIndividualPlannedObjectiveRequestModel
+	if err := json.NewDecoder(r.Body).Decode(&vm); err != nil {
+		response.Error(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	result, err := h.svc.ReviewPeriod.ReSubmitIndividualPlannedObjective(r.Context(), &vm)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "ReSubmitIndividualPlannedObjective").Msg("Failed to re-submit individual planned objective")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.OK(w, result)
+}
+
 // ===========================================================================
 // PERIOD OBJECTIVE EVALUATIONS
 // ===========================================================================
@@ -1038,6 +1322,196 @@ func (h *ReviewPeriodHandler) GetStaffPeriodScore(w http.ResponseWriter, r *http
 	result, err := h.svc.ReviewPeriod.GetStaffPeriodScore(r.Context(), staffID, reviewPeriodID)
 	if err != nil {
 		h.log.Error().Err(err).Str("action", "GetStaffPeriodScore").Str("staffId", staffID).Str("reviewPeriodId", reviewPeriodID).Msg("Failed to get staff period score")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.OK(w, result)
+}
+
+// ===========================================================================
+// ADDITIONAL RETRIEVAL ENDPOINTS
+// ===========================================================================
+
+// GetReviewPeriods handles GET /api/v1/review-periods/all
+// Retrieves all review periods.
+func (h *ReviewPeriodHandler) GetReviewPeriods(w http.ResponseWriter, r *http.Request) {
+	result, err := h.svc.ReviewPeriod.GetReviewPeriods(r.Context())
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetReviewPeriods").Msg("Failed to get review periods")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.OK(w, result)
+}
+
+// GetReviewPeriodCategoryDefinitions handles GET /api/v1/review-periods/{reviewPeriodId}/category-definitions
+// Retrieves category definitions for a review period.
+func (h *ReviewPeriodHandler) GetReviewPeriodCategoryDefinitions(w http.ResponseWriter, r *http.Request) {
+	reviewPeriodID := r.PathValue("reviewPeriodId")
+	if reviewPeriodID == "" {
+		response.Error(w, http.StatusBadRequest, "reviewPeriodId is required")
+		return
+	}
+
+	result, err := h.svc.ReviewPeriod.GetReviewPeriodCategoryDefinitions(r.Context(), reviewPeriodID)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetReviewPeriodCategoryDefinitions").Str("reviewPeriodId", reviewPeriodID).Msg("Failed to get category definitions")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.OK(w, result)
+}
+
+// GetReviewPeriodObjectivesWithCategoryDefinitions handles GET /api/v1/review-periods/{reviewPeriodId}/objectives-with-categories
+// Retrieves objectives enriched with category definitions for a review period.
+func (h *ReviewPeriodHandler) GetReviewPeriodObjectivesWithCategoryDefinitions(w http.ResponseWriter, r *http.Request) {
+	reviewPeriodID := r.PathValue("reviewPeriodId")
+	if reviewPeriodID == "" {
+		response.Error(w, http.StatusBadRequest, "reviewPeriodId is required")
+		return
+	}
+
+	result, err := h.svc.ReviewPeriod.GetReviewPeriodObjectivesWithCategoryDefinitions(r.Context(), reviewPeriodID)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetReviewPeriodObjectivesWithCategoryDefinitions").Str("reviewPeriodId", reviewPeriodID).Msg("Failed to get objectives with category definitions")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.OK(w, result)
+}
+
+// GetAllPlannedOperationalObjectives handles GET /api/v1/review-periods/{reviewPeriodId}/planned-objectives
+// Retrieves all planned operational objectives for a review period.
+func (h *ReviewPeriodHandler) GetAllPlannedOperationalObjectives(w http.ResponseWriter, r *http.Request) {
+	reviewPeriodID := r.PathValue("reviewPeriodId")
+	if reviewPeriodID == "" {
+		response.Error(w, http.StatusBadRequest, "reviewPeriodId is required")
+		return
+	}
+
+	result, err := h.svc.ReviewPeriod.GetAllPlannedOperationalObjectives(r.Context(), reviewPeriodID)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetAllPlannedOperationalObjectives").Str("reviewPeriodId", reviewPeriodID).Msg("Failed to get all planned operational objectives")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.OK(w, result)
+}
+
+// GetObjectivesByWorkproductStatus handles GET /api/v1/review-periods/objectives-by-status?reviewPeriodId={id}&staffId={id}&workproductStatus={status}
+// Retrieves planned objectives filtered by work product status.
+func (h *ReviewPeriodHandler) GetObjectivesByWorkproductStatus(w http.ResponseWriter, r *http.Request) {
+	reviewPeriodID := r.URL.Query().Get("reviewPeriodId")
+	staffID := r.URL.Query().Get("staffId")
+	statusStr := r.URL.Query().Get("workproductStatus")
+
+	if reviewPeriodID == "" || staffID == "" || statusStr == "" {
+		response.Error(w, http.StatusBadRequest, "reviewPeriodId, staffId, and workproductStatus are required")
+		return
+	}
+
+	statusInt, err := strconv.Atoi(statusStr)
+	if err != nil {
+		response.Error(w, http.StatusBadRequest, "workproductStatus must be a valid integer")
+		return
+	}
+
+	result, err := h.svc.ReviewPeriod.GetObjectivesByWorkproductStatus(r.Context(), reviewPeriodID, staffID, enums.Status(statusInt))
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetObjectivesByWorkproductStatus").Msg("Failed to get objectives by workproduct status")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.OK(w, result)
+}
+
+// GetPlannedObjective handles GET /api/v1/review-periods/planned-objective?plannedObjectiveId={id}
+// Retrieves a single planned objective by ID.
+func (h *ReviewPeriodHandler) GetPlannedObjective(w http.ResponseWriter, r *http.Request) {
+	plannedObjectiveID := r.URL.Query().Get("plannedObjectiveId")
+	if plannedObjectiveID == "" {
+		response.Error(w, http.StatusBadRequest, "plannedObjectiveId is required")
+		return
+	}
+
+	result, err := h.svc.ReviewPeriod.GetPlannedObjective(r.Context(), plannedObjectiveID)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetPlannedObjective").Str("plannedObjectiveId", plannedObjectiveID).Msg("Failed to get planned objective")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.OK(w, result)
+}
+
+// GetEnterpriseObjectiveByLevel handles GET /api/v1/review-periods/enterprise-objective?objectiveId={id}&objectiveLevel={level}
+// Retrieves an enterprise objective by ID and level.
+func (h *ReviewPeriodHandler) GetEnterpriseObjectiveByLevel(w http.ResponseWriter, r *http.Request) {
+	objectiveID := r.URL.Query().Get("objectiveId")
+	levelStr := r.URL.Query().Get("objectiveLevel")
+
+	if objectiveID == "" || levelStr == "" {
+		response.Error(w, http.StatusBadRequest, "objectiveId and objectiveLevel are required")
+		return
+	}
+
+	level, err := strconv.Atoi(levelStr)
+	if err != nil {
+		response.Error(w, http.StatusBadRequest, "objectiveLevel must be a valid integer")
+		return
+	}
+
+	result, err := h.svc.ReviewPeriod.GetEnterpriseObjectiveByLevel(r.Context(), objectiveID, level)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetEnterpriseObjectiveByLevel").Str("objectiveId", objectiveID).Msg("Failed to get enterprise objective")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.OK(w, result)
+}
+
+// ArchiveCancelledObjectives handles POST /api/v1/review-periods/archive-objectives?staffId={id}&reviewPeriodId={id}
+// Soft-deletes all cancelled objectives for a staff member in a review period.
+func (h *ReviewPeriodHandler) ArchiveCancelledObjectives(w http.ResponseWriter, r *http.Request) {
+	staffID := r.URL.Query().Get("staffId")
+	reviewPeriodID := r.URL.Query().Get("reviewPeriodId")
+
+	if staffID == "" || reviewPeriodID == "" {
+		response.Error(w, http.StatusBadRequest, "staffId and reviewPeriodId are required")
+		return
+	}
+
+	result, err := h.svc.ReviewPeriod.ArchiveCancelledObjectives(r.Context(), staffID, reviewPeriodID)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "ArchiveCancelledObjectives").Str("staffId", staffID).Str("reviewPeriodId", reviewPeriodID).Msg("Failed to archive cancelled objectives")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.OK(w, result)
+}
+
+// ArchiveCancelledWorkProducts handles POST /api/v1/review-periods/archive-workproducts?staffId={id}&reviewPeriodId={id}
+// Soft-deletes all cancelled work products for a staff member in a review period.
+func (h *ReviewPeriodHandler) ArchiveCancelledWorkProducts(w http.ResponseWriter, r *http.Request) {
+	staffID := r.URL.Query().Get("staffId")
+	reviewPeriodID := r.URL.Query().Get("reviewPeriodId")
+
+	if staffID == "" || reviewPeriodID == "" {
+		response.Error(w, http.StatusBadRequest, "staffId and reviewPeriodId are required")
+		return
+	}
+
+	result, err := h.svc.ReviewPeriod.ArchiveCancelledWorkProducts(r.Context(), staffID, reviewPeriodID)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "ArchiveCancelledWorkProducts").Str("staffId", staffID).Str("reviewPeriodId", reviewPeriodID).Msg("Failed to archive cancelled work products")
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}

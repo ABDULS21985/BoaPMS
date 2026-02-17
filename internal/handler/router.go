@@ -164,8 +164,15 @@ func NewRouter(svc *service.Container, mw *middleware.Stack, cfg *config.Config,
 	mux.Handle("POST /api/v1/review-periods/disable-work-product-evaluation", jwtProtect(mw, rpHandler.DisableWorkProductEvaluation))
 
 	// -- Review Period Queries --
+	mux.Handle("GET /api/v1/review-periods/all", jwtProtect(mw, rpHandler.GetReviewPeriods))
 	mux.Handle("GET /api/v1/review-periods/active", jwtProtect(mw, rpHandler.GetActiveReviewPeriod))
 	mux.Handle("GET /api/v1/review-periods/staff-active", jwtProtect(mw, rpHandler.GetStaffActiveReviewPeriod))
+	mux.Handle("GET /api/v1/review-periods/planned-objective", jwtProtect(mw, rpHandler.GetPlannedObjective))
+	mux.Handle("GET /api/v1/review-periods/enterprise-objective", jwtProtect(mw, rpHandler.GetEnterpriseObjectiveByLevel))
+	mux.Handle("GET /api/v1/review-periods/objectives-by-status", jwtProtect(mw, rpHandler.GetObjectivesByWorkproductStatus))
+	mux.Handle("GET /api/v1/review-periods/{reviewPeriodId}/category-definitions", jwtProtect(mw, rpHandler.GetReviewPeriodCategoryDefinitions))
+	mux.Handle("GET /api/v1/review-periods/{reviewPeriodId}/objectives-with-categories", jwtProtect(mw, rpHandler.GetReviewPeriodObjectivesWithCategoryDefinitions))
+	mux.Handle("GET /api/v1/review-periods/{reviewPeriodId}/planned-objectives", jwtProtect(mw, rpHandler.GetAllPlannedOperationalObjectives))
 	mux.Handle("GET /api/v1/review-periods/{reviewPeriodId}", jwtProtect(mw, rpHandler.GetReviewPeriodDetails))
 
 	// -- Review Period Objectives --
@@ -182,8 +189,18 @@ func NewRouter(svc *service.Container, mw *middleware.Stack, cfg *config.Config,
 	mux.Handle("POST /api/v1/review-periods/category-definitions/approve", jwtProtect(mw, rpHandler.ApproveReviewPeriodObjectiveCategoryDefinition))
 	mux.Handle("POST /api/v1/review-periods/category-definitions/reject", jwtProtect(mw, rpHandler.RejectReviewPeriodObjectiveCategoryDefinition))
 
-	// -- Review Period Extensions --
+	// -- Review Period Extensions (full lifecycle) --
+	mux.Handle("POST /api/v1/review-periods/extensions/draft", jwtProtect(mw, rpHandler.SaveDraftReviewPeriodExtension))
+	mux.Handle("POST /api/v1/review-periods/extensions/submit-draft", jwtProtect(mw, rpHandler.SubmitDraftReviewPeriodExtension))
+	mux.Handle("POST /api/v1/review-periods/extensions/approve", jwtProtect(mw, rpHandler.ApproveReviewPeriodExtension))
+	mux.Handle("POST /api/v1/review-periods/extensions/reject", jwtProtect(mw, rpHandler.RejectReviewPeriodExtension))
+	mux.Handle("POST /api/v1/review-periods/extensions/return", jwtProtect(mw, rpHandler.ReturnReviewPeriodExtension))
+	mux.Handle("POST /api/v1/review-periods/extensions/resubmit", jwtProtect(mw, rpHandler.ReSubmitReviewPeriodExtension))
+	mux.Handle("POST /api/v1/review-periods/extensions/cancel", jwtProtect(mw, rpHandler.CancelReviewPeriodExtension))
+	mux.Handle("POST /api/v1/review-periods/extensions/close", jwtProtect(mw, rpHandler.CloseReviewPeriodExtension))
+	mux.Handle("PUT /api/v1/review-periods/extensions", jwtProtect(mw, rpHandler.UpdateReviewPeriodExtension))
 	mux.Handle("POST /api/v1/review-periods/extensions", jwtProtect(mw, rpHandler.AddReviewPeriodExtension))
+	mux.Handle("GET /api/v1/review-periods/extensions/all", jwtProtect(mw, rpHandler.GetAllReviewPeriodExtensions))
 	mux.Handle("GET /api/v1/review-periods/{reviewPeriodId}/extensions", jwtProtect(mw, rpHandler.GetReviewPeriodExtensions))
 
 	// -- Review Period 360 Reviews --
@@ -198,6 +215,12 @@ func NewRouter(svc *service.Container, mw *middleware.Stack, cfg *config.Config,
 	mux.Handle("POST /api/v1/review-periods/individual-objectives/reject", jwtProtect(mw, rpHandler.RejectIndividualPlannedObjective))
 	mux.Handle("POST /api/v1/review-periods/individual-objectives/return", jwtProtect(mw, rpHandler.ReturnIndividualPlannedObjective))
 	mux.Handle("POST /api/v1/review-periods/individual-objectives/cancel", jwtProtect(mw, rpHandler.CancelIndividualPlannedObjective))
+	mux.Handle("POST /api/v1/review-periods/individual-objectives/accept", jwtProtect(mw, rpHandler.AcceptIndividualPlannedObjective))
+	mux.Handle("POST /api/v1/review-periods/individual-objectives/reinstate", jwtProtect(mw, rpHandler.ReInstateIndividualPlannedObjective))
+	mux.Handle("POST /api/v1/review-periods/individual-objectives/pause", jwtProtect(mw, rpHandler.PauseIndividualPlannedObjective))
+	mux.Handle("POST /api/v1/review-periods/individual-objectives/suspend", jwtProtect(mw, rpHandler.SuspendIndividualPlannedObjective))
+	mux.Handle("POST /api/v1/review-periods/individual-objectives/resume", jwtProtect(mw, rpHandler.ResumeIndividualPlannedObjective))
+	mux.Handle("POST /api/v1/review-periods/individual-objectives/resubmit", jwtProtect(mw, rpHandler.ReSubmitIndividualPlannedObjective))
 	mux.Handle("GET /api/v1/review-periods/individual-objectives", jwtProtect(mw, rpHandler.GetStaffIndividualPlannedObjectives))
 
 	// -- Period Objective Evaluations --
@@ -208,6 +231,10 @@ func NewRouter(svc *service.Container, mw *middleware.Stack, cfg *config.Config,
 
 	// -- Period Scores --
 	mux.Handle("GET /api/v1/review-periods/scores", jwtProtect(mw, rpHandler.GetStaffPeriodScore))
+
+	// -- Archive Operations --
+	mux.Handle("POST /api/v1/review-periods/archive-objectives", jwtProtect(mw, rpHandler.ArchiveCancelledObjectives))
+	mux.Handle("POST /api/v1/review-periods/archive-workproducts", jwtProtect(mw, rpHandler.ArchiveCancelledWorkProducts))
 
 	// ----------------------------------------------------------------
 	// Competency Management routes — JWT required

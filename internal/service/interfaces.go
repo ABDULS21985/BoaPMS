@@ -317,15 +317,25 @@ type ReviewPeriodService interface {
 	ApproveCategoryDefinition(ctx context.Context, req *performance.CategoryDefinitionRequestVm) (*performance.ResponseVm, error)
 	RejectCategoryDefinition(ctx context.Context, req *performance.CategoryDefinitionRequestVm) (*performance.ResponseVm, error)
 
-	// Extensions
+	// Extensions – full lifecycle
+	SaveDraftReviewPeriodExtension(ctx context.Context, req *performance.CreateReviewPeriodExtensionRequestModel) (*performance.ResponseVm, error)
 	AddReviewPeriodExtension(ctx context.Context, req *performance.ReviewPeriodExtensionRequestModel) (*performance.ResponseVm, error)
+	SubmitDraftReviewPeriodExtension(ctx context.Context, req *performance.ReviewPeriodExtensionRequestModel) (*performance.ResponseVm, error)
+	ApproveReviewPeriodExtension(ctx context.Context, req *performance.ReviewPeriodExtensionRequestModel) (*performance.ResponseVm, error)
+	RejectReviewPeriodExtension(ctx context.Context, req *performance.ReviewPeriodExtensionRequestModel) (*performance.ResponseVm, error)
+	ReturnReviewPeriodExtension(ctx context.Context, req *performance.ReviewPeriodExtensionRequestModel) (*performance.ResponseVm, error)
+	ReSubmitReviewPeriodExtension(ctx context.Context, req *performance.ReviewPeriodExtensionRequestModel) (*performance.ResponseVm, error)
+	UpdateReviewPeriodExtension(ctx context.Context, req *performance.ReviewPeriodExtensionRequestModel) (*performance.ResponseVm, error)
+	CancelReviewPeriodExtension(ctx context.Context, req *performance.ReviewPeriodExtensionRequestModel) (*performance.ResponseVm, error)
+	CloseReviewPeriodExtension(ctx context.Context, req *performance.ReviewPeriodExtensionRequestModel) (*performance.ResponseVm, error)
 	GetReviewPeriodExtensions(ctx context.Context, reviewPeriodID string) (*performance.ReviewPeriodExtensionListResponseVm, error)
+	GetAllReviewPeriodExtensions(ctx context.Context) (*performance.ReviewPeriodExtensionListResponseVm, error)
 
 	// 360 Reviews
 	AddReviewPeriod360Review(ctx context.Context, req *performance.CreateReviewPeriod360ReviewRequestModel) (*performance.ResponseVm, error)
 	GetReviewPeriod360Reviews(ctx context.Context, reviewPeriodID string) (*performance.ReviewPeriod360ReviewListResponseVm, error)
 
-	// Individual Planned Objectives
+	// Individual Planned Objectives – full lifecycle
 	SaveDraftIndividualPlannedObjective(ctx context.Context, req *performance.AddReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error)
 	AddIndividualPlannedObjective(ctx context.Context, req *performance.AddReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error)
 	SubmitDraftIndividualPlannedObjective(ctx context.Context, req *performance.ReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error)
@@ -333,6 +343,12 @@ type ReviewPeriodService interface {
 	RejectIndividualPlannedObjective(ctx context.Context, req *performance.ReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error)
 	ReturnIndividualPlannedObjective(ctx context.Context, req *performance.ReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error)
 	CancelIndividualPlannedObjective(ctx context.Context, req *performance.ReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error)
+	AcceptIndividualPlannedObjective(ctx context.Context, req *performance.ReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error)
+	ReInstateIndividualPlannedObjective(ctx context.Context, req *performance.ReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error)
+	PauseIndividualPlannedObjective(ctx context.Context, req *performance.ReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error)
+	SuspendIndividualPlannedObjective(ctx context.Context, req *performance.ReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error)
+	ResumeIndividualPlannedObjective(ctx context.Context, req *performance.ReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error)
+	ReSubmitIndividualPlannedObjective(ctx context.Context, req *performance.ReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error)
 	GetStaffIndividualPlannedObjectives(ctx context.Context, staffID, reviewPeriodID string) (*performance.PlannedOperationalObjectivesResponseVm, error)
 
 	// Period Objective Evaluations
@@ -347,6 +363,9 @@ type ReviewPeriodService interface {
 	// Additional Retrieval (mirrors remaining .NET IReviewPeriodService methods)
 	GetReviewPeriods(ctx context.Context) (*performance.GetAllReviewPeriodResponseVm, error)
 	GetReviewPeriodCategoryDefinitions(ctx context.Context, reviewPeriodID string) (*performance.ReviewPeriodCategoryDefinitionResponseVm, error)
+	GetReviewPeriodObjectivesWithCategoryDefinitions(ctx context.Context, reviewPeriodID string) (*performance.ReviewPeriodObjectivesResponseVm, error)
+	GetAllPlannedOperationalObjectives(ctx context.Context, reviewPeriodID string) (*performance.OperationalObjectivesResponseVm, error)
+	GetObjectivesByWorkproductStatus(ctx context.Context, reviewPeriodID, staffID string, workproductStatus enums.Status) (*performance.PlannedOperationalObjectivesResponseVm, error)
 	GetPlannedObjective(ctx context.Context, plannedObjectiveID string) (*performance.PlannedObjectiveResponseVm, error)
 	GetEnterpriseObjectiveByLevel(ctx context.Context, objectiveID string, objectiveLevel int) (*performance.EnterpriseObjectiveResponseVm, error)
 	ArchiveCancelledObjectives(ctx context.Context, staffID string, reviewPeriodID string) (*performance.ResponseVm, error)

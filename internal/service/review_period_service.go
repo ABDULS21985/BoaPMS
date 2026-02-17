@@ -3064,5 +3064,616 @@ func (s *reviewPeriodService) ArchiveCancelledWorkProducts(ctx context.Context, 
 	return response, nil
 }
 
+// ===========================================================================
+// Extension Lifecycle (SaveDraft through Close)
+// ===========================================================================
+
+// SaveDraftReviewPeriodExtension creates a new extension in Draft status.
+func (s *reviewPeriodService) SaveDraftReviewPeriodExtension(ctx context.Context, vm *performance.CreateReviewPeriodExtensionRequestModel) (*performance.ResponseVm, error) {
+	response := &performance.ResponseVm{}
+	response.HasError = true
+	response.Message = "An error occurred"
+
+	rpResp, err := s.getReviewPeriod(ctx, vm.ReviewPeriodID)
+	if err != nil {
+		return response, err
+	}
+	if rpResp.HasError {
+		response.Message = "Review Period record not found"
+		return response, nil
+	}
+
+	rp := rpResp.PerformanceReviewPeriod
+	if rp.RecordStatus != enums.StatusClosed.String() {
+		response.Message = "Review Period extension can only be done if its closed"
+		return response, nil
+	}
+
+	if !vm.StartDate.IsZero() && !vm.EndDate.IsZero() {
+		if vm.StartDate.After(vm.EndDate) || vm.StartDate.Equal(vm.EndDate) {
+			response.Message = "The start date must not exceed the end date"
+			return response, nil
+		}
+		if vm.StartDate.Before(rp.EndDate) {
+			response.Message = "The extension start date must exceed the review period end date"
+			return response, nil
+		}
+	}
+
+	extID, err := s.generateCode(ctx, enums.SeqReviewPeriodExtension, 10)
+	if err != nil {
+		return response, err
+	}
+
+	entity := &performance.ReviewPeriodExtension{
+		ReviewPeriodExtensionID: extID,
+		ReviewPeriodID:          vm.ReviewPeriodID,
+		TargetType:              enums.ReviewPeriodExtensionTargetType(vm.TargetType),
+		TargetReference:         vm.TargetReference,
+		Description:             vm.Description,
+		StartDate:               vm.StartDate,
+		EndDate:                 vm.EndDate,
+	}
+	entity.RecordStatus = enums.StatusDraft.String()
+
+	if err := s.extensionRepo.InsertAndSave(ctx, entity); err != nil {
+		s.log.Error().Err(err).Msg("failed to save draft review period extension")
+		return response, err
+	}
+
+	response.HasError = false
+	response.Message = "Operation completed"
+	response.ID = extID
+	return response, nil
+}
+
+// reviewPeriodExtensionSetup is the internal helper that handles all extension
+// lifecycle transitions after the initial Add. Mirrors .NET ReviewPeriodExtensionSetup.
+func (s *reviewPeriodService) reviewPeriodExtensionSetup(ctx context.Context, vm *performance.ReviewPeriodExtensionRequestModel, op enums.OperationType) (*performance.ResponseVm, error) {
+	response := &performance.ResponseVm{}
+	response.HasError = true
+	response.Message = "An error occurred"
+
+	ext, err := s.extensionRepo.GetByStringID(ctx, "review_period_extension_id", vm.ReviewPeriodExtensionID)
+	if err != nil {
+		return response, err
+	}
+	if ext == nil {
+		response.Message = "Review Period Extension record not found"
+		return response, nil
+	}
+
+	now := time.Now().UTC()
+
+	switch op {
+	case enums.OperationCommitDraft:
+		if ext.RecordStatus != enums.StatusDraft.String() {
+			response.Message = "Extension cannot be submitted; it is not in Draft status"
+			return response, nil
+		}
+		ext.RecordStatus = enums.StatusPendingApproval.String()
+
+	case enums.OperationApprove:
+		if ext.RecordStatus != enums.StatusPendingApproval.String() {
+			response.Message = "Extension cannot be approved"
+			return response, nil
+		}
+		ext.RecordStatus = enums.StatusActive.String()
+		ext.IsActive = true
+		ext.IsApproved = true
+		ext.ApprovedBy = vm.ApprovedBy
+		ext.DateApproved = &now
+		ext.IsRejected = false
+
+	case enums.OperationReject:
+		if ext.RecordStatus != enums.StatusPendingApproval.String() {
+			response.Message = "Extension cannot be rejected"
+			return response, nil
+		}
+		ext.RecordStatus = enums.StatusRejected.String()
+		ext.IsActive = false
+		ext.IsRejected = true
+		ext.RejectedBy = vm.RejectedBy
+		ext.DateRejected = &now
+		ext.RejectionReason = vm.RejectionReason
+		ext.IsApproved = false
+
+	case enums.OperationReturn:
+		if ext.RecordStatus != enums.StatusPendingApproval.String() {
+			response.Message = "Extension cannot be returned"
+			return response, nil
+		}
+		ext.RecordStatus = enums.StatusReturned.String()
+		ext.IsActive = false
+		ext.IsRejected = true
+		ext.RejectedBy = vm.RejectedBy
+		ext.DateRejected = &now
+		ext.RejectionReason = vm.RejectionReason
+		ext.IsApproved = false
+
+	case enums.OperationReSubmit:
+		if ext.RecordStatus != enums.StatusReturned.String() {
+			response.Message = "Extension cannot be re-submitted; it is not in Returned status"
+			return response, nil
+		}
+		ext.RecordStatus = enums.StatusPendingApproval.String()
+		ext.IsRejected = false
+		ext.RejectedBy = ""
+		ext.RejectionReason = ""
+
+	case enums.OperationUpdate:
+		if ext.RecordStatus != enums.StatusDraft.String() && ext.RecordStatus != enums.StatusReturned.String() {
+			response.Message = "Extension can only be updated when in Draft or Returned status"
+			return response, nil
+		}
+		ext.Description = vm.Description
+		ext.TargetType = enums.ReviewPeriodExtensionTargetType(vm.TargetType)
+		ext.TargetReference = vm.TargetReference
+		ext.StartDate = vm.StartDate
+		ext.EndDate = vm.EndDate
+
+	case enums.OperationCancel:
+		if ext.RecordStatus != enums.StatusDraft.String() && ext.RecordStatus != enums.StatusReturned.String() {
+			response.Message = "Extension cannot be cancelled"
+			return response, nil
+		}
+		ext.RecordStatus = enums.StatusCancelled.String()
+		ext.IsActive = false
+
+	case enums.OperationClose:
+		if ext.RecordStatus != enums.StatusActive.String() {
+			response.Message = "Extension cannot be closed; it is not in Active status"
+			return response, nil
+		}
+		ext.RecordStatus = enums.StatusClosed.String()
+		ext.IsActive = false
+
+	default:
+		response.Message = fmt.Sprintf("Unsupported operation type: %d", op)
+		return response, nil
+	}
+
+	if err := s.extensionRepo.UpdateAndSave(ctx, ext); err != nil {
+		s.log.Error().Err(err).Str("op", fmt.Sprintf("%d", op)).Msg("failed extension lifecycle transition")
+		return response, err
+	}
+
+	response.HasError = false
+	response.Message = "Operation completed"
+	response.ID = ext.ReviewPeriodExtensionID
+	return response, nil
+}
+
+func (s *reviewPeriodService) SubmitDraftReviewPeriodExtension(ctx context.Context, vm *performance.ReviewPeriodExtensionRequestModel) (*performance.ResponseVm, error) {
+	return s.reviewPeriodExtensionSetup(ctx, vm, enums.OperationCommitDraft)
+}
+
+func (s *reviewPeriodService) ApproveReviewPeriodExtension(ctx context.Context, vm *performance.ReviewPeriodExtensionRequestModel) (*performance.ResponseVm, error) {
+	return s.reviewPeriodExtensionSetup(ctx, vm, enums.OperationApprove)
+}
+
+func (s *reviewPeriodService) RejectReviewPeriodExtension(ctx context.Context, vm *performance.ReviewPeriodExtensionRequestModel) (*performance.ResponseVm, error) {
+	return s.reviewPeriodExtensionSetup(ctx, vm, enums.OperationReject)
+}
+
+func (s *reviewPeriodService) ReturnReviewPeriodExtension(ctx context.Context, vm *performance.ReviewPeriodExtensionRequestModel) (*performance.ResponseVm, error) {
+	return s.reviewPeriodExtensionSetup(ctx, vm, enums.OperationReturn)
+}
+
+func (s *reviewPeriodService) ReSubmitReviewPeriodExtension(ctx context.Context, vm *performance.ReviewPeriodExtensionRequestModel) (*performance.ResponseVm, error) {
+	return s.reviewPeriodExtensionSetup(ctx, vm, enums.OperationReSubmit)
+}
+
+func (s *reviewPeriodService) UpdateReviewPeriodExtension(ctx context.Context, vm *performance.ReviewPeriodExtensionRequestModel) (*performance.ResponseVm, error) {
+	return s.reviewPeriodExtensionSetup(ctx, vm, enums.OperationUpdate)
+}
+
+func (s *reviewPeriodService) CancelReviewPeriodExtension(ctx context.Context, vm *performance.ReviewPeriodExtensionRequestModel) (*performance.ResponseVm, error) {
+	return s.reviewPeriodExtensionSetup(ctx, vm, enums.OperationCancel)
+}
+
+func (s *reviewPeriodService) CloseReviewPeriodExtension(ctx context.Context, vm *performance.ReviewPeriodExtensionRequestModel) (*performance.ResponseVm, error) {
+	return s.reviewPeriodExtensionSetup(ctx, vm, enums.OperationClose)
+}
+
+// GetAllReviewPeriodExtensions retrieves all extensions across all review periods.
+func (s *reviewPeriodService) GetAllReviewPeriodExtensions(ctx context.Context) (*performance.ReviewPeriodExtensionListResponseVm, error) {
+	response := &performance.ReviewPeriodExtensionListResponseVm{}
+	response.HasError = true
+	response.Message = "An error occurred"
+
+	var extensions []performance.ReviewPeriodExtension
+	err := s.db.WithContext(ctx).
+		Where("soft_deleted = ?", false).
+		Preload("ReviewPeriod").
+		Find(&extensions).Error
+	if err != nil {
+		s.log.Error().Err(err).Msg("failed to retrieve all review period extensions")
+		return response, err
+	}
+
+	data := make([]performance.ReviewPeriodExtensionData, 0, len(extensions))
+	for _, ext := range extensions {
+		d := performance.ReviewPeriodExtensionData{
+			ReviewPeriodExtensionID: ext.ReviewPeriodExtensionID,
+			ReviewPeriodID:          ext.ReviewPeriodID,
+			TargetType:              int(ext.TargetType),
+			TargetReference:         ext.TargetReference,
+			Description:             ext.Description,
+			StartDate:               ext.StartDate,
+			EndDate:                 ext.EndDate,
+		}
+		if ext.ReviewPeriod != nil {
+			d.ReviewPeriod = ext.ReviewPeriod.Name
+		}
+		data = append(data, d)
+	}
+
+	response.TotalRecords = len(data)
+	response.ReviewPeriodExtensions = data
+	response.HasError = false
+	response.Message = "Operation completed"
+	return response, nil
+}
+
+// ===========================================================================
+// Individual Planned Objectives – Additional Operations
+// ===========================================================================
+
+// AcceptIndividualPlannedObjective accepts a planned objective (PendingAcceptance → Active).
+func (s *reviewPeriodService) AcceptIndividualPlannedObjective(ctx context.Context, vm *performance.ReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error) {
+	response := &performance.ResponseVm{}
+	response.HasError = true
+	response.Message = "An error occurred"
+
+	po, err := s.plannedObjRepo.GetByStringID(ctx, "planned_objective_id", vm.PlannedObjectiveID)
+	if err != nil {
+		return response, err
+	}
+	if po == nil {
+		response.Message = "Planned objective record not found"
+		return response, nil
+	}
+
+	if po.RecordStatus != enums.StatusPendingAcceptance.String() {
+		response.Message = "Planned objective cannot be accepted; it is not in PendingAcceptance status"
+		return response, nil
+	}
+
+	now := time.Now().UTC()
+	po.RecordStatus = enums.StatusActive.String()
+	po.IsActive = true
+	po.IsApproved = true
+	po.ApprovedBy = vm.ApprovedBy
+	po.DateApproved = &now
+
+	if err := s.plannedObjRepo.UpdateAndSave(ctx, po); err != nil {
+		s.log.Error().Err(err).Msg("failed to accept planned objective")
+		return response, err
+	}
+
+	response.HasError = false
+	response.Message = "Operation completed"
+	response.ID = po.PlannedObjectiveID
+	return response, nil
+}
+
+// ReInstateIndividualPlannedObjective re-activates a cancelled or rejected objective.
+func (s *reviewPeriodService) ReInstateIndividualPlannedObjective(ctx context.Context, vm *performance.ReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error) {
+	response := &performance.ResponseVm{}
+	response.HasError = true
+	response.Message = "An error occurred"
+
+	po, err := s.plannedObjRepo.GetByStringID(ctx, "planned_objective_id", vm.PlannedObjectiveID)
+	if err != nil {
+		return response, err
+	}
+	if po == nil {
+		response.Message = "Planned objective record not found"
+		return response, nil
+	}
+
+	if po.RecordStatus != enums.StatusCancelled.String() && po.RecordStatus != enums.StatusRejected.String() {
+		response.Message = "Planned objective can only be reinstated from Cancelled or Rejected status"
+		return response, nil
+	}
+
+	po.RecordStatus = enums.StatusDraft.String()
+	po.IsActive = false
+	po.IsRejected = false
+	po.RejectedBy = ""
+	po.RejectionReason = ""
+	po.IsApproved = false
+	po.ApprovedBy = ""
+
+	if err := s.plannedObjRepo.UpdateAndSave(ctx, po); err != nil {
+		s.log.Error().Err(err).Msg("failed to reinstate planned objective")
+		return response, err
+	}
+
+	response.HasError = false
+	response.Message = "Operation completed"
+	response.ID = po.PlannedObjectiveID
+	return response, nil
+}
+
+// PauseIndividualPlannedObjective pauses an active objective (Active → Paused).
+func (s *reviewPeriodService) PauseIndividualPlannedObjective(ctx context.Context, vm *performance.ReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error) {
+	response := &performance.ResponseVm{}
+	response.HasError = true
+	response.Message = "An error occurred"
+
+	po, err := s.plannedObjRepo.GetByStringID(ctx, "planned_objective_id", vm.PlannedObjectiveID)
+	if err != nil {
+		return response, err
+	}
+	if po == nil {
+		response.Message = "Planned objective record not found"
+		return response, nil
+	}
+
+	if po.RecordStatus != enums.StatusActive.String() {
+		response.Message = "Planned objective cannot be paused; it is not in Active status"
+		return response, nil
+	}
+
+	po.RecordStatus = enums.StatusPaused.String()
+	po.IsActive = false
+
+	if err := s.plannedObjRepo.UpdateAndSave(ctx, po); err != nil {
+		s.log.Error().Err(err).Msg("failed to pause planned objective")
+		return response, err
+	}
+
+	response.HasError = false
+	response.Message = "Operation completed"
+	response.ID = po.PlannedObjectiveID
+	return response, nil
+}
+
+// SuspendIndividualPlannedObjective requests suspension (Active → SuspensionPendingApproval).
+func (s *reviewPeriodService) SuspendIndividualPlannedObjective(ctx context.Context, vm *performance.ReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error) {
+	response := &performance.ResponseVm{}
+	response.HasError = true
+	response.Message = "An error occurred"
+
+	po, err := s.plannedObjRepo.GetByStringID(ctx, "planned_objective_id", vm.PlannedObjectiveID)
+	if err != nil {
+		return response, err
+	}
+	if po == nil {
+		response.Message = "Planned objective record not found"
+		return response, nil
+	}
+
+	if po.RecordStatus != enums.StatusActive.String() {
+		response.Message = "Planned objective cannot be suspended; it is not in Active status"
+		return response, nil
+	}
+
+	po.RecordStatus = enums.StatusSuspensionPendingApproval.String()
+
+	if err := s.plannedObjRepo.UpdateAndSave(ctx, po); err != nil {
+		s.log.Error().Err(err).Msg("failed to suspend planned objective")
+		return response, err
+	}
+
+	response.HasError = false
+	response.Message = "Operation completed"
+	response.ID = po.PlannedObjectiveID
+	return response, nil
+}
+
+// ResumeIndividualPlannedObjective resumes a paused objective (Paused → Active).
+func (s *reviewPeriodService) ResumeIndividualPlannedObjective(ctx context.Context, vm *performance.ReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error) {
+	response := &performance.ResponseVm{}
+	response.HasError = true
+	response.Message = "An error occurred"
+
+	po, err := s.plannedObjRepo.GetByStringID(ctx, "planned_objective_id", vm.PlannedObjectiveID)
+	if err != nil {
+		return response, err
+	}
+	if po == nil {
+		response.Message = "Planned objective record not found"
+		return response, nil
+	}
+
+	if po.RecordStatus != enums.StatusPaused.String() {
+		response.Message = "Planned objective cannot be resumed; it is not in Paused status"
+		return response, nil
+	}
+
+	po.RecordStatus = enums.StatusActive.String()
+	po.IsActive = true
+
+	if err := s.plannedObjRepo.UpdateAndSave(ctx, po); err != nil {
+		s.log.Error().Err(err).Msg("failed to resume planned objective")
+		return response, err
+	}
+
+	response.HasError = false
+	response.Message = "Operation completed"
+	response.ID = po.PlannedObjectiveID
+	return response, nil
+}
+
+// ReSubmitIndividualPlannedObjective re-submits a returned objective (Returned → PendingApproval).
+func (s *reviewPeriodService) ReSubmitIndividualPlannedObjective(ctx context.Context, vm *performance.ReviewPeriodIndividualPlannedObjectiveRequestModel) (*performance.ResponseVm, error) {
+	response := &performance.ResponseVm{}
+	response.HasError = true
+	response.Message = "An error occurred"
+
+	po, err := s.plannedObjRepo.GetByStringID(ctx, "planned_objective_id", vm.PlannedObjectiveID)
+	if err != nil {
+		return response, err
+	}
+	if po == nil {
+		response.Message = "Planned objective record not found"
+		return response, nil
+	}
+
+	if po.RecordStatus != enums.StatusReturned.String() {
+		response.Message = "Planned objective cannot be re-submitted; it is not in Returned status"
+		return response, nil
+	}
+
+	po.RecordStatus = enums.StatusPendingApproval.String()
+	po.IsRejected = false
+	po.RejectedBy = ""
+	po.RejectionReason = ""
+
+	if err := s.plannedObjRepo.UpdateAndSave(ctx, po); err != nil {
+		s.log.Error().Err(err).Msg("failed to re-submit planned objective")
+		return response, err
+	}
+
+	response.HasError = false
+	response.Message = "Operation completed"
+	response.ID = po.PlannedObjectiveID
+	return response, nil
+}
+
+// ===========================================================================
+// Additional Retrieval Methods
+// ===========================================================================
+
+// GetReviewPeriodObjectivesWithCategoryDefinitions returns objectives enriched
+// with their category definitions for a review period.
+func (s *reviewPeriodService) GetReviewPeriodObjectivesWithCategoryDefinitions(ctx context.Context, reviewPeriodID string) (*performance.ReviewPeriodObjectivesResponseVm, error) {
+	response := &performance.ReviewPeriodObjectivesResponseVm{}
+	response.HasError = true
+	response.Message = "An error occurred"
+
+	rpResp, err := s.getReviewPeriod(ctx, reviewPeriodID)
+	if err != nil {
+		return response, err
+	}
+	if rpResp.HasError {
+		response.Message = "Review Period record not found"
+		return response, nil
+	}
+
+	// Fetch period objectives tied to this review period, along with category definitions
+	var periodObjs []performance.PeriodObjective
+	err = s.db.WithContext(ctx).
+		Where("review_period_id = ? AND soft_deleted = ?", reviewPeriodID, false).
+		Preload("Objective").
+		Preload("Objective.Category").
+		Find(&periodObjs).Error
+	if err != nil {
+		s.log.Error().Err(err).Msg("failed to retrieve objectives with category definitions")
+		return response, err
+	}
+
+	data := make([]performance.EnterpriseObjectiveData, 0, len(periodObjs))
+	for _, po := range periodObjs {
+		if po.Objective == nil {
+			continue
+		}
+		obj := po.Objective
+		d := performance.EnterpriseObjectiveData{
+			EnterpriseObjectiveID:          obj.EnterpriseObjectiveID,
+			PeriodObjectiveID:              po.PeriodObjectiveID,
+			Name:                           obj.Name,
+			Kpi:                            obj.Kpi,
+			Description:                    obj.Description,
+			Target:                         obj.Target,
+			EnterpriseObjectivesCategoryID: obj.EnterpriseObjectivesCategoryID,
+			StrategyID:                     obj.StrategyID,
+		}
+		d.RecordStatus = obj.RecordStatus
+		data = append(data, d)
+	}
+
+	response.TotalRecords = len(data)
+	response.Objectives = data
+	response.HasError = false
+	response.Message = "Operation completed"
+	return response, nil
+}
+
+// GetAllPlannedOperationalObjectives retrieves all planned operational objectives for a review period.
+func (s *reviewPeriodService) GetAllPlannedOperationalObjectives(ctx context.Context, reviewPeriodID string) (*performance.OperationalObjectivesResponseVm, error) {
+	response := &performance.OperationalObjectivesResponseVm{}
+	response.HasError = true
+	response.Message = "An error occurred"
+
+	var plannedObjs []performance.ReviewPeriodIndividualPlannedObjective
+	err := s.db.WithContext(ctx).
+		Where("review_period_id = ? AND soft_deleted = ?", reviewPeriodID, false).
+		Preload("ReviewPeriod").
+		Find(&plannedObjs).Error
+	if err != nil {
+		s.log.Error().Err(err).Msg("failed to retrieve all planned operational objectives")
+		return response, err
+	}
+
+	data := make([]performance.OperationalObjectiveData, 0, len(plannedObjs))
+	for _, po := range plannedObjs {
+		d := performance.OperationalObjectiveData{
+			ReviewPeriodID: po.ReviewPeriodID,
+			ObjectiveLevel: fmt.Sprintf("%d", po.ObjectiveLevel),
+			ObjLevel:       po.ObjectiveLevel,
+			ObjectiveID:    po.ObjectiveID,
+			RecordStatus:   po.RecordStatus,
+			StaffID:        po.StaffID,
+		}
+		if po.ReviewPeriod != nil {
+			d.ReviewPeriod = po.ReviewPeriod.Name
+		}
+		data = append(data, d)
+	}
+
+	response.TotalRecords = len(data)
+	response.Objectives = data
+	response.HasError = false
+	response.Message = "Operation completed"
+	return response, nil
+}
+
+// GetObjectivesByWorkproductStatus retrieves planned objectives filtered by work product status.
+func (s *reviewPeriodService) GetObjectivesByWorkproductStatus(ctx context.Context, reviewPeriodID, staffID string, workproductStatus enums.Status) (*performance.PlannedOperationalObjectivesResponseVm, error) {
+	response := &performance.PlannedOperationalObjectivesResponseVm{}
+	response.HasError = true
+	response.Message = "An error occurred"
+
+	var plannedObjs []performance.ReviewPeriodIndividualPlannedObjective
+	err := s.db.WithContext(ctx).
+		Where("staff_id = ? AND review_period_id = ? AND soft_deleted = ?", staffID, reviewPeriodID, false).
+		Preload("ReviewPeriod").
+		Preload("OperationalObjectiveWorkProducts", "record_status = ? AND soft_deleted = ?", workproductStatus.String(), false).
+		Find(&plannedObjs).Error
+	if err != nil {
+		s.log.Error().Err(err).Msg("failed to retrieve objectives by workproduct status")
+		return response, err
+	}
+
+	data := make([]performance.PlannedObjectiveData, 0, len(plannedObjs))
+	for _, po := range plannedObjs {
+		d := performance.PlannedObjectiveData{
+			PlannedObjectiveID: po.PlannedObjectiveID,
+			ReviewPeriodID:     po.ReviewPeriodID,
+			ObjectiveLevel:     fmt.Sprintf("%d", po.ObjectiveLevel),
+			ObjectiveID:        po.ObjectiveID,
+			RecordStatus:       po.RecordStatus,
+			StaffID:            po.StaffID,
+			IsApproved:         po.IsApproved,
+			IsRejected:         po.IsRejected,
+			IsActive:           po.IsActive,
+		}
+		if po.ReviewPeriod != nil {
+			d.ReviewPeriod = po.ReviewPeriod.Name
+		}
+		data = append(data, d)
+	}
+
+	response.TotalRecords = len(data)
+	response.PlannedObjectives = data
+	response.HasError = false
+	response.Message = "Operation completed"
+	return response, nil
+}
+
 // Compile-time interface compliance check.
 var _ ReviewPeriodService = (*reviewPeriodService)(nil)
