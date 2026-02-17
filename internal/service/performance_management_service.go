@@ -478,6 +478,10 @@ func (s *performanceManagementService) GetWorkProductTasks(ctx context.Context, 
 	return s.workProduct.GetWorkProductTasks(ctx, workProductID)
 }
 
+func (s *performanceManagementService) GetWorkProductTaskDetail(ctx context.Context, taskID string) (performance.WorkProductTaskResponseVm, error) {
+	return s.workProduct.GetWorkProductTaskDetail(ctx, taskID)
+}
+
 func (s *performanceManagementService) ReCalculateWorkProductPoints(ctx context.Context, staffID, reviewPeriodID string) (performance.RecalculateWorkProductResponseVm, error) {
 	return s.workProduct.ReCalculateWorkProductPoints(ctx, staffID, reviewPeriodID)
 }

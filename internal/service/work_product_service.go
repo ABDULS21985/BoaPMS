@@ -1006,6 +1006,38 @@ func (ws *workProductService) GetWorkProductTasks(ctx context.Context, workProdu
 	return resp, nil
 }
 
+// GetWorkProductTaskDetail -- retrieves a single work product task by ID.
+// Mirrors .NET GetWorkProductTaskDetail.
+func (ws *workProductService) GetWorkProductTaskDetail(ctx context.Context, taskID string) (performance.WorkProductTaskResponseVm, error) {
+	resp := performance.WorkProductTaskResponseVm{}
+	resp.Message = "an error occurred"
+
+	var task performance.WorkProductTask
+	err := ws.db.WithContext(ctx).
+		Where("work_product_task_id = ?", taskID).
+		First(&task).Error
+	if err != nil {
+		ws.log.Error().Err(err).Str("taskID", taskID).Msg("failed to get work product task detail")
+		resp.HasError = true
+		return resp, err
+	}
+
+	detail := performance.WorkProductTaskDetail{
+		WorkProductTaskID: task.WorkProductTaskID,
+		Name:              task.Name,
+		Description:       task.Description,
+		StartDate:         task.StartDate,
+		EndDate:           task.EndDate,
+		WorkProductID:     task.WorkProductID,
+	}
+	if task.CompletionDate != nil {
+		detail.CompletionDate = *task.CompletionDate
+	}
+	resp.WorkProductTask = &detail
+	resp.Message = "operation completed successfully"
+	return resp, nil
+}
+
 // =========================================================================
 // ReCalculateWorkProductPoints -- recalculates points for all work products
 // of a staff member in a review period.

@@ -149,6 +149,7 @@ type PerformanceManagementService interface {
 	GetObjectiveWorkProducts(ctx context.Context, objectiveID string) (performance.ObjectiveWorkProductListResponseVm, error)
 	WorkProductTaskSetup(ctx context.Context, req *performance.WorkProductTaskRequestModel) (performance.ResponseVm, error)
 	GetWorkProductTasks(ctx context.Context, workProductID string) (performance.WorkProductTaskListResponseVm, error)
+	GetWorkProductTaskDetail(ctx context.Context, taskID string) (performance.WorkProductTaskResponseVm, error)
 	ReCalculateWorkProductPoints(ctx context.Context, staffID, reviewPeriodID string) (performance.RecalculateWorkProductResponseVm, error)
 	WorkProductEvaluation(ctx context.Context, req *performance.WorkProductEvaluationRequestModel) (performance.EvaluationResponseVm, error)
 	GetWorkProductEvaluation(ctx context.Context, workProductID string) (performance.WorkProductEvaluationResponseVm, error)
