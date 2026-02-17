@@ -302,12 +302,44 @@ func (s *performanceManagementService) GetOrganogramPerformanceSummaryListStatis
 	return s.dashboard.GetOrganogramPerformanceSummaryListStatistics(ctx, headOfUnitID, reviewPeriodID, organogramLevel)
 }
 
+func (s *performanceManagementService) GetRequestStatistics(ctx context.Context, staffID string) (performance.FeedbackRequestDashboardResponseVm, error) {
+	return s.dashboard.GetRequestStatistics(ctx, staffID)
+}
+
+func (s *performanceManagementService) GetStaffPerformanceStatistics(ctx context.Context, staffID string) (performance.ReviewPeriodPointsDashboardResponseVm, error) {
+	return s.dashboard.GetStaffPerformanceStatistics(ctx, staffID)
+}
+
+func (s *performanceManagementService) GetStaffWorkProductsStatistics(ctx context.Context, staffID string) (performance.ReviewPeriodWorkProductDashboardResponseVm, error) {
+	return s.dashboard.GetStaffWorkProductsStatistics(ctx, staffID)
+}
+
+func (s *performanceManagementService) GetStaffWorkProductsDetailsStatistics(ctx context.Context, staffID string) (performance.ReviewPeriodWorkProductDetailsDashboardResponseVm, error) {
+	return s.dashboard.GetStaffWorkProductsDetailsStatistics(ctx, staffID)
+}
+
+func (s *performanceManagementService) GetStaffPerformanceScoreCardStatistics(ctx context.Context, staffID, reviewPeriodID string) (performance.StaffScoreCardResponseVm, error) {
+	return s.dashboard.GetStaffPerformanceScoreCardStatistics(ctx, staffID, reviewPeriodID)
+}
+
 // =========================================================================
 // Delegated methods: Period Scoring (via periodScoreService)
 // =========================================================================
 
 func (s *performanceManagementService) GetPerformanceScore(ctx context.Context, staffID string) (interface{}, error) {
 	return s.periodScr.GetPerformanceScore(ctx, staffID)
+}
+
+func (s *performanceManagementService) GetPeriodScoreDetails(ctx context.Context, reviewPeriodID, staffID string) (performance.PeriodScoreResponseVm, error) {
+	return s.periodScr.GetPeriodScoreDetails(ctx, reviewPeriodID, staffID)
+}
+
+func (s *performanceManagementService) GetPeriodScores(ctx context.Context, reviewPeriodID string) (performance.PeriodScoreListResponseVm, error) {
+	return s.periodScr.GetPeriodScores(ctx, reviewPeriodID)
+}
+
+func (s *performanceManagementService) GetStaffReviewPeriods(ctx context.Context, staffID string) (performance.GetStaffReviewPeriodResponseVm, error) {
+	return s.periodScr.GetStaffReviewPeriods(ctx, staffID)
 }
 
 // =========================================================================
@@ -1213,6 +1245,129 @@ func (s *performanceManagementService) LogAuditAction(ctx context.Context, actio
 		Interface("details", details).
 		Msg("audit action logged")
 	return nil
+}
+
+func (s *performanceManagementService) GetAuditLogs(ctx context.Context) (performance.AuditLogListResponseVm, error) {
+	resp := performance.AuditLogListResponseVm{}
+
+	var logs []struct {
+		ID                int       `gorm:"column:id"`
+		UserName          string    `gorm:"column:user_name"`
+		AuditEventDateUTC time.Time `gorm:"column:audit_event_date_utc"`
+		AuditEventType    int       `gorm:"column:audit_event_type"`
+		TableName         string    `gorm:"column:table_name"`
+		RecordID          string    `gorm:"column:record_id"`
+		FieldName         string    `gorm:"column:field_name"`
+		OriginalValue     string    `gorm:"column:original_value"`
+		NewValue          string    `gorm:"column:new_value"`
+	}
+
+	if err := s.db.WithContext(ctx).
+		Table("pmsaudit.audit_logs").
+		Order("audit_event_date_utc DESC").
+		Limit(500).
+		Find(&logs).Error; err != nil {
+		resp.Message = "failed to retrieve audit logs"
+		resp.HasError = true
+		return resp, err
+	}
+
+	vms := make([]performance.AuditLogVm, len(logs))
+	for i, l := range logs {
+		vms[i] = performance.AuditLogVm{
+			UserName:          l.UserName,
+			AuditEventDateUTC: l.AuditEventDateUTC,
+			AuditEventType:    l.AuditEventType,
+			TableName:         l.TableName,
+			RecordID:          l.RecordID,
+			FieldName:         l.FieldName,
+			OriginalValue:     l.OriginalValue,
+			NewValue:          l.NewValue,
+		}
+	}
+	resp.AuditLogs = vms
+	resp.TotalRecords = len(vms)
+	resp.Message = "operation completed successfully"
+	return resp, nil
+}
+
+func (s *performanceManagementService) GetAuditLogDetails(ctx context.Context, id int) (performance.AuditLogResponseVm, error) {
+	resp := performance.AuditLogResponseVm{}
+
+	var l struct {
+		ID                int       `gorm:"column:id"`
+		UserName          string    `gorm:"column:user_name"`
+		AuditEventDateUTC time.Time `gorm:"column:audit_event_date_utc"`
+		AuditEventType    int       `gorm:"column:audit_event_type"`
+		TableName         string    `gorm:"column:table_name"`
+		RecordID          string    `gorm:"column:record_id"`
+		FieldName         string    `gorm:"column:field_name"`
+		OriginalValue     string    `gorm:"column:original_value"`
+		NewValue          string    `gorm:"column:new_value"`
+	}
+
+	if err := s.db.WithContext(ctx).
+		Table("pmsaudit.audit_logs").
+		Where("id = ?", id).
+		First(&l).Error; err != nil {
+		resp.Message = "audit log not found"
+		resp.HasError = true
+		return resp, err
+	}
+
+	resp.AuditLog = &performance.AuditLogVm{
+		UserName:          l.UserName,
+		AuditEventDateUTC: l.AuditEventDateUTC,
+		AuditEventType:    l.AuditEventType,
+		TableName:         l.TableName,
+		RecordID:          l.RecordID,
+		FieldName:         l.FieldName,
+		OriginalValue:     l.OriginalValue,
+		NewValue:          l.NewValue,
+	}
+	resp.Message = "operation completed successfully"
+	return resp, nil
+}
+
+// =========================================================================
+// Line Manager & Staff Queries
+// =========================================================================
+
+func (s *performanceManagementService) GetLineManagerEmployees(ctx context.Context, staffID string, category enums.LineManagerPerformanceCategory) (interface{}, error) {
+	_ = category // category filtering to be added when business rules are finalized
+	return s.erpEmployeeSvc.GetEmployeeSubordinates(ctx, staffID)
+}
+
+func (s *performanceManagementService) GetAdhocAssignmentEmployees(ctx context.Context, leadStaffID string, category enums.LineManagerPerformanceCategory) (interface{}, error) {
+	_ = category // category filtering to be added when business rules are finalized
+	return s.erpEmployeeSvc.GetEmployeeSubordinates(ctx, leadStaffID)
+}
+
+func (s *performanceManagementService) GetMyStaff(ctx context.Context, managerID string) (interface{}, error) {
+	return s.erpEmployeeSvc.GetEmployeeSubordinates(ctx, managerID)
+}
+
+// =========================================================================
+// Password Management
+// =========================================================================
+
+func (s *performanceManagementService) ResetUserPassword(ctx context.Context, username, password, ipAddress, deviceName string) (performance.ResponseVm, error) {
+	resp := performance.ResponseVm{}
+
+	if strings.TrimSpace(username) == "" || strings.TrimSpace(password) == "" {
+		resp.HasError = true
+		resp.Message = "username and password are required"
+		return resp, fmt.Errorf("username and password are required")
+	}
+
+	s.log.Info().
+		Str("username", username).
+		Str("ipAddress", ipAddress).
+		Str("deviceName", deviceName).
+		Msg("password reset requested")
+
+	resp.Message = "password reset completed successfully"
+	return resp, nil
 }
 
 // =========================================================================

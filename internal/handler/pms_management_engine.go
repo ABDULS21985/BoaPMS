@@ -2702,6 +2702,806 @@ func (h *PmsEngineHandler) GetStaffIndividualObjectives(w http.ResponseWriter, r
 	response.OK(w, result)
 }
 
+// =================== 360 REVIEW HANDLERS ===================================
+
+// Trigger360Review handles POST /api/v1/pms-engine/360-review/trigger
+// Mirrors .NET Trigger360Review — creates a 360 review configuration for a review period.
+func (h *PmsEngineHandler) Trigger360Review(w http.ResponseWriter, r *http.Request) {
+	var req performance.CreateReviewPeriod360ReviewRequestModel
+	if !h.decodeJSON(w, r, &req) {
+		return
+	}
+	result, err := h.svc.ReviewPeriod.AddReviewPeriod360Review(r.Context(), &req)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "Trigger360Review").Msg("Failed to trigger 360 review")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.Created(w, result)
+}
+
+// Initiate360Review handles POST /api/v1/pms-engine/360-review/initiate
+// Mirrors .NET Initiate360Review — initiates 360 review for selected staff.
+func (h *PmsEngineHandler) Initiate360Review(w http.ResponseWriter, r *http.Request) {
+	var req performance.Initiate360ReviewRequestModel
+	if !h.decodeJSON(w, r, &req) {
+		return
+	}
+	result, err := h.svc.Performance.Initiate360Review(r.Context(), &req)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "Initiate360Review").Msg("Failed to initiate 360 review")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// Complete360ReviewForStaff handles POST /api/v1/pms-engine/360-review/complete
+// Mirrors .NET Complete360Review — completes 360 review for a review period.
+func (h *PmsEngineHandler) Complete360ReviewForStaff(w http.ResponseWriter, r *http.Request) {
+	var req performance.Complete360ReviewRequestModel
+	if !h.decodeJSON(w, r, &req) {
+		return
+	}
+	result, err := h.svc.Performance.Complete360Review(r.Context(), &req)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "Complete360ReviewForStaff").Msg("Failed to complete 360 review")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// =================== 360 RATING MANAGEMENT HANDLERS ========================
+
+// Add360Rating handles POST /api/v1/pms-engine/360-review/rating
+// Mirrors .NET Add360Rating — saves a competency rating for 360 review.
+func (h *PmsEngineHandler) Add360Rating(w http.ResponseWriter, r *http.Request) {
+	var req performance.SavePmsCompetencyRequestVm
+	if !h.decodeJSON(w, r, &req) {
+		return
+	}
+	result, err := h.svc.Performance.CompetencyRatingSetup(r.Context(), &req)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "Add360Rating").Msg("Failed to add 360 rating")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.Created(w, result)
+}
+
+// Update360Rating handles PUT /api/v1/pms-engine/360-review/rating
+// Mirrors .NET Update360Rating — updates a competency rating for 360 review.
+func (h *PmsEngineHandler) Update360Rating(w http.ResponseWriter, r *http.Request) {
+	var req performance.SavePmsCompetencyRequestVm
+	if !h.decodeJSON(w, r, &req) {
+		return
+	}
+	result, err := h.svc.Performance.CompetencyRatingSetup(r.Context(), &req)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "Update360Rating").Msg("Failed to update 360 rating")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// ReviewerComplete360Review handles POST /api/v1/pms-engine/360-review/reviewer-complete
+// Mirrors .NET ReviewerComplete360Review — reviewer marks their 360 review as complete.
+func (h *PmsEngineHandler) ReviewerComplete360Review(w http.ResponseWriter, r *http.Request) {
+	var req performance.CompetencyReviewerRequestModel
+	if !h.decodeJSON(w, r, &req) {
+		return
+	}
+	req.RecordStatus = enums.OperationComplete.String()
+	result, err := h.svc.Performance.CompetencyReviewerSetup(r.Context(), &req)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "ReviewerComplete360Review").Msg("Failed to complete reviewer 360 review")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// =================== COMPETENCY REVIEW RETRIEVAL HANDLERS ==================
+
+// GetCompetencyReviewDetail handles GET /api/v1/pms-engine/competency-review/{feedbackId}
+// Mirrors .NET GetCompetencyReviewDetail — retrieves a competency review feedback by ID.
+func (h *PmsEngineHandler) GetCompetencyReviewDetail(w http.ResponseWriter, r *http.Request) {
+	feedbackID := r.PathValue("feedbackId")
+	if feedbackID == "" {
+		response.Error(w, http.StatusBadRequest, "feedbackId is required")
+		return
+	}
+	result, err := h.svc.Performance.GetCompetencyReviewFeedback(r.Context(), feedbackID)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetCompetencyReviewDetail").Str("feedbackId", feedbackID).Msg("Failed to get competency review detail")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// GetCompetencyReviewFeedbackDetails handles GET /api/v1/pms-engine/competency-review/{feedbackId}/details
+// Mirrors .NET GetCompetencyReviewFeedbackDetails — retrieves detailed feedback including reviewers.
+func (h *PmsEngineHandler) GetCompetencyReviewFeedbackDetails(w http.ResponseWriter, r *http.Request) {
+	feedbackID := r.PathValue("feedbackId")
+	if feedbackID == "" {
+		response.Error(w, http.StatusBadRequest, "feedbackId is required")
+		return
+	}
+	result, err := h.svc.Performance.GetCompetencyReviewFeedbackDetails(r.Context(), feedbackID)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetCompetencyReviewFeedbackDetails").Str("feedbackId", feedbackID).Msg("Failed to get competency review feedback details")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// GetAllCompetencyReviewFeedbacksByReviewPeriod handles GET /api/v1/pms-engine/competency-review/feedbacks?staffId={id}
+// Mirrors .NET GetAllCompetencyReviewFeedbacksByReviewPeriod — retrieves all feedbacks for a staff member.
+func (h *PmsEngineHandler) GetAllCompetencyReviewFeedbacksByReviewPeriod(w http.ResponseWriter, r *http.Request) {
+	staffID := h.requiredQuery(w, r, "staffId")
+	if staffID == "" {
+		return
+	}
+	result, err := h.svc.Performance.GetAllCompetencyReviewFeedbacks(r.Context(), staffID)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetAllCompetencyReviewFeedbacksByReviewPeriod").Str("staffId", staffID).Msg("Failed to get competency review feedbacks")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// GetAllMyReviewedCompetencies handles GET /api/v1/pms-engine/competency-review/my-reviewed?reviewerStaffId={id}
+// Mirrors .NET GetAllMyReviewedCompetencies — retrieves competencies reviewed by the current reviewer.
+func (h *PmsEngineHandler) GetAllMyReviewedCompetencies(w http.ResponseWriter, r *http.Request) {
+	reviewerStaffID := h.requiredQuery(w, r, "reviewerStaffId")
+	if reviewerStaffID == "" {
+		return
+	}
+	result, err := h.svc.Performance.GetCompetencyReviews(r.Context(), reviewerStaffID)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetAllMyReviewedCompetencies").Str("reviewerStaffId", reviewerStaffID).Msg("Failed to get reviewed competencies")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// GetCompetenciesToReview handles GET /api/v1/pms-engine/competency-review/to-review?reviewerStaffId={id}
+// Mirrors .NET GetCompetenciesToReview — retrieves competencies pending review by a reviewer.
+func (h *PmsEngineHandler) GetCompetenciesToReview(w http.ResponseWriter, r *http.Request) {
+	reviewerStaffID := h.requiredQuery(w, r, "reviewerStaffId")
+	if reviewerStaffID == "" {
+		return
+	}
+	result, err := h.svc.Performance.GetCompetencyReviews(r.Context(), reviewerStaffID)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetCompetenciesToReview").Str("reviewerStaffId", reviewerStaffID).Msg("Failed to get competencies to review")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// GetReviewerFeedbackDetails handles GET /api/v1/pms-engine/competency-review/reviewer/{reviewerId}
+// Mirrors .NET GetReviewerFeedbackDetails — retrieves detailed feedback for a specific reviewer.
+func (h *PmsEngineHandler) GetReviewerFeedbackDetails(w http.ResponseWriter, r *http.Request) {
+	reviewerID := r.PathValue("reviewerId")
+	if reviewerID == "" {
+		response.Error(w, http.StatusBadRequest, "reviewerId is required")
+		return
+	}
+	result, err := h.svc.Performance.GetReviewerFeedbackDetails(r.Context(), reviewerID)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetReviewerFeedbackDetails").Str("reviewerId", reviewerID).Msg("Failed to get reviewer feedback details")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// GetQuestionnaire handles GET /api/v1/pms-engine/competency-review/questionnaire?staffId={id}
+// Mirrors .NET GetQuestionnaire — retrieves the questionnaire for a staff member.
+func (h *PmsEngineHandler) GetQuestionnaire(w http.ResponseWriter, r *http.Request) {
+	staffID := h.requiredQuery(w, r, "staffId")
+	if staffID == "" {
+		return
+	}
+	result, err := h.svc.Performance.GetQuestionnaire(r.Context(), staffID)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetQuestionnaire").Str("staffId", staffID).Msg("Failed to get questionnaire")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// =================== FEEDBACK REQUEST RETRIEVAL HANDLERS ===================
+
+// GetStaffRequests handles GET /api/v1/pms-engine/feedback/requests/staff?staffId={id}
+// Mirrors .NET GetStaffRequests — retrieves all feedback requests assigned to a staff member.
+func (h *PmsEngineHandler) GetStaffRequests(w http.ResponseWriter, r *http.Request) {
+	staffID := h.requiredQuery(w, r, "staffId")
+	if staffID == "" {
+		return
+	}
+	result, err := h.svc.Performance.GetRequests(r.Context(), staffID, nil, nil)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetStaffRequests").Str("staffId", staffID).Msg("Failed to get staff requests")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// GetBreachedRequests handles GET /api/v1/pms-engine/feedback/requests/breached?staffId={id}&reviewPeriodId={id}
+// Mirrors .NET GetBreachedRequests — retrieves breached (SLA-violated) feedback requests.
+func (h *PmsEngineHandler) GetBreachedRequests(w http.ResponseWriter, r *http.Request) {
+	staffID := h.requiredQuery(w, r, "staffId")
+	if staffID == "" {
+		return
+	}
+	reviewPeriodID := h.requiredQuery(w, r, "reviewPeriodId")
+	if reviewPeriodID == "" {
+		return
+	}
+	result, err := h.svc.Performance.GetBreachedRequests(r.Context(), staffID, reviewPeriodID)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetBreachedRequests").Str("staffId", staffID).Msg("Failed to get breached requests")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// GetStaffRequestsByStatus handles GET /api/v1/pms-engine/feedback/requests/staff/by-status?staffId={id}&status={status}
+// Mirrors .NET GetStaffRequestsByStatus — retrieves feedback requests filtered by status.
+func (h *PmsEngineHandler) GetStaffRequestsByStatus(w http.ResponseWriter, r *http.Request) {
+	staffID := h.requiredQuery(w, r, "staffId")
+	if staffID == "" {
+		return
+	}
+	status := h.requiredQuery(w, r, "status")
+	if status == "" {
+		return
+	}
+	result, err := h.svc.Performance.GetRequests(r.Context(), staffID, nil, &status)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetStaffRequestsByStatus").Str("staffId", staffID).Str("status", status).Msg("Failed to get staff requests by status")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// GetAllRequests handles GET /api/v1/pms-engine/feedback/requests/all?staffId={id}
+// Mirrors .NET GetAllRequests — retrieves all feedback requests owned by a staff member.
+func (h *PmsEngineHandler) GetAllRequests(w http.ResponseWriter, r *http.Request) {
+	staffID := h.requiredQuery(w, r, "staffId")
+	if staffID == "" {
+		return
+	}
+	result, err := h.svc.Performance.GetRequestsByOwner(r.Context(), staffID, nil)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetAllRequests").Str("staffId", staffID).Msg("Failed to get all requests")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// GetRequestsByStatus handles GET /api/v1/pms-engine/feedback/requests/by-status?staffId={id}&status={status}
+// Mirrors .NET GetRequestsByStatus — retrieves feedback requests filtered by status (owner perspective).
+func (h *PmsEngineHandler) GetRequestsByStatus(w http.ResponseWriter, r *http.Request) {
+	staffID := h.requiredQuery(w, r, "staffId")
+	if staffID == "" {
+		return
+	}
+	status := h.requiredQuery(w, r, "status")
+	if status == "" {
+		return
+	}
+	result, err := h.svc.Performance.GetRequests(r.Context(), staffID, nil, &status)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetRequestsByStatus").Str("staffId", staffID).Str("status", status).Msg("Failed to get requests by status")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// GetRequestDetails handles GET /api/v1/pms-engine/feedback/requests/{requestId}
+// Mirrors .NET GetRequestDetails — retrieves details for a specific feedback request.
+func (h *PmsEngineHandler) GetRequestDetails(w http.ResponseWriter, r *http.Request) {
+	requestID := r.PathValue("requestId")
+	if requestID == "" {
+		response.Error(w, http.StatusBadRequest, "requestId is required")
+		return
+	}
+	result, err := h.svc.Performance.GetRequestDetails(r.Context(), requestID)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetRequestDetails").Str("requestId", requestID).Msg("Failed to get request details")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// =================== FEEDBACK REQUEST ACTION HANDLERS ======================
+
+// ReassignRequest handles POST /api/v1/pms-engine/feedback/requests/reassign
+// Mirrors .NET ReassignRequest — reassigns a feedback request to a different staff member.
+func (h *PmsEngineHandler) ReassignRequest(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		RequestID         string `json:"requestId"`
+		NewAssignedStaffID string `json:"newAssignedStaffId"`
+	}
+	if !h.decodeJSON(w, r, &req) {
+		return
+	}
+	if err := h.svc.Performance.ReassignRequest(r.Context(), req.RequestID, req.NewAssignedStaffID); err != nil {
+		h.log.Error().Err(err).Str("action", "ReassignRequest").Str("requestId", req.RequestID).Msg("Failed to reassign request")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, map[string]string{"message": "Request reassigned successfully"})
+}
+
+// ReassignSelfRequest handles POST /api/v1/pms-engine/feedback/requests/reassign-self
+// Mirrors .NET ReassignSelfRequest — staff member reassigns their own feedback request.
+func (h *PmsEngineHandler) ReassignSelfRequest(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		RequestID         string `json:"requestId"`
+		CurrentStaffID    string `json:"currentStaffId"`
+		NewAssignedStaffID string `json:"newAssignedStaffId"`
+	}
+	if !h.decodeJSON(w, r, &req) {
+		return
+	}
+	if err := h.svc.Performance.ReassignSelfRequest(r.Context(), req.RequestID, req.CurrentStaffID, req.NewAssignedStaffID); err != nil {
+		h.log.Error().Err(err).Str("action", "ReassignSelfRequest").Str("requestId", req.RequestID).Msg("Failed to self-reassign request")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, map[string]string{"message": "Request reassigned successfully"})
+}
+
+// CloseRequest handles POST /api/v1/pms-engine/feedback/requests/close
+// Mirrors .NET CloseRequest — closes a feedback request.
+func (h *PmsEngineHandler) CloseRequest(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		RequestID string `json:"requestId"`
+	}
+	if !h.decodeJSON(w, r, &req) {
+		return
+	}
+	if err := h.svc.Performance.CloseRequest(r.Context(), req.RequestID); err != nil {
+		h.log.Error().Err(err).Str("action", "CloseRequest").Str("requestId", req.RequestID).Msg("Failed to close request")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, map[string]string{"message": "Request closed successfully"})
+}
+
+// TreatAssignedRequest handles POST /api/v1/pms-engine/feedback/requests/treat
+// Mirrors .NET TreatAssignedRequest — treats (processes) an assigned feedback request.
+func (h *PmsEngineHandler) TreatAssignedRequest(w http.ResponseWriter, r *http.Request) {
+	var req performance.TreatFeedbackRequestModel
+	if !h.decodeJSON(w, r, &req) {
+		return
+	}
+	if err := h.svc.Performance.TreatAssignedRequest(r.Context(), &req); err != nil {
+		h.log.Error().Err(err).Str("action", "TreatAssignedRequest").Str("requestId", req.RequestID).Msg("Failed to treat assigned request")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, map[string]string{"message": "Request treated successfully"})
+}
+
+// =================== COMPETENCY GAP CLOSURE HANDLERS =======================
+
+// CompetencyGapClosureSetup handles POST /api/v1/pms-engine/competency-review/gap-closure
+// Mirrors .NET CompetencyGapClosureSetup — creates or updates competency gap closure records.
+func (h *PmsEngineHandler) CompetencyGapClosureSetup(w http.ResponseWriter, r *http.Request) {
+	var req performance.CompetencyGapClosureRequestModel
+	if !h.decodeJSON(w, r, &req) {
+		return
+	}
+	result, err := h.svc.Performance.CompetencyGapClosureSetup(r.Context(), &req)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "CompetencyGapClosureSetup").Msg("Failed to setup competency gap closure")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// =================== DASHBOARD & STATISTICS HANDLERS =======================
+
+// GetRequestStatistics handles GET /api/v1/pms-engine/stats/requests?staffId=X
+// Mirrors .NET GetRequestStatistics — feedback request SLA dashboard statistics.
+func (h *PmsEngineHandler) GetRequestStatistics(w http.ResponseWriter, r *http.Request) {
+	staffID := h.requiredQuery(w, r, "staffId")
+	if staffID == "" {
+		return
+	}
+	result, err := h.svc.Performance.GetRequestStatistics(r.Context(), staffID)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetRequestStatistics").Str("staffId", staffID).Msg("Failed to get request statistics")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// GetStaffPerformanceStatistics handles GET /api/v1/pms-engine/stats/performance?staffId=X
+// Mirrors .NET GetStaffPerformanceStatistics — points dashboard statistics.
+func (h *PmsEngineHandler) GetStaffPerformanceStatistics(w http.ResponseWriter, r *http.Request) {
+	staffID := h.requiredQuery(w, r, "staffId")
+	if staffID == "" {
+		return
+	}
+	result, err := h.svc.Performance.GetStaffPerformanceStatistics(r.Context(), staffID)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetStaffPerformanceStatistics").Str("staffId", staffID).Msg("Failed to get performance statistics")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// GetStaffWorkProductsStatistics handles GET /api/v1/pms-engine/stats/work-products?staffId=X
+// Mirrors .NET GetStaffWorkProductsStatistics — work product count summary.
+func (h *PmsEngineHandler) GetStaffWorkProductsStatistics(w http.ResponseWriter, r *http.Request) {
+	staffID := h.requiredQuery(w, r, "staffId")
+	if staffID == "" {
+		return
+	}
+	result, err := h.svc.Performance.GetStaffWorkProductsStatistics(r.Context(), staffID)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetStaffWorkProductsStatistics").Str("staffId", staffID).Msg("Failed to get work products statistics")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// GetStaffWorkProductsDetailsStatistics handles GET /api/v1/pms-engine/stats/work-products-details?staffId=X
+// Mirrors .NET GetStaffWorkProductsDetailsStatistics — detailed work product breakdown.
+func (h *PmsEngineHandler) GetStaffWorkProductsDetailsStatistics(w http.ResponseWriter, r *http.Request) {
+	staffID := h.requiredQuery(w, r, "staffId")
+	if staffID == "" {
+		return
+	}
+	result, err := h.svc.Performance.GetStaffWorkProductsDetailsStatistics(r.Context(), staffID)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetStaffWorkProductsDetailsStatistics").Str("staffId", staffID).Msg("Failed to get work products details statistics")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// =================== SCORECARD STATISTICS HANDLERS =========================
+
+// GetStaffPerformanceScoreCardStatistics handles GET /api/v1/pms-engine/scorecard?staffId=X&reviewPeriodId=Y
+// Mirrors .NET GetStaffPerformanceScoreCardStatistics — full score card.
+func (h *PmsEngineHandler) GetStaffPerformanceScoreCardStatistics(w http.ResponseWriter, r *http.Request) {
+	staffID := h.requiredQuery(w, r, "staffId")
+	if staffID == "" {
+		return
+	}
+	reviewPeriodID := h.requiredQuery(w, r, "reviewPeriodId")
+	if reviewPeriodID == "" {
+		return
+	}
+	result, err := h.svc.Performance.GetStaffPerformanceScoreCardStatistics(r.Context(), staffID, reviewPeriodID)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetStaffPerformanceScoreCardStatistics").Str("staffId", staffID).Msg("Failed to get scorecard statistics")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// GetStaffAnnualPerformanceScoreCardStatistics handles GET /api/v1/pms-engine/scorecard/annual?staffId=X&year=Y
+// Mirrors .NET GetStaffAnnualPerformanceScoreCardStatistics — annual score card.
+func (h *PmsEngineHandler) GetStaffAnnualPerformanceScoreCardStatistics(w http.ResponseWriter, r *http.Request) {
+	staffID := h.requiredQuery(w, r, "staffId")
+	if staffID == "" {
+		return
+	}
+	yearStr := h.requiredQuery(w, r, "year")
+	if yearStr == "" {
+		return
+	}
+	year, err := strconv.Atoi(yearStr)
+	if err != nil {
+		response.Error(w, http.StatusBadRequest, "year must be a valid integer")
+		return
+	}
+	result, err := h.svc.Performance.GetStaffAnnualPerformanceScoreCardStatistics(r.Context(), staffID, year)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetStaffAnnualPerformanceScoreCardStatistics").Str("staffId", staffID).Int("year", year).Msg("Failed to get annual scorecard")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// GetSubordinatesStaffPerformanceScoreCardStatistics handles GET /api/v1/pms-engine/scorecard/subordinates?managerId=X&reviewPeriodId=Y
+// Mirrors .NET GetSurbodinatesStaffPerformanceScoreCardStatistics — subordinates score cards.
+func (h *PmsEngineHandler) GetSubordinatesStaffPerformanceScoreCardStatistics(w http.ResponseWriter, r *http.Request) {
+	managerID := h.requiredQuery(w, r, "managerId")
+	if managerID == "" {
+		return
+	}
+	reviewPeriodID := h.requiredQuery(w, r, "reviewPeriodId")
+	if reviewPeriodID == "" {
+		return
+	}
+	result, err := h.svc.Performance.GetSubordinatesStaffPerformanceScoreCardStatistics(r.Context(), managerID, reviewPeriodID)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetSubordinatesScoreCard").Str("managerId", managerID).Msg("Failed to get subordinates scorecard")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// =================== ORGANOGRAM PERFORMANCE HANDLERS =======================
+
+// GetOrganogramPerformanceSummaryStatistics handles GET /api/v1/pms-engine/organogram-performance?referenceId=X&reviewPeriodId=Y&level=Z
+// Mirrors .NET GetOrganogramPerformanceSummaryStatistics — single org unit performance summary.
+func (h *PmsEngineHandler) GetOrganogramPerformanceSummaryStatistics(w http.ResponseWriter, r *http.Request) {
+	referenceID := h.requiredQuery(w, r, "referenceId")
+	if referenceID == "" {
+		return
+	}
+	reviewPeriodID := h.requiredQuery(w, r, "reviewPeriodId")
+	if reviewPeriodID == "" {
+		return
+	}
+	levelStr := r.URL.Query().Get("level")
+	level := enums.OrganogramLevelOffice // default to Office per .NET
+	if levelStr != "" {
+		l, err := strconv.Atoi(levelStr)
+		if err != nil {
+			response.Error(w, http.StatusBadRequest, "level must be a valid integer")
+			return
+		}
+		level = enums.OrganogramLevel(l)
+	}
+	result, err := h.svc.Performance.GetOrganogramPerformanceSummaryStatistics(r.Context(), referenceID, reviewPeriodID, level)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetOrganogramPerformanceSummary").Str("referenceId", referenceID).Msg("Failed to get organogram performance summary")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// GetOrganogramPerformanceSummaryListStatistics handles GET /api/v1/pms-engine/organogram-performance/list?headOfUnitId=X&reviewPeriodId=Y&level=Z
+// Mirrors .NET GetOrganogramPerformanceSummaryListStatistics — list of org unit performance summaries.
+func (h *PmsEngineHandler) GetOrganogramPerformanceSummaryListStatistics(w http.ResponseWriter, r *http.Request) {
+	headOfUnitID := h.requiredQuery(w, r, "headOfUnitId")
+	if headOfUnitID == "" {
+		return
+	}
+	reviewPeriodID := h.requiredQuery(w, r, "reviewPeriodId")
+	if reviewPeriodID == "" {
+		return
+	}
+	levelStr := r.URL.Query().Get("level")
+	level := enums.OrganogramLevelDivision // default to Division per .NET
+	if levelStr != "" {
+		l, err := strconv.Atoi(levelStr)
+		if err != nil {
+			response.Error(w, http.StatusBadRequest, "level must be a valid integer")
+			return
+		}
+		level = enums.OrganogramLevel(l)
+	}
+	result, err := h.svc.Performance.GetOrganogramPerformanceSummaryListStatistics(r.Context(), headOfUnitID, reviewPeriodID, level)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetOrganogramPerformanceSummaryList").Str("headOfUnitId", headOfUnitID).Msg("Failed to get organogram performance summary list")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// =================== PERIOD SCORE HANDLERS =================================
+
+// GetPeriodScoreDetails handles GET /api/v1/pms-engine/period-scores?reviewPeriodId=X&staffId=Y
+// Mirrors .NET GetPeriodScoreDetails — single staff + review period score.
+func (h *PmsEngineHandler) GetPeriodScoreDetails(w http.ResponseWriter, r *http.Request) {
+	reviewPeriodID := h.requiredQuery(w, r, "reviewPeriodId")
+	if reviewPeriodID == "" {
+		return
+	}
+	staffID := h.requiredQuery(w, r, "staffId")
+	if staffID == "" {
+		return
+	}
+	result, err := h.svc.Performance.GetPeriodScoreDetails(r.Context(), reviewPeriodID, staffID)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetPeriodScoreDetails").Str("staffId", staffID).Str("reviewPeriodId", reviewPeriodID).Msg("Failed to get period score details")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// GetPeriodScores handles GET /api/v1/pms-engine/period-scores/all?reviewPeriodId=X
+// Mirrors .NET GetPeriodScores — all scores for a review period.
+func (h *PmsEngineHandler) GetPeriodScores(w http.ResponseWriter, r *http.Request) {
+	reviewPeriodID := h.requiredQuery(w, r, "reviewPeriodId")
+	if reviewPeriodID == "" {
+		return
+	}
+	result, err := h.svc.Performance.GetPeriodScores(r.Context(), reviewPeriodID)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetPeriodScores").Str("reviewPeriodId", reviewPeriodID).Msg("Failed to get period scores")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// GetStaffReviewPeriods handles GET /api/v1/pms-engine/staff-review-periods?staffId=X
+// Mirrors .NET GetStaffReviewPeriods — review periods a staff has participated in.
+func (h *PmsEngineHandler) GetStaffReviewPeriods(w http.ResponseWriter, r *http.Request) {
+	staffID := h.requiredQuery(w, r, "staffId")
+	if staffID == "" {
+		return
+	}
+	result, err := h.svc.Performance.GetStaffReviewPeriods(r.Context(), staffID)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetStaffReviewPeriods").Str("staffId", staffID).Msg("Failed to get staff review periods")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// =================== AUDIT LOG HANDLERS ====================================
+
+// GetAuditLogs handles GET /api/v1/pms-engine/audit-logs
+// Mirrors .NET GetAuditLogs — retrieves recent audit log entries.
+func (h *PmsEngineHandler) GetAuditLogs(w http.ResponseWriter, r *http.Request) {
+	result, err := h.svc.Performance.GetAuditLogs(r.Context())
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetAuditLogs").Msg("Failed to get audit logs")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// GetAuditLogDetails handles GET /api/v1/pms-engine/audit-logs/{id}
+// Mirrors .NET GetAuditLogDetails — retrieves a single audit log entry.
+func (h *PmsEngineHandler) GetAuditLogDetails(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	if idStr == "" {
+		response.Error(w, http.StatusBadRequest, "id is required")
+		return
+	}
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		response.Error(w, http.StatusBadRequest, "id must be a valid integer")
+		return
+	}
+	result, err := h.svc.Performance.GetAuditLogDetails(r.Context(), id)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetAuditLogDetails").Int("id", id).Msg("Failed to get audit log details")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// =================== LINE MANAGER & STAFF HANDLERS =========================
+
+// GetLineManagerEmployees handles GET /api/v1/pms-engine/line-manager-employees?staffId=X&category=Y
+// Mirrors .NET GetLineManagerEmployees — retrieves employees under a line manager.
+func (h *PmsEngineHandler) GetLineManagerEmployees(w http.ResponseWriter, r *http.Request) {
+	staffID := h.requiredQuery(w, r, "staffId")
+	if staffID == "" {
+		return
+	}
+	categoryStr := h.requiredQuery(w, r, "category")
+	if categoryStr == "" {
+		return
+	}
+	categoryInt, err := strconv.Atoi(categoryStr)
+	if err != nil {
+		response.Error(w, http.StatusBadRequest, "category must be a valid integer")
+		return
+	}
+	category := enums.LineManagerPerformanceCategory(categoryInt)
+	result, err := h.svc.Performance.GetLineManagerEmployees(r.Context(), staffID, category)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetLineManagerEmployees").Str("staffId", staffID).Msg("Failed to get line manager employees")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// GetAdhocAssignmentEmployees handles GET /api/v1/pms-engine/adhoc-employees?leadStaffId=X&category=Y
+// Mirrors .NET GetAdhocAssignmentEmployees — retrieves adhoc assignment employees.
+func (h *PmsEngineHandler) GetAdhocAssignmentEmployees(w http.ResponseWriter, r *http.Request) {
+	leadStaffID := h.requiredQuery(w, r, "leadStaffId")
+	if leadStaffID == "" {
+		return
+	}
+	categoryStr := h.requiredQuery(w, r, "category")
+	if categoryStr == "" {
+		return
+	}
+	categoryInt, err := strconv.Atoi(categoryStr)
+	if err != nil {
+		response.Error(w, http.StatusBadRequest, "category must be a valid integer")
+		return
+	}
+	category := enums.LineManagerPerformanceCategory(categoryInt)
+	result, err := h.svc.Performance.GetAdhocAssignmentEmployees(r.Context(), leadStaffID, category)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetAdhocAssignmentEmployees").Str("leadStaffId", leadStaffID).Msg("Failed to get adhoc assignment employees")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// GetMyStaff handles GET /api/v1/pms-engine/my-staff?managerId=X
+// Mirrors .NET GetMyStaff — retrieves staff under a manager.
+func (h *PmsEngineHandler) GetMyStaff(w http.ResponseWriter, r *http.Request) {
+	managerID := h.requiredQuery(w, r, "managerId")
+	if managerID == "" {
+		return
+	}
+	result, err := h.svc.Performance.GetMyStaff(r.Context(), managerID)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "GetMyStaff").Str("managerId", managerID).Msg("Failed to get my staff")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
+// =================== PASSWORD MANAGEMENT HANDLERS ==========================
+
+// ResetUserPassword handles POST /api/v1/pms-engine/reset-password
+// Mirrors .NET ResetUserPassword — resets a user's password (AllowAnonymous).
+func (h *PmsEngineHandler) ResetUserPassword(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Username   string `json:"username"`
+		Password   string `json:"password"`
+		DeviceName string `json:"deviceName"`
+		IPAddress  string `json:"ipAddress"`
+	}
+	if !h.decodeJSON(w, r, &req) {
+		return
+	}
+	if req.Username == "" || req.Password == "" {
+		response.Error(w, http.StatusBadRequest, "username and password are required")
+		return
+	}
+	result, err := h.svc.Performance.ResetUserPassword(r.Context(), req.Username, req.Password, req.IPAddress, req.DeviceName)
+	if err != nil {
+		h.log.Error().Err(err).Str("action", "ResetUserPassword").Str("username", req.Username).Msg("Failed to reset user password")
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	response.OK(w, result)
+}
+
 // =================== ROUTE REGISTRATION ====================================
 
 // RegisterRoutes registers all PMS engine routes on the given mux.
@@ -2870,4 +3670,66 @@ func (h *PmsEngineHandler) RegisterRoutes(mux *http.ServeMux, mw *middleware.Sta
 	mux.Handle("POST "+base+"/individual-objectives/return", jwt(h.ReturnIndividualObjective))
 	mux.Handle("POST "+base+"/individual-objectives/cancel", jwt(h.CancelIndividualObjective))
 	mux.Handle("GET "+base+"/individual-objectives", jwt(h.GetStaffIndividualObjectives))
+
+	// --- 360 Review ---
+	mux.Handle("POST "+base+"/360-review/trigger", jwt(h.Trigger360Review))
+	mux.Handle("POST "+base+"/360-review/initiate", jwt(h.Initiate360Review))
+	mux.Handle("POST "+base+"/360-review/complete", jwt(h.Complete360ReviewForStaff))
+	mux.Handle("POST "+base+"/360-review/rating", jwt(h.Add360Rating))
+	mux.Handle("PUT "+base+"/360-review/rating", jwt(h.Update360Rating))
+	mux.Handle("POST "+base+"/360-review/reviewer-complete", jwt(h.ReviewerComplete360Review))
+
+	// --- Competency Review ---
+	mux.Handle("GET "+base+"/competency-review/{feedbackId}/details", jwt(h.GetCompetencyReviewFeedbackDetails))
+	mux.Handle("GET "+base+"/competency-review/{feedbackId}", jwt(h.GetCompetencyReviewDetail))
+	mux.Handle("GET "+base+"/competency-review/feedbacks", jwt(h.GetAllCompetencyReviewFeedbacksByReviewPeriod))
+	mux.Handle("GET "+base+"/competency-review/my-reviewed", jwt(h.GetAllMyReviewedCompetencies))
+	mux.Handle("GET "+base+"/competency-review/to-review", jwt(h.GetCompetenciesToReview))
+	mux.Handle("GET "+base+"/competency-review/reviewer/{reviewerId}", jwt(h.GetReviewerFeedbackDetails))
+	mux.Handle("GET "+base+"/competency-review/questionnaire", jwt(h.GetQuestionnaire))
+	mux.Handle("POST "+base+"/competency-review/gap-closure", jwt(h.CompetencyGapClosureSetup))
+
+	// --- Feedback Requests (Extended) ---
+	mux.Handle("GET "+base+"/feedback/requests/staff", jwt(h.GetStaffRequests))
+	mux.Handle("GET "+base+"/feedback/requests/breached", jwt(h.GetBreachedRequests))
+	mux.Handle("GET "+base+"/feedback/requests/staff/by-status", jwt(h.GetStaffRequestsByStatus))
+	mux.Handle("GET "+base+"/feedback/requests/all", jwt(h.GetAllRequests))
+	mux.Handle("GET "+base+"/feedback/requests/by-status", jwt(h.GetRequestsByStatus))
+	mux.Handle("GET "+base+"/feedback/requests/{requestId}", jwt(h.GetRequestDetails))
+	mux.Handle("POST "+base+"/feedback/requests/reassign", jwt(h.ReassignRequest))
+	mux.Handle("POST "+base+"/feedback/requests/reassign-self", jwt(h.ReassignSelfRequest))
+	mux.Handle("POST "+base+"/feedback/requests/close", jwt(h.CloseRequest))
+	mux.Handle("POST "+base+"/feedback/requests/treat", jwt(h.TreatAssignedRequest))
+
+	// --- Dashboard & Statistics ---
+	mux.Handle("GET "+base+"/stats/requests", jwt(h.GetRequestStatistics))
+	mux.Handle("GET "+base+"/stats/performance", jwt(h.GetStaffPerformanceStatistics))
+	mux.Handle("GET "+base+"/stats/work-products", jwt(h.GetStaffWorkProductsStatistics))
+	mux.Handle("GET "+base+"/stats/work-products-details", jwt(h.GetStaffWorkProductsDetailsStatistics))
+
+	// --- ScoreCard Statistics ---
+	mux.Handle("GET "+base+"/scorecard", jwt(h.GetStaffPerformanceScoreCardStatistics))
+	mux.Handle("GET "+base+"/scorecard/annual", jwt(h.GetStaffAnnualPerformanceScoreCardStatistics))
+	mux.Handle("GET "+base+"/scorecard/subordinates", jwt(h.GetSubordinatesStaffPerformanceScoreCardStatistics))
+
+	// --- Organogram Performance ---
+	mux.Handle("GET "+base+"/organogram-performance/list", jwt(h.GetOrganogramPerformanceSummaryListStatistics))
+	mux.Handle("GET "+base+"/organogram-performance", jwt(h.GetOrganogramPerformanceSummaryStatistics))
+
+	// --- Period Scores ---
+	mux.Handle("GET "+base+"/period-scores/all", jwt(h.GetPeriodScores))
+	mux.Handle("GET "+base+"/period-scores", jwt(h.GetPeriodScoreDetails))
+	mux.Handle("GET "+base+"/staff-review-periods", jwt(h.GetStaffReviewPeriods))
+
+	// --- Audit Logs ---
+	mux.Handle("GET "+base+"/audit-logs/{id}", jwt(h.GetAuditLogDetails))
+	mux.Handle("GET "+base+"/audit-logs", jwt(h.GetAuditLogs))
+
+	// --- Line Manager & Staff ---
+	mux.Handle("GET "+base+"/line-manager-employees", jwt(h.GetLineManagerEmployees))
+	mux.Handle("GET "+base+"/adhoc-employees", jwt(h.GetAdhocAssignmentEmployees))
+	mux.Handle("GET "+base+"/my-staff", jwt(h.GetMyStaff))
+
+	// --- Password Management (AllowAnonymous) ---
+	mux.Handle("POST "+base+"/reset-password", http.HandlerFunc(h.ResetUserPassword))
 }

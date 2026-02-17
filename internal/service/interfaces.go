@@ -221,15 +221,39 @@ type PerformanceManagementService interface {
 	// =====================================================================
 	GetPerformanceScore(ctx context.Context, staffID string) (interface{}, error)
 	GetDashboardStats(ctx context.Context, staffID string) (interface{}, error)
+	GetRequestStatistics(ctx context.Context, staffID string) (performance.FeedbackRequestDashboardResponseVm, error)
+	GetStaffPerformanceStatistics(ctx context.Context, staffID string) (performance.ReviewPeriodPointsDashboardResponseVm, error)
+	GetStaffWorkProductsStatistics(ctx context.Context, staffID string) (performance.ReviewPeriodWorkProductDashboardResponseVm, error)
+	GetStaffWorkProductsDetailsStatistics(ctx context.Context, staffID string) (performance.ReviewPeriodWorkProductDetailsDashboardResponseVm, error)
+	GetStaffPerformanceScoreCardStatistics(ctx context.Context, staffID, reviewPeriodID string) (performance.StaffScoreCardResponseVm, error)
 	GetStaffAnnualPerformanceScoreCardStatistics(ctx context.Context, staffID string, year int) (performance.StaffAnnualScoreCardResponseVm, error)
 	GetSubordinatesStaffPerformanceScoreCardStatistics(ctx context.Context, managerStaffID, reviewPeriodID string) (performance.AllStaffScoreCardResponseVm, error)
 	GetOrganogramPerformanceSummaryStatistics(ctx context.Context, referenceID, reviewPeriodID string, organogramLevel enums.OrganogramLevel) (performance.OrganogramPerformanceSummaryResponseVm, error)
 	GetOrganogramPerformanceSummaryListStatistics(ctx context.Context, headOfUnitID, reviewPeriodID string, organogramLevel enums.OrganogramLevel) (performance.OrganogramPerformanceSummaryListResponseVm, error)
 
+	// Period Scores
+	GetPeriodScoreDetails(ctx context.Context, reviewPeriodID, staffID string) (performance.PeriodScoreResponseVm, error)
+	GetPeriodScores(ctx context.Context, reviewPeriodID string) (performance.PeriodScoreListResponseVm, error)
+	GetStaffReviewPeriods(ctx context.Context, staffID string) (performance.GetStaffReviewPeriodResponseVm, error)
+
 	// =====================================================================
 	// Audit
 	// =====================================================================
 	LogAuditAction(ctx context.Context, action string, details interface{}) error
+	GetAuditLogs(ctx context.Context) (performance.AuditLogListResponseVm, error)
+	GetAuditLogDetails(ctx context.Context, id int) (performance.AuditLogResponseVm, error)
+
+	// =====================================================================
+	// Line Manager & Staff Queries
+	// =====================================================================
+	GetLineManagerEmployees(ctx context.Context, staffID string, category enums.LineManagerPerformanceCategory) (interface{}, error)
+	GetAdhocAssignmentEmployees(ctx context.Context, leadStaffID string, category enums.LineManagerPerformanceCategory) (interface{}, error)
+	GetMyStaff(ctx context.Context, managerID string) (interface{}, error)
+
+	// =====================================================================
+	// Password Management
+	// =====================================================================
+	ResetUserPassword(ctx context.Context, username, password, ipAddress, deviceName string) (performance.ResponseVm, error)
 }
 
 // --- PMS Setup ---
