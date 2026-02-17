@@ -365,6 +365,52 @@ export interface PeriodScore {
   dateCreated: string;
 }
 
+// --- Individual Planned Objective ---
+export interface IndividualPlannedObjective {
+  individualPlannedObjectiveId: string;
+  reviewPeriodId: string;
+  staffId: string;
+  objectiveId?: string;
+  objectiveName?: string;
+  objectiveLevel?: string;
+  categoryName?: string;
+  title?: string;
+  description?: string;
+  weight: number;
+  targetDate?: string;
+  keyPerformanceIndicator?: string;
+  remark?: string;
+  recordStatus?: number;
+  isActive: boolean;
+  createdBy: string;
+  dateCreated: string;
+}
+
+// --- Project & Committee Members ---
+export interface ProjectMember {
+  projectMemberId: string;
+  staffId: string;
+  staffName?: string;
+  projectId: string;
+  plannedObjectiveId?: string;
+  recordStatus?: number;
+  isActive: boolean;
+  createdBy: string;
+  dateCreated: string;
+}
+
+export interface CommitteeMember {
+  committeeMemberId: string;
+  staffId: string;
+  staffName?: string;
+  committeeId: string;
+  plannedObjectiveId?: string;
+  recordStatus?: number;
+  isActive: boolean;
+  createdBy: string;
+  dateCreated: string;
+}
+
 // --- PMS Configuration ---
 export interface PmsConfiguration {
   pmsConfigurationId: string;
