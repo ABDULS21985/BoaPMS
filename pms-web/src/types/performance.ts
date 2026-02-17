@@ -329,6 +329,131 @@ export interface FeedbackQuestionnaire {
   dateCreated: string;
 }
 
+export interface FeedbackQuestionnaireOption {
+  feedbackQuestionaireOptionId: string;
+  optionStatement: string;
+  description?: string;
+  score: number;
+  questionId: string;
+  isActive: boolean;
+  createdBy: string;
+  dateCreated: string;
+}
+
+// --- PMS Competency ---
+export interface PmsCompetency {
+  pmsCompetencyId: string;
+  name: string;
+  description?: string;
+  objectCategoryId: string;
+  recordStatus?: number;
+  isActive: boolean;
+  createdBy: string;
+  dateCreated: string;
+  feedbackQuestionaires?: FeedbackQuestionnaireWithOptions[];
+}
+
+export interface FeedbackQuestionnaireWithOptions {
+  feedbackQuestionaireId: string;
+  question: string;
+  description: string;
+  pmsCompetencyId: string;
+  isActive: boolean;
+  createdBy: string;
+  dateCreated: string;
+  options: FeedbackQuestionnaireOption[];
+}
+
+// --- Competency Review (360 Feedback) ---
+export interface CompetencyReviewFeedback {
+  competencyReviewFeedbackId: string;
+  staffId: string;
+  staffName?: string;
+  maxPoints: number;
+  finalScore: number;
+  reviewPeriodId: string;
+  recordStatus?: number;
+  recordStatusName?: string;
+  isActive: boolean;
+  createdBy: string;
+  dateCreated: string;
+}
+
+export interface CompetencyReviewFeedbackDetails {
+  competencyReviewFeedbackId: string;
+  staffId: string;
+  staffName?: string;
+  officeId: number;
+  officeCode?: string;
+  officeName?: string;
+  divisionId: number;
+  divisionCode?: string;
+  divisionName?: string;
+  departmentId: number;
+  departmentCode?: string;
+  departmentName?: string;
+  maxPoints: number;
+  finalScore: number;
+  finalScorePercentage: number;
+  reviewPeriodId: string;
+  recordStatusName?: string;
+  ratings?: CompetencyReviewerRatingSummary[];
+}
+
+export interface CompetencyReviewerRatingSummary {
+  pmsCompetencyId: string;
+  pmsCompetencyName: string;
+  averageRating: number;
+  totalReviewers: number;
+}
+
+export interface CompetencyReviewer {
+  competencyReviewerId: string;
+  reviewStaffId: string;
+  finalRating: number;
+  competencyReviewFeedbackId: string;
+  competencyReviewFeedback?: CompetencyReviewFeedback;
+  recordStatusName?: string;
+  initiatedDate?: string;
+  recordStatus?: number;
+  isActive: boolean;
+  createdBy: string;
+  dateCreated: string;
+  competencyReviewerRatings?: CompetencyReviewerRating[];
+}
+
+export interface CompetencyReviewerRating {
+  competencyReviewerRatingId: string;
+  pmsCompetencyId: string;
+  feedbackQuestionaireOptionId: string;
+  rating: number;
+  competencyReviewerId: string;
+  feedbackQuestionaireOption?: FeedbackQuestionnaireOption;
+  pmsCompetency?: PmsCompetency;
+  isActive: boolean;
+  createdBy: string;
+  dateCreated: string;
+}
+
+// --- Breached Feedback Request ---
+export interface BreachedFeedbackRequestLog extends FeedbackRequestLog {
+  isBreached: boolean;
+}
+
+// --- Pending Request ---
+export interface StaffPendingRequest {
+  feedbackRequestLogId: string;
+  feedbackRequestType: number;
+  referenceId: string;
+  timeInitiated: string;
+  assignedStaffId: string;
+  requestOwnerStaffId: string;
+  recordStatus: number;
+  hasSla: boolean;
+  id: number;
+  isActive: boolean;
+}
+
 // --- Grievance ---
 export interface Grievance {
   grievanceId: string;
