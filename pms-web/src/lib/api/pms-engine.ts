@@ -9,6 +9,13 @@ import type {
   IndividualPlannedObjective,
   ProjectMember,
   CommitteeMember,
+  FeedbackRequestLog,
+  BreachedFeedbackRequestLog,
+  StaffPendingRequest,
+  CompetencyReviewFeedback,
+  CompetencyReviewFeedbackDetails,
+  CompetencyReviewer,
+  PmsCompetency,
 } from "@/types/performance";
 
 // --- Projects ---
@@ -144,11 +151,63 @@ export const submitDraftEvaluation = (data: unknown) => post<ResponseVm>("/pms-e
 export const approveEvaluation = (data: unknown) => post<ResponseVm>("/pms-engine/evaluations/approve", data);
 export const rejectEvaluation = (data: unknown) => post<ResponseVm>("/pms-engine/evaluations/reject", data);
 
-// --- Feedback ---
+// --- Feedback Requests ---
 export const getStaffFeedbackRequests = (staffId: string) =>
-  get<BaseAPIResponse<unknown[]>>(`/pms-engine/feedback/requests?staffId=${staffId}`);
+  get<BaseAPIResponse<FeedbackRequestLog[]>>(`/pms-engine/feedback/requests?staffId=${staffId}`);
 export const completeFeedbackRequest = (data: unknown) =>
   post<ResponseVm>("/pms-engine/feedback/process", data);
+export const getStaffRequests = (staffId: string) =>
+  get<BaseAPIResponse<FeedbackRequestLog[]>>(`/pms-engine/feedback/requests/staff?staffId=${staffId}`);
+export const getBreachedRequests = (staffId: string, reviewPeriodId: string) =>
+  get<BaseAPIResponse<BreachedFeedbackRequestLog[]>>(`/pms-engine/feedback/requests/breached?staffId=${staffId}&reviewPeriodId=${reviewPeriodId}`);
+export const getPendingFeedbackActions = (staffId: string) =>
+  get<BaseAPIResponse<StaffPendingRequest[]>>(`/pms-engine/feedback/pending?staffId=${staffId}`);
+export const getAllRequests = (staffId: string) =>
+  get<BaseAPIResponse<FeedbackRequestLog[]>>(`/pms-engine/feedback/requests/all?staffId=${staffId}`);
+export const getRequestDetails = (requestId: string) =>
+  get<BaseAPIResponse<FeedbackRequestLog>>(`/pms-engine/feedback/requests/${requestId}`);
+export const getRequestsByStatus = (staffId: string, status: string) =>
+  get<BaseAPIResponse<FeedbackRequestLog[]>>(`/pms-engine/feedback/requests/by-status?staffId=${staffId}&status=${status}`);
+export const reassignRequest = (data: { requestId: string; newAssignedStaffId: string }) =>
+  post<ResponseVm>("/pms-engine/feedback/requests/reassign", data);
+export const reassignSelfRequest = (data: { requestId: string; currentStaffId: string; newAssignedStaffId: string }) =>
+  post<ResponseVm>("/pms-engine/feedback/requests/reassign-self", data);
+export const closeRequest = (data: { requestId: string }) =>
+  post<ResponseVm>("/pms-engine/feedback/requests/close", data);
+export const treatAssignedRequest = (data: { requestId: string; operationType: number; comment?: string }) =>
+  post<ResponseVm>("/pms-engine/feedback/requests/treat", data);
+
+// --- 360 Review ---
+export const trigger360Review = (data: unknown) =>
+  post<ResponseVm>("/pms-engine/360-review/trigger", data);
+export const initiate360Review = (data: { staffId: string[]; reviewPeriodId: string }) =>
+  post<ResponseVm>("/pms-engine/360-review/initiate", data);
+export const complete360ReviewForStaff = (data: { reviewPeriodId: string }) =>
+  post<ResponseVm>("/pms-engine/360-review/complete", data);
+export const add360Rating = (data: unknown) =>
+  post<ResponseVm>("/pms-engine/360-review/rating", data);
+export const update360Rating = (data: unknown) =>
+  put<ResponseVm>("/pms-engine/360-review/rating", data);
+export const reviewerComplete360Review = (data: { reviewStaffId: string; competencyReviewFeedbackId: string }) =>
+  post<ResponseVm>("/pms-engine/360-review/reviewer-complete", data);
+
+// --- Competency Review ---
+export const getCompetencyReviewDetail = (feedbackId: string) =>
+  get<BaseAPIResponse<CompetencyReviewFeedback>>(`/pms-engine/competency-review/${feedbackId}`);
+export const getCompetencyReviewFeedbackDetails = (feedbackId: string) =>
+  get<BaseAPIResponse<CompetencyReviewFeedbackDetails>>(`/pms-engine/competency-review/${feedbackId}/details`);
+export const getAllCompetencyReviewFeedbacks = (staffId: string) =>
+  get<BaseAPIResponse<CompetencyReviewFeedback[]>>(`/pms-engine/competency-review/feedbacks?staffId=${staffId}`);
+export const getCompetenciesToReview = (reviewerStaffId: string) =>
+  get<BaseAPIResponse<CompetencyReviewer[]>>(`/pms-engine/competency-review/to-review?reviewerStaffId=${reviewerStaffId}`);
+export const getMyReviewedCompetencies = (reviewerStaffId: string) =>
+  get<BaseAPIResponse<CompetencyReviewer[]>>(`/pms-engine/competency-review/my-reviewed?reviewerStaffId=${reviewerStaffId}`);
+export const getReviewerFeedbackDetails = (reviewerId: string) =>
+  get<BaseAPIResponse<CompetencyReviewer>>(`/pms-engine/competency-review/reviewer/${reviewerId}`);
+export const getQuestionnaire = (staffId: string) =>
+  get<BaseAPIResponse<PmsCompetency[]>>(`/pms-engine/competency-review/questionnaire?staffId=${staffId}`);
+export const competencyGapClosureSetup = (data: unknown) =>
+  post<ResponseVm>("/pms-engine/competency-review/gap-closure", data);
 
 // --- Line Manager & Staff ---
 export const getLineManagerEmployees = (staffId: string, category: string) =>
