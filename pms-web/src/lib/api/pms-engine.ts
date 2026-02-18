@@ -223,6 +223,10 @@ export const getPerformanceSummary = () =>
 export const getDashboardStats = (staffId: string) =>
   get<BaseAPIResponse<unknown>>(`/pms-engine/dashboard?staffId=${staffId}`);
 
+// --- Audit Logs ---
+export const getAuditLogs = () =>
+  get<{ auditLogs: import("@/types/staff").AuditLog[]; totalRecords: number; message: string }>("/pms-engine/audit-logs");
+
 // --- Staff Project/Committee Work Products ---
 export const getStaffProjectWorkProducts = (staffId: string, reviewPeriodId: string) =>
   get<BaseAPIResponse<WorkProduct[]>>(`/pms-engine/work-products/project/staff?staffId=${staffId}&reviewPeriodId=${reviewPeriodId}`);

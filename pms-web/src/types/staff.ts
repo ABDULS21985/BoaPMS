@@ -49,3 +49,23 @@ export interface StaffIdMask {
   firstName?: string;
   lastName?: string;
 }
+
+export interface RoleWithPermissions {
+  allPermissions: Permission[];
+  rolesAndPermissions: {
+    roleId: string;
+    roleName: string;
+    permissions: Permission[];
+  };
+}
+
+export interface AuditLog {
+  userName: string;
+  auditEventDateUTC: string;
+  auditEventType: number;
+  tableName: string;
+  recordId: string;
+  fieldName: string;
+  originalValue: string;
+  newValue: string;
+}
