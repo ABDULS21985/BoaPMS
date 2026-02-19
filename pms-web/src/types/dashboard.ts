@@ -153,13 +153,131 @@ export interface EmployeeErpDetails {
   email?: string;
   jobTitle?: string;
   gradeName?: string;
+  departmentId?: number;
   departmentName?: string;
+  divisionId?: number;
   divisionName?: string;
+  officeId?: number;
   officeName?: string;
   supervisorId?: string;
   supervisorName?: string;
   headOfOfficeId?: string;
   headOfOfficeName?: string;
+  headOfDivisionId?: string;
+  headOfDepartmentId?: string;
   phone?: string;
   photoUrl?: string;
+}
+
+// --- Subordinates ScoreCard ---
+export interface SubordinateScoreCard {
+  staffId: string;
+  staffName: string;
+  totalWorkProducts: number;
+  percentageWorkProductsCompletion: number;
+  actualPoints: number;
+  maxPoints: number;
+  percentageScore: number;
+  staffPerformanceGrade: string;
+  totalWorkProductsCompletedOnSchedule: number;
+  totalWorkProductsBehindSchedule: number;
+}
+
+export interface SubordinatesScoreCardResponse {
+  isSuccess: boolean;
+  message: string;
+  managerId: string;
+  reviewPeriodId: string;
+  scoreCards: SubordinateScoreCard[];
+}
+
+// --- Period Score Data (for PMS Score Report) ---
+export interface PeriodScoreData {
+  periodScoreId: string;
+  staffId: string;
+  staffFullName: string;
+  reviewPeriodId: string;
+  reviewPeriod: string;
+  year: number;
+  startDate: string;
+  endDate: string;
+  finalScore: number;
+  maxPoint: number;
+  scorePercentage: number;
+  finalGradeName: string;
+  strategyName?: string;
+  hrdDeductedPoints: number;
+  departmentId?: number;
+  departmentName?: string;
+  divisionId?: number;
+  divisionName?: string;
+  officeId?: number;
+  officeName?: string;
+  staffGrade?: string;
+  isUnderPerforming: boolean;
+  minNoOfObjectives?: number;
+  maxNoOfObjectives?: number;
+  locationId?: string;
+}
+
+// --- Competency Group Report ---
+export interface CompetencyRatingStat {
+  ratingOrder: number;
+  ratingName: string;
+  numberOfStaff: number;
+  staffPercentage: number;
+}
+
+export interface CategoryCompetencyDetailStat {
+  categoryName: string;
+  competencyRatingStat: CompetencyRatingStat[];
+  averageRating: number;
+  highestRating: number;
+  lowestRating: number;
+  mostCommonRating: number;
+  groupCompetencyRatings: ChartDataVm[];
+}
+
+export interface CategoryCompetencyStat {
+  categoryName: string;
+  actual: number;
+  expected: number;
+}
+
+export interface GroupedCompetencyReviewProfile {
+  categoryCompetencyStats: CategoryCompetencyStat[];
+  categoryCompetencyDetailStats: CategoryCompetencyDetailStat[];
+}
+
+export interface ChartDataVm {
+  label: string;
+  actual: number;
+  expected: number;
+}
+
+// --- Competency Matrix ---
+export interface CompetencyMatrixDetail {
+  competencyName: string;
+  averageScore: number;
+  expectedRatingValue: number;
+}
+
+export interface CompetencyMatrixReviewProfile {
+  employeeId: string;
+  employeeName: string;
+  position: string;
+  grade: string;
+  officeName: string;
+  divisionName: string;
+  departmentName: string;
+  noOfCompetencies: number;
+  noOfCompetent: number;
+  gapCount: number;
+  overallAverage: number;
+  competencyMatrixDetails: CompetencyMatrixDetail[];
+}
+
+export interface CompetencyMatrixReviewOverview {
+  competencyNames: string[];
+  competencyMatrixReviewProfiles: CompetencyMatrixReviewProfile[];
 }

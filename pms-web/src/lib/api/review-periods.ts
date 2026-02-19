@@ -115,6 +115,10 @@ export const approveIndividualPlannedObjective = (data: unknown) =>
 export const rejectIndividualPlannedObjective = (data: unknown) =>
   post<ResponseVm>("/review-periods/individual-objectives/reject", data);
 
+// --- Reinstate Objective ---
+export const reInstateObjective = (data: unknown) =>
+  post<ResponseVm>("/review-periods/individual-objectives/reinstate", data);
+
 // --- Period Objective Evaluations ---
 export const createPeriodObjectiveEvaluation = (data: unknown) =>
   post<ResponseVm>("/review-periods/evaluations", data);

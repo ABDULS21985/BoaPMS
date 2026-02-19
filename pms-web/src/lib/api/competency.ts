@@ -23,6 +23,10 @@ import type {
   CompetencyBankYear,
   OfficeCompetencyReview,
 } from "@/types/competency";
+import type {
+  CompetencyMatrixReviewOverview,
+  GroupedCompetencyReviewProfile,
+} from "@/types/dashboard";
 
 // --- Competencies ---
 export const getCompetencies = () =>
@@ -107,7 +111,7 @@ export const getGroupCompetencyReviewProfiles = (params: {
   if (params.officeId) q.set("officeId", String(params.officeId));
   if (params.divisionId) q.set("divisionId", String(params.divisionId));
   if (params.departmentId) q.set("departmentId", String(params.departmentId));
-  return get<BaseAPIResponse<CompetencyReviewProfile[]>>(`/competency/review-profiles/group?${q}`);
+  return get<BaseAPIResponse<GroupedCompetencyReviewProfile>>(`/competency/review-profiles/group?${q}`);
 };
 export const getCompetencyMatrixReviewProfiles = (params: {
   reviewPeriodId?: number; officeId?: number; divisionId?: number; departmentId?: number;
@@ -117,10 +121,10 @@ export const getCompetencyMatrixReviewProfiles = (params: {
   if (params.officeId) q.set("officeId", String(params.officeId));
   if (params.divisionId) q.set("divisionId", String(params.divisionId));
   if (params.departmentId) q.set("departmentId", String(params.departmentId));
-  return get<BaseAPIResponse<CompetencyReviewProfile[]>>(`/competency/review-profiles/matrix?${q}`);
+  return get<BaseAPIResponse<CompetencyMatrixReviewOverview>>(`/competency/review-profiles/matrix?${q}`);
 };
 export const getTechnicalCompetencyMatrixReviewProfiles = (reviewPeriodId: number, jobRoleId: number) =>
-  get<BaseAPIResponse<CompetencyReviewProfile[]>>(
+  get<BaseAPIResponse<CompetencyMatrixReviewOverview>>(
     `/competency/review-profiles/technical-matrix?reviewPeriodId=${reviewPeriodId}&jobRoleId=${jobRoleId}`
   );
 export const saveCompetencyReviewProfile = (data: unknown) =>

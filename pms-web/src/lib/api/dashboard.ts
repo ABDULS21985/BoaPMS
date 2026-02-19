@@ -10,6 +10,8 @@ import type {
   OrganogramPerformanceSummary,
   PendingAction,
   EmployeeErpDetails,
+  SubordinatesScoreCardResponse,
+  PeriodScoreData,
 } from "@/types/dashboard";
 import type { PerformanceReviewPeriod } from "@/types/performance";
 import type { StaffIdMask } from "@/types/staff";
@@ -61,3 +63,42 @@ export const getEmployeeDetail = (userId: string) =>
 
 export const getStaffIdMask = (userId: string) =>
   get<BaseAPIResponse<StaffIdMask>>(`/staff/${userId}/id-mask`);
+
+// --- Subordinates ScoreCard ---
+export const getSubordinatesScoreCard = (managerId: string, reviewPeriodId: string) =>
+  get<SubordinatesScoreCardResponse>(
+    `/pms-engine/scorecard/subordinates?managerId=${managerId}&reviewPeriodId=${reviewPeriodId}`
+  );
+
+// --- Organogram Performance List ---
+export const getOrganogramPerformanceSummaryList = (
+  headOfUnitId: string,
+  reviewPeriodId: string,
+  level?: number
+) =>
+  get<BaseAPIResponse<OrganogramPerformanceSummary[]>>(
+    `/pms-engine/organogram-performance/list?headOfUnitId=${headOfUnitId}&reviewPeriodId=${reviewPeriodId}${level !== undefined ? `&level=${level}` : ""}`
+  );
+
+// --- Period Scores (for PMS Score Report) ---
+export const getPeriodScores = (reviewPeriodId: string) =>
+  get<BaseAPIResponse<PeriodScoreData[]>>(
+    `/pms-engine/period-scores/all?reviewPeriodId=${reviewPeriodId}`
+  );
+
+export const getPeriodScoreDetails = (reviewPeriodId: string, staffId: string) =>
+  get<BaseAPIResponse<PeriodScoreData>>(
+    `/pms-engine/period-scores?reviewPeriodId=${reviewPeriodId}&staffId=${staffId}`
+  );
+
+// --- Head Subordinates ---
+export const getHeadSubordinates = (staffId: string) =>
+  get<BaseAPIResponse<unknown[]>>(
+    `/pms-engine/line-manager-employees?staffId=${staffId}&category=direct`
+  );
+
+// --- Staff Review Periods ---
+export const getStaffReviewPeriods = (staffId: string) =>
+  get<BaseAPIResponse<import("@/types/performance").PerformanceReviewPeriod[]>>(
+    `/pms-engine/staff-review-periods?staffId=${staffId}`
+  );

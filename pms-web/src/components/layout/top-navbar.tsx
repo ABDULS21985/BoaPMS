@@ -25,7 +25,11 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { useUIStore } from "@/stores/ui-store";
 
-export function TopNavbar() {
+interface TopNavbarProps {
+  showSidebarTrigger?: boolean;
+}
+
+export function TopNavbar({ showSidebarTrigger = true }: TopNavbarProps) {
   const { data: session } = useSession();
   const { theme, toggleTheme } = useUIStore();
   const user = session?.user;
@@ -40,8 +44,12 @@ export function TopNavbar() {
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4">
-      <SidebarTrigger className="-ml-1" />
-      <Separator orientation="vertical" className="h-6" />
+      {showSidebarTrigger && (
+        <>
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="h-6" />
+        </>
+      )}
 
       <div className="flex flex-1 items-center gap-4">
         <h2 className="hidden text-sm font-semibold text-muted-foreground sm:block">
