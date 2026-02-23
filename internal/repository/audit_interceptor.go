@@ -60,6 +60,11 @@ func (ai *AuditInterceptor) logAudit(db *gorm.DB, eventType enums.AuditEventType
 	}
 
 	tableName := stmt.Schema.Table
+
+	// Skip auditing the audit log table itself to prevent infinite recursion.
+	if tableName == "pmsaudit.audit_logs" {
+		return
+	}
 	model := stmt.Model
 	if model == nil {
 		return

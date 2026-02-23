@@ -2221,12 +2221,11 @@ func (h *PmsEngineHandler) GetWorkProductTaskDetail(w http.ResponseWriter, r *ht
 	response.OK(w, result)
 }
 
-// GetWorkProductTasks handles GET /api/v1/pms-engine/work-products/{workProductId}/tasks
+// GetWorkProductTasks handles GET /api/v1/pms-engine/work-products/tasks/by-product?workProductId=xxx
 // Mirrors .NET GetWorkProductTasks -- retrieves all tasks for a work product.
 func (h *PmsEngineHandler) GetWorkProductTasks(w http.ResponseWriter, r *http.Request) {
-	workProductID := r.PathValue("workProductId")
+	workProductID := h.requiredQuery(w, r, "workProductId")
 	if workProductID == "" {
-		response.Error(w, http.StatusBadRequest, "workProductId is required")
 		return
 	}
 
@@ -2275,12 +2274,11 @@ func (h *PmsEngineHandler) UpdateWorkProductEvaluation(w http.ResponseWriter, r 
 	response.OK(w, result)
 }
 
-// GetWorkProductEvaluation handles GET /api/v1/pms-engine/work-products/{workProductId}/evaluation
+// GetWorkProductEvaluation handles GET /api/v1/pms-engine/work-products/evaluation/by-product?workProductId=xxx
 // Mirrors .NET GetWorkProductEvaluation -- retrieves evaluation for a work product.
 func (h *PmsEngineHandler) GetWorkProductEvaluation(w http.ResponseWriter, r *http.Request) {
-	workProductID := r.PathValue("workProductId")
+	workProductID := h.requiredQuery(w, r, "workProductId")
 	if workProductID == "" {
-		response.Error(w, http.StatusBadRequest, "workProductId is required")
 		return
 	}
 
@@ -2293,12 +2291,11 @@ func (h *PmsEngineHandler) GetWorkProductEvaluation(w http.ResponseWriter, r *ht
 	response.OK(w, result)
 }
 
-// InitiateWorkProductReEvaluation handles POST /api/v1/pms-engine/work-products/{workProductId}/re-evaluate
+// InitiateWorkProductReEvaluation handles POST /api/v1/pms-engine/work-products/re-evaluate?workProductId=xxx
 // Mirrors .NET InitiateWorkProductReEvaluation.
 func (h *PmsEngineHandler) InitiateWorkProductReEvaluation(w http.ResponseWriter, r *http.Request) {
-	workProductID := r.PathValue("workProductId")
+	workProductID := h.requiredQuery(w, r, "workProductId")
 	if workProductID == "" {
-		response.Error(w, http.StatusBadRequest, "workProductId is required")
 		return
 	}
 
@@ -2808,9 +2805,8 @@ func (h *PmsEngineHandler) ReviewerComplete360Review(w http.ResponseWriter, r *h
 // GetCompetencyReviewDetail handles GET /api/v1/pms-engine/competency-review/{feedbackId}
 // Mirrors .NET GetCompetencyReviewDetail — retrieves a competency review feedback by ID.
 func (h *PmsEngineHandler) GetCompetencyReviewDetail(w http.ResponseWriter, r *http.Request) {
-	feedbackID := r.PathValue("feedbackId")
+	feedbackID := h.requiredQuery(w, r, "feedbackId")
 	if feedbackID == "" {
-		response.Error(w, http.StatusBadRequest, "feedbackId is required")
 		return
 	}
 	result, err := h.svc.Performance.GetCompetencyReviewFeedback(r.Context(), feedbackID)
@@ -2822,12 +2818,11 @@ func (h *PmsEngineHandler) GetCompetencyReviewDetail(w http.ResponseWriter, r *h
 	response.OK(w, result)
 }
 
-// GetCompetencyReviewFeedbackDetails handles GET /api/v1/pms-engine/competency-review/{feedbackId}/details
+// GetCompetencyReviewFeedbackDetails handles GET /api/v1/pms-engine/competency-review/feedback-details?feedbackId=xxx
 // Mirrors .NET GetCompetencyReviewFeedbackDetails — retrieves detailed feedback including reviewers.
 func (h *PmsEngineHandler) GetCompetencyReviewFeedbackDetails(w http.ResponseWriter, r *http.Request) {
-	feedbackID := r.PathValue("feedbackId")
+	feedbackID := h.requiredQuery(w, r, "feedbackId")
 	if feedbackID == "" {
-		response.Error(w, http.StatusBadRequest, "feedbackId is required")
 		return
 	}
 	result, err := h.svc.Performance.GetCompetencyReviewFeedbackDetails(r.Context(), feedbackID)
@@ -3633,13 +3628,13 @@ func (h *PmsEngineHandler) RegisterRoutes(mux *http.ServeMux, mw *middleware.Sta
 	mux.Handle("POST "+base+"/work-products/tasks/cancel", jwt(h.CancelWorkProductTask))
 	mux.Handle("POST "+base+"/work-products/tasks/complete", jwt(h.CompleteWorkProductTask))
 	mux.Handle("GET "+base+"/work-products/tasks/{taskId}", jwt(h.GetWorkProductTaskDetail))
-	mux.Handle("GET "+base+"/work-products/{workProductId}/tasks", jwt(h.GetWorkProductTasks))
+	mux.Handle("GET "+base+"/work-products/tasks/by-product", jwt(h.GetWorkProductTasks))
 
 	// --- Work Product Evaluation ---
 	mux.Handle("POST "+base+"/work-products/evaluation", jwt(h.AddWorkProductEvaluation))
 	mux.Handle("PUT "+base+"/work-products/evaluation", jwt(h.UpdateWorkProductEvaluation))
-	mux.Handle("GET "+base+"/work-products/{workProductId}/evaluation", jwt(h.GetWorkProductEvaluation))
-	mux.Handle("POST "+base+"/work-products/{workProductId}/re-evaluate", jwt(h.InitiateWorkProductReEvaluation))
+	mux.Handle("GET "+base+"/work-products/evaluation/by-product", jwt(h.GetWorkProductEvaluation))
+	mux.Handle("POST "+base+"/work-products/re-evaluate", jwt(h.InitiateWorkProductReEvaluation))
 	mux.Handle("POST "+base+"/work-products/recalculate", jwt(h.ReCalculateWorkProductPoints))
 
 	// --- Period Objective Evaluation ---
@@ -3680,8 +3675,8 @@ func (h *PmsEngineHandler) RegisterRoutes(mux *http.ServeMux, mw *middleware.Sta
 	mux.Handle("POST "+base+"/360-review/reviewer-complete", jwt(h.ReviewerComplete360Review))
 
 	// --- Competency Review ---
-	mux.Handle("GET "+base+"/competency-review/{feedbackId}/details", jwt(h.GetCompetencyReviewFeedbackDetails))
-	mux.Handle("GET "+base+"/competency-review/{feedbackId}", jwt(h.GetCompetencyReviewDetail))
+	mux.Handle("GET "+base+"/competency-review/feedback-details", jwt(h.GetCompetencyReviewFeedbackDetails))
+	mux.Handle("GET "+base+"/competency-review/detail", jwt(h.GetCompetencyReviewDetail))
 	mux.Handle("GET "+base+"/competency-review/feedbacks", jwt(h.GetAllCompetencyReviewFeedbacksByReviewPeriod))
 	mux.Handle("GET "+base+"/competency-review/my-reviewed", jwt(h.GetAllMyReviewedCompetencies))
 	mux.Handle("GET "+base+"/competency-review/to-review", jwt(h.GetCompetenciesToReview))

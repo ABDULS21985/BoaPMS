@@ -42,6 +42,6 @@ export const removePermissionFromRole = (roleId: string, permissionId: string) =
 export const getEmployees = () =>
   get<BaseAPIResponse<unknown[]>>("/employees");
 export const getEmployeesByDivision = (divisionId: number) =>
-  get<BaseAPIResponse<unknown[]>>(`/employees/division/${divisionId}`);
+  get<BaseAPIResponse<unknown[]>>(`/employees/by-division?divisionId=${divisionId}`);
 export const getEmployeeDetails = (employeeNumber: string) =>
-  get<BaseAPIResponse<unknown>>(`/employees/${employeeNumber}`);
+  get<BaseAPIResponse<unknown>>(`/employees?employeeNumber=${employeeNumber}`);

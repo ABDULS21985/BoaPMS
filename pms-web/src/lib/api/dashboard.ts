@@ -51,7 +51,7 @@ export const getOrganogramPerformanceSummary = (
 
 // --- Pending Actions ---
 export const getStaffPendingRequests = (staffId: string) =>
-  get<BaseAPIResponse<PendingAction[]>>(`/pms-engine/feedback-requests?staffId=${staffId}`);
+  get<BaseAPIResponse<PendingAction[]>>(`/pms-engine/feedback/requests?staffId=${staffId}`);
 
 // --- Active Review Period ---
 export const getActiveReviewPeriod = () =>
@@ -59,10 +59,10 @@ export const getActiveReviewPeriod = () =>
 
 // --- Employee Details (ERP) ---
 export const getEmployeeDetail = (userId: string) =>
-  get<BaseAPIResponse<EmployeeErpDetails>>(`/employees/${userId}`);
+  get<BaseAPIResponse<EmployeeErpDetails>>(`/employees?employeeNumber=${userId}`);
 
 export const getStaffIdMask = (userId: string) =>
-  get<BaseAPIResponse<StaffIdMask>>(`/staff/${userId}/id-mask`);
+  get<BaseAPIResponse<StaffIdMask>>(`/employees/staff-id-mask?employeeNumber=${userId}`);
 
 // --- Subordinates ScoreCard ---
 export const getSubordinatesScoreCard = (managerId: string, reviewPeriodId: string) =>

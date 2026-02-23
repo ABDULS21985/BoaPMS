@@ -80,14 +80,19 @@ export default function DashboardPage() {
       ]);
 
       if (rpRes.status === "fulfilled" && rpRes.value?.data) {
-        setReviewPeriod(rpRes.value.data);
-        // Load objectives count using review period
-        try {
-          const objRes = await getStaffObjectives(staffId, rpRes.value.data.periodId);
-          if (objRes?.data) {
-            setObjectiveCount(Array.isArray(objRes.data) ? objRes.data.length : 0);
-          }
-        } catch { /* ignore */ }
+        // The API returns { hasError, performanceReviewPeriod, ... } wrapper
+        const rpData = rpRes.value.data as Record<string, unknown>;
+        const rp = (rpData.performanceReviewPeriod ?? rpData) as PerformanceReviewPeriod | null;
+        if (rp && !rpData.hasError && rp.startDate) {
+          setReviewPeriod(rp);
+          // Load objectives count using review period
+          try {
+            const objRes = await getStaffObjectives(staffId, rp.periodId);
+            if (objRes?.data) {
+              setObjectiveCount(Array.isArray(objRes.data) ? objRes.data.length : 0);
+            }
+          } catch { /* ignore */ }
+        }
       }
       if (reqRes.status === "fulfilled" && reqRes.value?.data) setRequestStats(reqRes.value.data);
       if (perfRes.status === "fulfilled" && perfRes.value?.data) setPerformanceStats(perfRes.value.data);

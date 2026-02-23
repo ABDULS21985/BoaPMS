@@ -15,13 +15,13 @@ export const saveDepartment = (data: unknown) =>
 export const getDivisions = () =>
   get<BaseAPIResponse<Division[]>>("/organogram/divisions");
 export const getDivisionsByDepartment = (departmentId: number) =>
-  get<BaseAPIResponse<Division[]>>(`/organogram/departments/${departmentId}/divisions`);
+  get<BaseAPIResponse<Division[]>>(`/organogram/divisions?departmentId=${departmentId}`);
 export const saveDivision = (data: unknown) =>
   post<ResponseVm>("/organogram/divisions", data);
 
 export const getOffices = () =>
   get<BaseAPIResponse<Office[]>>("/organogram/offices");
 export const getOfficesByDivision = (divisionId: number) =>
-  get<BaseAPIResponse<Office[]>>(`/organogram/divisions/${divisionId}/offices`);
+  get<BaseAPIResponse<Office[]>>(`/organogram/offices?divisionId=${divisionId}`);
 export const saveOffice = (data: unknown) =>
   post<ResponseVm>("/organogram/offices", data);

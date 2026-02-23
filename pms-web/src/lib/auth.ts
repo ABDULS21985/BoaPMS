@@ -50,6 +50,7 @@ declare module "next-auth" {
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  secret: process.env.AUTH_SECRET,
   providers: [
     Credentials({
       name: "credentials",
@@ -72,20 +73,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
           if (!res.ok) return null;
 
-          const data: AuthenticateResponse = await res.json();
+          const json = await res.json();
+          // Go API wraps responses in { success, data }
+          const data = json.data ?? json;
 
           return {
-            id: data.userId,
-            name: `${data.firstName} ${data.lastName}`,
+            id: data.user_id,
+            name: `${data.first_name} ${data.last_name}`,
             email: data.email,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            roles: data.roles,
-            permissions: data.permissions,
-            organizationalUnit: data.organizationalUnit,
-            accessToken: data.accessToken,
-            refreshToken: data.refreshToken,
-            expiresAt: data.expiresAt,
+            firstName: data.first_name,
+            lastName: data.last_name,
+            roles: data.roles ?? [],
+            permissions: data.permissions ?? [],
+            organizationalUnit: data.organizational_unit,
+            accessToken: data.access_token,
+            refreshToken: data.refresh_token,
+            expiresAt: data.expires_at,
           };
         } catch {
           return null;
@@ -112,16 +115,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       // Token rotation: refresh if expired
       if (token.expiresAt && Date.now() / 1000 > (token.expiresAt as number)) {
         try {
-          const res = await fetch(`${API_URL}/auth/refresh-token`, {
+          const res = await fetch(`${API_URL}/auth/refresh`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ refreshToken: token.refreshToken }),
+            body: JSON.stringify({ refresh_token: token.refreshToken }),
           });
           if (res.ok) {
-            const refreshed = await res.json();
-            token.accessToken = refreshed.accessToken;
-            token.refreshToken = refreshed.refreshToken;
-            token.expiresAt = refreshed.expiresAt;
+            const json = await res.json();
+            const refreshed = json.data ?? json;
+            token.accessToken = refreshed.access_token;
+            token.refreshToken = refreshed.refresh_token;
+            token.expiresAt = refreshed.expires_at;
           }
         } catch {
           // Refresh failed — user will be redirected to login

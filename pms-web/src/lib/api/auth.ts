@@ -1,4 +1,4 @@
-import { post } from "@/lib/api-client";
+import { get, post } from "@/lib/api-client";
 import type { AuthenticateResponse, LoginRequest, TokenResponse, RefreshTokenRequest } from "@/types/auth";
 
 export function login(data: LoginRequest) {
@@ -6,9 +6,9 @@ export function login(data: LoginRequest) {
 }
 
 export function refreshToken(data: RefreshTokenRequest) {
-  return post<TokenResponse>("/auth/refresh-token", data);
+  return post<TokenResponse>("/auth/refresh", { refresh_token: data.refreshToken });
 }
 
 export function validateToken() {
-  return post<{ valid: boolean }>("/auth/validate");
+  return get<{ valid: boolean }>("/auth/validate");
 }

@@ -112,7 +112,7 @@ export const reInstateWorkProduct = (data: unknown) => post<ResponseVm>("/pms-en
 
 // --- Work Product Tasks ---
 export const getWorkProductTasks = (workProductId: string) =>
-  get<BaseAPIResponse<WorkProductTask[]>>(`/pms-engine/work-products/${workProductId}/tasks`);
+  get<BaseAPIResponse<WorkProductTask[]>>(`/pms-engine/work-products/tasks/by-product?workProductId=${workProductId}`);
 export const getWorkProductTaskDetail = (taskId: string) =>
   get<BaseAPIResponse<WorkProductTask>>(`/pms-engine/work-products/tasks/${taskId}`);
 export const createWorkProductTask = (data: unknown) => post<ResponseVm>("/pms-engine/work-products/tasks", data);
@@ -126,9 +126,9 @@ export const evaluateWorkProduct = (data: unknown) =>
 export const updateWorkProductEvaluation = (data: unknown) =>
   put<ResponseVm>("/pms-engine/work-products/evaluation", data);
 export const getWorkProductEvaluation = (workProductId: string) =>
-  get<BaseAPIResponse<WorkProductEvaluation>>(`/pms-engine/work-products/${workProductId}/evaluation`);
+  get<BaseAPIResponse<WorkProductEvaluation>>(`/pms-engine/work-products/evaluation/by-product?workProductId=${workProductId}`);
 export const initiateReEvaluation = (workProductId: string) =>
-  post<ResponseVm>(`/pms-engine/work-products/${workProductId}/re-evaluate`, {});
+  post<ResponseVm>(`/pms-engine/work-products/re-evaluate?workProductId=${workProductId}`, {});
 
 // --- Individual Objectives ---
 export const getStaffIndividualObjectives = (staffId: string, reviewPeriodId: string) =>
@@ -193,9 +193,9 @@ export const reviewerComplete360Review = (data: { reviewStaffId: string; compete
 
 // --- Competency Review ---
 export const getCompetencyReviewDetail = (feedbackId: string) =>
-  get<BaseAPIResponse<CompetencyReviewFeedback>>(`/pms-engine/competency-review/${feedbackId}`);
+  get<BaseAPIResponse<CompetencyReviewFeedback>>(`/pms-engine/competency-review/detail?feedbackId=${feedbackId}`);
 export const getCompetencyReviewFeedbackDetails = (feedbackId: string) =>
-  get<BaseAPIResponse<CompetencyReviewFeedbackDetails>>(`/pms-engine/competency-review/${feedbackId}/details`);
+  get<BaseAPIResponse<CompetencyReviewFeedbackDetails>>(`/pms-engine/competency-review/feedback-details?feedbackId=${feedbackId}`);
 export const getAllCompetencyReviewFeedbacks = (staffId: string) =>
   get<BaseAPIResponse<CompetencyReviewFeedback[]>>(`/pms-engine/competency-review/feedbacks?staffId=${staffId}`);
 export const getCompetenciesToReview = (reviewerStaffId: string) =>
